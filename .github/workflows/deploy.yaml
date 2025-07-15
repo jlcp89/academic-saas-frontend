@@ -1,0 +1,154 @@
+name: Deploy Next.js Frontend to AWS
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+    branches:
+      - dev
+      - main
+
+jobs:
+  # Deploy to dev environment
+  deploy_dev:
+    name: Deploy DEV Environment
+    if: github.event.pull_request.base.ref == 'dev'
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      - name: Deploy Next.js Frontend to EC2 (dev)
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST_DEV }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            export ENVIRONMENT=dev
+            export NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_DEV }}
+            export NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_DEV }}
+            export NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET_DEV }}
+            
+            cd /home/ec2-user
+            echo "Removing previous frontend deployment..."
+            sudo rm -rf academic-saas-frontend
+            
+            echo "Cloning frontend repository (PR branch: ${{ github.event.pull_request.head.ref }})..."
+            git clone --depth 1 --branch ${{ github.event.pull_request.head.ref }} --single-branch https://${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository_owner }}/academic-saas-frontend.git academic-saas-frontend
+            
+            cd academic-saas-frontend
+            
+            echo "Creating environment file..."
+            cat > .env.local << EOF
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_DEV }}
+            NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_DEV }}
+            NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET_DEV }}
+            EOF
+            
+            echo "Building Docker image..."
+            sudo docker build -t academic-saas-frontend:dev .
+            
+            echo "Stopping existing frontend containers..."
+            sudo docker stop academic-saas-frontend-dev || true
+            sudo docker rm academic-saas-frontend-dev || true
+            
+            echo "Starting frontend container..."
+            sudo docker run -d \
+              --name academic-saas-frontend-dev \
+              --restart unless-stopped \
+              -p 3000:3000 \
+              -e NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_DEV }} \
+              -e NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_DEV }} \
+              -e NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET_DEV }} \
+              academic-saas-frontend:dev
+            
+            echo "DEV frontend deployment finished."
+
+  # Deploy to production environment
+  deploy_prod:
+    name: Deploy PROD Environment
+    if: |
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.action == 'closed' &&
+      github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    environment: prod
+
+    steps:
+      - name: Deploy Next.js Frontend to EC2 (prod)
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST_PROD }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            export ENVIRONMENT=prod
+            export NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_PROD }}
+            export NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_PROD }}
+            export NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET_PROD }}
+            
+            cd /home/ec2-user
+            echo "Creating backup of current frontend deployment..."
+            sudo cp -r academic-saas-frontend academic-saas-frontend-backup-$(date +%Y%m%d-%H%M%S) || true
+            
+            echo "Removing previous frontend deployment..."
+            sudo rm -rf academic-saas-frontend
+            
+            echo "Cloning frontend repository (main branch)..."
+            git clone --depth 1 --branch main --single-branch https://${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository_owner }}/academic-saas-frontend.git academic-saas-frontend
+            
+            cd academic-saas-frontend
+            
+            echo "Creating production environment file..."
+            cat > .env.local << EOF
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_PROD }}
+            NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_PROD }}
+            NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET_PROD }}
+            EOF
+            
+            echo "Building Docker image..."
+            sudo docker build -t academic-saas-frontend:prod .
+            
+            echo "Stopping existing frontend containers..."
+            sudo docker stop academic-saas-frontend-prod || true
+            sudo docker rm academic-saas-frontend-prod || true
+            
+            echo "Starting frontend container..."
+            sudo docker run -d \
+              --name academic-saas-frontend-prod \
+              --restart unless-stopped \
+              -p 3000:3000 \
+              -e NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_PROD }} \
+              -e NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_PROD }} \
+              -e NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET_PROD }} \
+              academic-saas-frontend:prod
+            
+            echo "Waiting for frontend to start..."
+            sleep 30
+            
+            echo "Health check..."
+            curl -f http://localhost:3000 || (echo "Frontend health check failed" && exit 1)
+            
+            echo "PROD frontend deployment finished."
+
+  # Cleanup old images
+  cleanup:
+    name: Cleanup Docker Images
+    needs: [deploy_dev, deploy_prod]
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Cleanup old Docker images
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST_DEV }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            echo "Cleaning up old Docker images..."
+            sudo docker image prune -f
+            sudo docker system prune -f
