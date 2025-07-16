@@ -90,23 +90,30 @@ jobs:
             echo "${{ secrets.EC2_SSH_KEY }}" > /tmp/ec2-key.pem
             chmod 600 /tmp/ec2-key.pem
             
-            # Deploy via SSH
-            ssh -i /tmp/ec2-key.pem -o StrictHostKeyChecking=no ubuntu@$INSTANCE_IP << EOF
-              # Login to ECR
-              aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
-              
-              # Pull latest image
-              docker pull $IMAGE_URI
-              
-              # Create environment file
-              sudo mkdir -p /opt/academic-saas
-              sudo tee /opt/academic-saas/.env << 'ENVEOF'
+            # Create environment file locally
+            cat > /tmp/frontend.env << EOF
 NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
 NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}
 NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
 AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
 AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-ENVEOF
+EOF
+            
+            # Deploy via SSH
+            ECR_REGISTRY="${{ steps.login-ecr.outputs.registry }}"
+            scp -i /tmp/ec2-key.pem -o StrictHostKeyChecking=no /tmp/frontend.env ubuntu@$INSTANCE_IP:/tmp/frontend.env
+            ssh -i /tmp/ec2-key.pem -o StrictHostKeyChecking=no ubuntu@$INSTANCE_IP << EOF
+              # Login to ECR
+              aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
+              
+              # Pull latest image
+              docker pull $IMAGE_URI
+              
+              # Setup environment file
+              sudo mkdir -p /opt/academic-saas
+              sudo cp /tmp/frontend.env /opt/academic-saas/.env
+              sudo chown root:root /opt/academic-saas/.env
+              sudo chmod 600 /opt/academic-saas/.env
               
               # Stop existing container if running
               docker stop academic-saas-frontend || true
@@ -125,6 +132,9 @@ ENVEOF
               curl -f http://localhost:3000/ || exit 1
               
               echo "Frontend deployment completed successfully"
+              
+              # Clean up temp file
+              rm -f /tmp/frontend.env
 EOF
             
             # Clean up key file
