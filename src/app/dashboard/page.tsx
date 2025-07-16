@@ -59,8 +59,8 @@ export default function Dashboard() {
                   <p><strong>Email:</strong> {user.email}</p>
                   <p><strong>Role:</strong> {user.role}</p>
                   <p><strong>Status:</strong> {user.is_active ? 'Active' : 'Inactive'}</p>
-                  {user.school_info && (
-                    <p><strong>School:</strong> {user.school_info.name}</p>
+                  {user.school && (
+                    <p><strong>School:</strong> {user.school.name}</p>
                   )}
                 </div>
               </CardContent>
