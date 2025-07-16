@@ -91,13 +91,13 @@ jobs:
             chmod 600 /tmp/ec2-key.pem
             
             # Create environment file locally
-            cat > /tmp/frontend.env << EOF
+            cat > /tmp/frontend.env << 'ENVFILE'
 NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
 NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}
 NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
 AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
 AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-EOF
+ENVFILE
             
             # Deploy via SSH
             ECR_REGISTRY="${{ steps.login-ecr.outputs.registry }}"
