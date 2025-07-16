@@ -103,39 +103,39 @@ jobs:
             ECR_REGISTRY="${{ steps.login-ecr.outputs.registry }}"
             scp -i /tmp/ec2-key.pem -o StrictHostKeyChecking=no /tmp/frontend.env ubuntu@$INSTANCE_IP:/tmp/frontend.env
             ssh -i /tmp/ec2-key.pem -o StrictHostKeyChecking=no ubuntu@$INSTANCE_IP << EOF
-              # Login to ECR
-              aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
-              
-              # Pull latest image
-              docker pull $IMAGE_URI
-              
-              # Setup environment file
-              sudo mkdir -p /opt/academic-saas
-              sudo cp /tmp/frontend.env /opt/academic-saas/.env
-              sudo chown root:root /opt/academic-saas/.env
-              sudo chmod 600 /opt/academic-saas/.env
-              
-              # Stop existing container if running
-              docker stop academic-saas-frontend || true
-              docker rm academic-saas-frontend || true
-              
-              # Run new container
-              docker run -d \
-                --name academic-saas-frontend \
-                --restart unless-stopped \
-                -p 3000:3000 \
-                --env-file /opt/academic-saas/.env \
-                $IMAGE_URI
-              
-              # Health check
-              sleep 30
-              curl -f http://localhost:3000/ || exit 1
-              
-              echo "Frontend deployment completed successfully"
-              
-              # Clean up temp file
-              rm -f /tmp/frontend.env
-            EOF
+# Login to ECR
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
+
+# Pull latest image
+docker pull $IMAGE_URI
+
+# Setup environment file
+sudo mkdir -p /opt/academic-saas
+sudo cp /tmp/frontend.env /opt/academic-saas/.env
+sudo chown root:root /opt/academic-saas/.env
+sudo chmod 600 /opt/academic-saas/.env
+
+# Stop existing container if running
+docker stop academic-saas-frontend || true
+docker rm academic-saas-frontend || true
+
+# Run new container
+docker run -d \
+  --name academic-saas-frontend \
+  --restart unless-stopped \
+  -p 3000:3000 \
+  --env-file /opt/academic-saas/.env \
+  $IMAGE_URI
+
+# Health check
+sleep 30
+curl -f http://localhost:3000/ || exit 1
+
+echo "Frontend deployment completed successfully"
+
+# Clean up temp file
+rm -f /tmp/frontend.env
+EOF
             
             # Clean up key file
             rm -f /tmp/ec2-key.pem
