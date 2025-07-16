@@ -1,0 +1,120 @@
+name: Deploy Frontend to AWS
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: academic-saas-frontend
+  NODE_VERSION: '18'
+
+jobs:
+  deploy:
+    name: Deploy Frontend
+    runs-on: ubuntu-latest
+    environment: development
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build application
+      env:
+        NEXT_PUBLIC_API_URL: http://academic-saas-dev-backend-alb-1977961495.us-east-1.elb.amazonaws.com
+        NEXTAUTH_URL: http://academic-saas-dev-frontend-alb-560850445.us-east-1.elb.amazonaws.com
+        NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+      run: |
+        npm run build
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        # Build a docker container and push it to ECR
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+    - name: Deploy to EC2 via Auto Scaling Group
+      env:
+        ASG_NAME: academic-saas-dev-frontend-asg
+        IMAGE_URI: ${{ steps.build-image.outputs.image }}
+      run: |
+        # Create deployment script
+        cat > deploy-frontend.sh << 'EOF'
+        #!/bin/bash
+        
+        # Pull latest image
+        docker pull $1
+        
+        # Stop existing container if running
+        docker stop academic-saas-frontend || true
+        docker rm academic-saas-frontend || true
+        
+        # Run new container
+        docker run -d \
+          --name academic-saas-frontend \
+          --restart unless-stopped \
+          -p 3000:3000 \
+          --env-file /opt/academic-saas/.env \
+          $1
+        
+        # Health check
+        sleep 30
+        curl -f http://localhost:3000/ || exit 1
+        
+        echo "Frontend deployment completed successfully"
+        EOF
+        
+        # Upload deployment script to S3
+        aws s3 cp deploy-frontend.sh s3://academic-saas-dev-7244fcb3/deployment/deploy-frontend.sh
+        
+        # Execute deployment on all instances in ASG
+        INSTANCE_IDS=$(aws autoscaling describe-auto-scaling-groups \
+          --auto-scaling-group-names $ASG_NAME \
+          --query 'AutoScalingGroups[0].Instances[?LifecycleState==`InService`].InstanceId' \
+          --output text)
+        
+        for INSTANCE_ID in $INSTANCE_IDS; do
+          aws ssm send-command \
+            --instance-ids $INSTANCE_ID \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=["aws s3 cp s3://academic-saas-dev-7244fcb3/deployment/deploy-frontend.sh /tmp/deploy-frontend.sh && chmod +x /tmp/deploy-frontend.sh && /tmp/deploy-frontend.sh '$IMAGE_URI'"]' \
+            --comment "Deploy frontend application"
+        done
+
+    - name: Verify deployment
+      run: |
+        # Wait for deployment to complete
+        sleep 120
+        
+        # Check health endpoint
+        FRONTEND_URL="http://academic-saas-dev-frontend-alb-560850445.us-east-1.elb.amazonaws.com"
+        curl -f $FRONTEND_URL/ || exit 1
+        
+        echo "Deployment verification completed"
