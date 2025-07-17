@@ -38,52 +38,89 @@ export interface Subscription {
   end_date: string;
 }
 
-// Academic interfaces
+// Academic interfaces matching backend structure
 export interface Subject {
   id: number;
-  name: string;
-  code: string;
-  description: string;
-  school: number;
+  subject_name: string;
+  subject_code: string;
   created_at: string;
+  updated_at: string;
 }
 
 export interface Section {
   id: number;
-  subject: Subject;
-  name: string;
-  professor: User;
-  school: number;
+  section_name: string;
+  subject: number;
+  subject_info: Subject;
+  professor: number;
+  professor_info: User;
+  start_date: string;
+  end_date: string;
+  max_students: number;
+  enrollment_count: number;
   created_at: string;
+  updated_at: string;
 }
 
 export interface Enrollment {
   id: number;
-  student: User;
-  section: Section;
-  enrolled_at: string;
-  is_active: boolean;
+  student: number;
+  student_info: User;
+  section: number;
+  section_info: Section;
+  status: 'ENROLLED' | 'DROPPED' | 'COMPLETED';
+  enrollment_date: string;
+  grade?: number;
 }
 
 export interface Assignment {
   id: number;
+  section: number;
+  section_info: Section;
   title: string;
   description: string;
-  section: Section;
+  instructions?: string;
   due_date: string;
-  max_score: number;
+  max_points: number;
+  assignment_type: 'HOMEWORK' | 'QUIZ' | 'EXAM' | 'PROJECT' | 'DISCUSSION';
+  created_by: number;
+  created_by_info: User;
+  submissions_count?: number;
+  average_score?: number;
+  attachments?: {
+    id: number;
+    name: string;
+    url: string;
+    size: number;
+  }[];
   created_at: string;
+  updated_at: string;
 }
 
 export interface Submission {
   id: number;
-  assignment: Assignment;
-  student: User;
+  assignment: number;
+  assignment_info: Assignment;
+  student: number;
+  student_info: User;
+  status: 'DRAFT' | 'SUBMITTED' | 'GRADED' | 'RETURNED';
   content: string;
-  submitted_at: string;
-  score?: number;
+  attachments?: {
+    id: number;
+    name: string;
+    url: string;
+    size: number;
+    uploaded_at: string;
+  }[];
+  submitted_at?: string;
+  points_earned?: number;
   feedback?: string;
+  graded_by?: number;
+  graded_by_info?: User;
   graded_at?: string;
+  is_late?: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 // API Response types

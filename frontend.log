@@ -1,0 +1,94 @@
+
+> academic-saas-frontend@0.1.0 dev
+> next dev --turbopack
+
+   ▲ Next.js 15.4.1 (Turbopack)
+   - Local:        http://localhost:3000
+   - Network:      http://172.24.136.90:3000
+   - Environments: .env.local
+   - Experiments (use with caution):
+     ✓ optimizeCss
+
+ ✓ Starting...
+ ○ Compiling middleware ...
+ ✓ Compiled middleware in 583ms
+ ✓ Ready in 2.6s
+ ○ Compiling /auth/login ...
+ ✓ Compiled /auth/login in 7.5s
+ GET /auth/login 200 in 8448ms
+ ○ Compiling /api/auth/[...nextauth] ...
+ ✓ Compiled /api/auth/[...nextauth] in 909ms
+ GET /api/auth/session 200 in 2284ms
+ GET /api/auth/session 200 in 63ms
+ GET /api/auth/providers 200 in 172ms
+ GET /api/auth/csrf 200 in 54ms
+ POST /api/auth/callback/credentials 200 in 418ms
+ GET /api/auth/session 200 in 56ms
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 2.4s
+ GET /dashboard 200 in 2520ms
+ ○ Compiling /schools ...
+ ✓ Compiled /schools in 1513ms
+ GET /schools 200 in 1632ms
+ GET /schools 200 in 165ms
+ ○ Compiling /subjects ...
+ ✓ Compiled /subjects in 1063ms
+ GET /subjects 200 in 1149ms
+ GET /schools 200 in 62ms
+ ○ Compiling /users ...
+ ✓ Compiled /users in 974ms
+ GET /users 200 in 1067ms
+ GET /subjects 200 in 86ms
+ ○ Compiling /sections ...
+ ✓ Compiled /sections in 1063ms
+ GET /sections 200 in 1187ms
+ ○ Compiling /enrollments ...
+ ✓ Compiled /enrollments in 1383ms
+ GET /enrollments 200 in 1547ms
+ ○ Compiling /assignments ...
+ ✓ Compiled /assignments in 1293ms
+ GET /assignments 200 in 1420ms
+ ○ Compiling /submissions ...
+ ✓ Compiled /submissions in 1041ms
+ GET /submissions 200 in 1127ms
+ ○ Compiling /grades ...
+ ✓ Compiled /grades in 836ms
+ GET /grades 200 in 967ms
+ ○ Compiling /reports ...
+ ✓ Compiled /reports in 1032ms
+ GET /reports 200 in 1145ms
+ GET /submissions 200 in 493ms
+ GET /api/auth/session 200 in 385ms
+ GET /api/auth/session 200 in 86ms
+ ○ Compiling /favicon.ico ...
+ ✓ Compiled /favicon.ico in 531ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 850ms
+ GET /dashboard 200 in 109ms
+ ✓ Compiled in 228ms
+ ✓ Compiled in 296ms
+ ✓ Compiled in 175ms
+ GET /api/auth/session 200 in 327ms
+ GET /api/auth/session 200 in 108ms
+ GET /api/auth/session 200 in 293ms
+ GET /api/auth/session 200 in 122ms
+ ○ Compiling / ...
+ ✓ Compiled / in 721ms
+ GET /api/auth/session 200 in 300ms
+ GET /api/auth/session 200 in 164ms
+ GET /api/auth/session 200 in 319ms
+ GET /api/auth/session 200 in 116ms
+ GET /api/auth/session 200 in 170ms
+ GET /api/auth/session 200 in 193ms
+ GET /dashboard 200 in 1151ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 324ms
+ GET /api/auth/session 200 in 241ms
+ GET /api/auth/session 200 in 122ms
+ GET /dashboard 200 in 307ms
+ GET /api/auth/session 200 in 376ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 525ms
+ GET /api/auth/session 200 in 156ms
+ GET /dashboard 200 in 236ms
+ GET /api/auth/session 200 in 317ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 487ms
+ GET /api/auth/session 200 in 109ms
+ GET /schools 200 in 121ms
