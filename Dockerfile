@@ -3,7 +3,7 @@ FROM node:20-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat curl
 WORKDIR /app
 
 # Copy package files
@@ -28,6 +28,9 @@ WORKDIR /app
 
 ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
+
+# Install curl for health checks
+RUN apk add --no-cache curl
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs
