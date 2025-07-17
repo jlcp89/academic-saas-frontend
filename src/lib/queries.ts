@@ -1,121 +1,151 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useApiClient } from './api-client';
 import { API_ENDPOINTS } from './constants';
-import { 
-  User, 
-  School, 
-  Subject, 
-  Section, 
-  Assignment, 
-  Enrollment, 
-  Submission,
-  ApiResponse,
-  CreateUserForm
-} from '@/types';
+import { School, User, Subject, Section, Enrollment, Assignment, Submission } from '@/types';
+import { useSession } from 'next-auth/react';
 
-// Query Keys
+// Query keys
 export const queryKeys = {
   users: ['users'] as const,
+  currentUser: ['currentUser'] as const,
   schools: ['schools'] as const,
   subjects: ['subjects'] as const,
   sections: ['sections'] as const,
-  assignments: ['assignments'] as const,
   enrollments: ['enrollments'] as const,
+  assignments: ['assignments'] as const,
   submissions: ['submissions'] as const,
-} as const;
+};
 
-// User Queries
-export function useUsers() {
-  const { request } = useApiClient();
+// Current User Query
+export function useCurrentUser() {
+  const apiClient = useApiClient();
+  const { data: session, update } = useSession();
   
   return useQuery({
-    queryKey: queryKeys.users,
-    queryFn: () => request<ApiResponse<User>>(API_ENDPOINTS.USERS),
+    queryKey: queryKeys.currentUser,
+    queryFn: async () => {
+      const response = await apiClient.get('/api/users/me/');
+      const userData = response.data;
+      
+      // Update the session with fresh data
+      if (update) {
+        await update({
+          ...session,
+          user: userData
+        });
+      }
+      
+      return userData;
+    },
+    enabled: !!session,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 }
 
-export function useCreateUser() {
-  const { request } = useApiClient();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (userData: CreateUserForm) =>
-      request<User>(API_ENDPOINTS.USERS, {
-        method: 'POST',
-        body: JSON.stringify(userData),
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.users });
+// Users Queries
+export function useUsers() {
+  const apiClient = useApiClient();
+  
+  return useQuery({
+    queryKey: queryKeys.users,
+    queryFn: async () => {
+      const response = await apiClient.get<User[]>(API_ENDPOINTS.USERS);
+      return response.data;
     },
   });
 }
 
-// School Queries (Superadmin only)
+// Schools Queries (Superadmin only)
 export function useSchools() {
-  const { request } = useApiClient();
+  const apiClient = useApiClient();
   
   return useQuery({
     queryKey: queryKeys.schools,
-    queryFn: () => request<ApiResponse<School>>(API_ENDPOINTS.SCHOOLS),
+    queryFn: async () => {
+      const response = await apiClient.get<School[]>(API_ENDPOINTS.SCHOOLS);
+      return response.data;
+    },
   });
 }
 
-// Subject Queries
+// Subjects Queries
 export function useSubjects() {
-  const { request } = useApiClient();
+  const apiClient = useApiClient();
   
   return useQuery({
     queryKey: queryKeys.subjects,
-    queryFn: () => request<ApiResponse<Subject>>(API_ENDPOINTS.SUBJECTS),
+    queryFn: async () => {
+      const response = await apiClient.get<Subject[]>(API_ENDPOINTS.SUBJECTS);
+      return response.data;
+    },
   });
 }
 
-// Section Queries
+// Sections Queries
 export function useSections() {
-  const { request } = useApiClient();
+  const apiClient = useApiClient();
   
   return useQuery({
     queryKey: queryKeys.sections,
-    queryFn: () => request<ApiResponse<Section>>(API_ENDPOINTS.SECTIONS),
+    queryFn: async () => {
+      const response = await apiClient.get<Section[]>(API_ENDPOINTS.SECTIONS);
+      return response.data;
+    },
   });
 }
 
-// Assignment Queries
-export function useAssignments() {
-  const { request } = useApiClient();
-  
-  return useQuery({
-    queryKey: queryKeys.assignments,
-    queryFn: () => request<ApiResponse<Assignment>>(API_ENDPOINTS.ASSIGNMENTS),
-  });
-}
-
-// Enrollment Queries
+// Enrollments Queries
 export function useEnrollments() {
-  const { request } = useApiClient();
+  const apiClient = useApiClient();
   
   return useQuery({
     queryKey: queryKeys.enrollments,
-    queryFn: () => request<ApiResponse<Enrollment>>(API_ENDPOINTS.ENROLLMENTS),
+    queryFn: async () => {
+      const response = await apiClient.get<Enrollment[]>(API_ENDPOINTS.ENROLLMENTS);
+      return response.data;
+    },
   });
 }
 
-// My Enrollments (for students)
-export function useMyEnrollments() {
-  const { request } = useApiClient();
+// Assignments Queries
+export function useAssignments() {
+  const apiClient = useApiClient();
   
   return useQuery({
-    queryKey: [...queryKeys.enrollments, 'my'],
-    queryFn: () => request<ApiResponse<Enrollment>>(`${API_ENDPOINTS.ENROLLMENTS}my_enrollments/`),
+    queryKey: queryKeys.assignments,
+    queryFn: async () => {
+      const response = await apiClient.get<Assignment[]>(API_ENDPOINTS.ASSIGNMENTS);
+      return response.data;
+    },
   });
 }
 
-// Submission Queries
+// Submissions Queries
 export function useSubmissions() {
-  const { request } = useApiClient();
+  const apiClient = useApiClient();
   
   return useQuery({
     queryKey: queryKeys.submissions,
-    queryFn: () => request<ApiResponse<Submission>>(API_ENDPOINTS.SUBMISSIONS),
+    queryFn: async () => {
+      const response = await apiClient.get<Submission[]>(API_ENDPOINTS.SUBMISSIONS);
+      return response.data;
+    },
+  });
+}
+
+// Mutation to refetch current user
+export function useRefreshCurrentUser() {
+  const queryClient = useQueryClient();
+  const { update } = useSession();
+  
+  return useMutation({
+    mutationFn: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.currentUser });
+      return true;
+    },
+    onSuccess: () => {
+      // Force session update after invalidating the query
+      update();
+    },
   });
 }

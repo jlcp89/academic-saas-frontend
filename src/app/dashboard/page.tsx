@@ -5,10 +5,13 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useCurrentUser, useRefreshCurrentUser } from '@/lib/queries';
 
 export default function Dashboard() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const router = useRouter();
+  const { data: currentUser } = useCurrentUser();
+  const refreshUser = useRefreshCurrentUser();
 
   useEffect(() => {
     if (status === 'loading') return; // Still loading
@@ -27,7 +30,8 @@ export default function Dashboard() {
     return null; // Will redirect to login
   }
 
-  const user = session.user;
+  // Use fresh data from currentUser if available, fallback to session
+  const user = currentUser || session.user;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -38,9 +42,19 @@ export default function Dashboard() {
               <h1 className="text-2xl font-bold text-gray-900">Academic SaaS Dashboard</h1>
               <p className="text-sm text-gray-600">Welcome back, {user.username}</p>
             </div>
-            <Button onClick={() => signOut()} variant="outline">
-              Sign Out
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => refreshUser.mutate()} 
+                disabled={refreshUser.isPending}
+                variant="outline"
+                size="sm"
+              >
+                {refreshUser.isPending ? 'Refreshing...' : 'Refresh Data'}
+              </Button>
+              <Button onClick={() => signOut()} variant="outline">
+                Sign Out
+              </Button>
+            </div>
           </div>
         </div>
       </div>
