@@ -141,7 +141,7 @@ jobs:
         chmod 600 /tmp/ec2-key.pem
         
         # Create optimized deployment script
-        cat > /tmp/deploy-frontend-dev.sh << 'EOF'
+        cat > /tmp/deploy-frontend-dev.sh << 'SCRIPT_EOF'
 #!/bin/bash
 set -e
 echo "🔄 Starting frontend deployment..."
@@ -200,7 +200,7 @@ else
   docker logs academic-saas-frontend --tail 20
   exit 1
 fi
-EOF
+SCRIPT_EOF
         
         # Copy and execute deployment script
         scp -i /tmp/ec2-key.pem -o StrictHostKeyChecking=no /tmp/deploy-frontend-dev.sh ec2-user@$DEV_INSTANCE_IP:/tmp/deploy-frontend-dev.sh
@@ -275,7 +275,7 @@ EOF
         echo "📋 Found instances: $INSTANCE_IDS"
         
         # Create production deployment script
-        cat > /tmp/deploy-frontend-prod.sh << 'EOF'
+        cat > /tmp/deploy-frontend-prod.sh << 'PROD_SCRIPT_EOF'
 #!/bin/bash
 set -e
 echo "🔄 Starting production frontend deployment..."
@@ -335,7 +335,7 @@ else
   docker logs academic-saas-frontend --tail 20
   exit 1
 fi
-EOF
+PROD_SCRIPT_EOF
         
         # Deploy to each instance
         for INSTANCE_ID in $INSTANCE_IDS; do
