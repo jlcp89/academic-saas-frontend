@@ -215,7 +215,7 @@ export class ReportsApi {
     filters: ReportFilters = {},
     options: ExportOptions
   ): Promise<Blob> {
-    const query = this.buildFilterQuery({ ...filters, type: reportType });
+    const query = this.buildFilterQuery(filters);
     const response = await fetch(`${this.baseURL}/export_csv/${query}`, {
       headers: {
         Authorization: `Bearer ${this.getToken()}`,

@@ -291,10 +291,16 @@ export default function SchoolsPage() {
 
   const customActions = [
     {
-      label: (school: School) => school.is_active ? 'Deactivate' : 'Activate',
-      icon: (school: School) => school.is_active ? ShieldX : ShieldCheck,
+      label: 'Deactivate',
+      icon: ShieldX,
       onClick: handleToggleSchoolStatus,
-      show: () => true,
+      show: (school: School) => school.is_active,
+    },
+    {
+      label: 'Activate',
+      icon: ShieldCheck,
+      onClick: handleToggleSchoolStatus,
+      show: (school: School) => !school.is_active,
     },
   ];
 

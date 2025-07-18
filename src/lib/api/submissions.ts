@@ -22,7 +22,7 @@ export interface GradeSubmissionForm {
   status: 'GRADED' | 'RETURNED';
 }
 
-export interface SubmissionWithDetails extends Submission {
+export interface SubmissionWithDetails extends Omit<Submission, 'assignment_info'> {
   assignment_info: {
     id: number;
     title: string;

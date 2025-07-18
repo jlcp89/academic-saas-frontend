@@ -37,7 +37,7 @@ export function SearchBar({
 }: SearchBarProps) {
   const [query, setQuery] = useState(initialValue);
   const [isFocused, setIsFocused] = useState(false);
-  const debounceRef = useRef<NodeJS.Timeout>();
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (debounceRef.current) {
@@ -125,7 +125,7 @@ export function AdvancedSearch({
   const [query, setQuery] = useState(initialQuery);
   const [activeFilters, setActiveFilters] = useState<Record<string, string>>(initialFilters);
   const [showFilters, setShowFilters] = useState(false);
-  const debounceRef = useRef<NodeJS.Timeout>();
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (debounceRef.current) {
@@ -279,7 +279,7 @@ export function GlobalSearch({
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const debounceRef = useRef<NodeJS.Timeout>();
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (debounceRef.current) {

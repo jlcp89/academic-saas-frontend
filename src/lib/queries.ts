@@ -24,7 +24,7 @@ export function useCurrentUser() {
   return useQuery({
     queryKey: queryKeys.currentUser,
     queryFn: async () => {
-      const response = await apiClient.get('/api/users/me/');
+      const response = await apiClient.request<{ data: User }>('/api/users/me/');
       const userData = response.data;
       
       // Update the session with fresh data
@@ -49,8 +49,8 @@ export function useUsers() {
   return useQuery({
     queryKey: queryKeys.users,
     queryFn: async () => {
-      const response = await apiClient.get<User[]>(API_ENDPOINTS.USERS);
-      return response.data;
+      const response = await apiClient.request<User[]>(API_ENDPOINTS.USERS);
+      return response;
     },
   });
 }
@@ -62,8 +62,8 @@ export function useSchools() {
   return useQuery({
     queryKey: queryKeys.schools,
     queryFn: async () => {
-      const response = await apiClient.get<School[]>(API_ENDPOINTS.SCHOOLS);
-      return response.data;
+      const response = await apiClient.request<School[]>(API_ENDPOINTS.SCHOOLS);
+      return response;
     },
   });
 }
@@ -75,8 +75,8 @@ export function useSubjects() {
   return useQuery({
     queryKey: queryKeys.subjects,
     queryFn: async () => {
-      const response = await apiClient.get<Subject[]>(API_ENDPOINTS.SUBJECTS);
-      return response.data;
+      const response = await apiClient.request<Subject[]>(API_ENDPOINTS.SUBJECTS);
+      return response;
     },
   });
 }
@@ -88,8 +88,8 @@ export function useSections() {
   return useQuery({
     queryKey: queryKeys.sections,
     queryFn: async () => {
-      const response = await apiClient.get<Section[]>(API_ENDPOINTS.SECTIONS);
-      return response.data;
+      const response = await apiClient.request<Section[]>(API_ENDPOINTS.SECTIONS);
+      return response;
     },
   });
 }
@@ -101,8 +101,8 @@ export function useEnrollments() {
   return useQuery({
     queryKey: queryKeys.enrollments,
     queryFn: async () => {
-      const response = await apiClient.get<Enrollment[]>(API_ENDPOINTS.ENROLLMENTS);
-      return response.data;
+      const response = await apiClient.request<Enrollment[]>(API_ENDPOINTS.ENROLLMENTS);
+      return response;
     },
   });
 }
@@ -114,8 +114,8 @@ export function useAssignments() {
   return useQuery({
     queryKey: queryKeys.assignments,
     queryFn: async () => {
-      const response = await apiClient.get<Assignment[]>(API_ENDPOINTS.ASSIGNMENTS);
-      return response.data;
+      const response = await apiClient.request<Assignment[]>(API_ENDPOINTS.ASSIGNMENTS);
+      return response;
     },
   });
 }
@@ -127,8 +127,8 @@ export function useSubmissions() {
   return useQuery({
     queryKey: queryKeys.submissions,
     queryFn: async () => {
-      const response = await apiClient.get<Submission[]>(API_ENDPOINTS.SUBMISSIONS);
-      return response.data;
+      const response = await apiClient.request<Submission[]>(API_ENDPOINTS.SUBMISSIONS);
+      return response;
     },
   });
 }

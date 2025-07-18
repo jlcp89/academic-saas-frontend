@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // Define route permissions
-const ROUTE_PERMISSIONS = {
+const ROUTE_PERMISSIONS: Record<string, string[]> = {
   '/dashboard': [], // All authenticated users
   '/users': ['ADMIN', 'SUPERADMIN'],
   '/schools': ['SUPERADMIN'],
@@ -14,11 +14,11 @@ const ROUTE_PERMISSIONS = {
   '/submissions': ['ADMIN', 'PROFESSOR', 'STUDENT', 'SUPERADMIN'],
   '/grades': ['ADMIN', 'PROFESSOR', 'SUPERADMIN'],
   '/reports': ['ADMIN', 'PROFESSOR', 'SUPERADMIN'],
-} as const;
+};
 
 export default withAuth(
-  function middleware(req: NextRequest) {
-    const token = req.nextauth.token;
+  function middleware(req: any) {
+    const token = req.nextauth?.token;
     const pathname = req.nextUrl.pathname;
 
     // Allow access to auth pages for unauthenticated users
@@ -37,10 +37,10 @@ export default withAuth(
     );
 
     if (matchedRoute) {
-      const requiredRoles = ROUTE_PERMISSIONS[matchedRoute as keyof typeof ROUTE_PERMISSIONS];
+      const requiredRoles = ROUTE_PERMISSIONS[matchedRoute];
       const userRole = token.userData?.role;
 
-      if (requiredRoles.length > 0 && !requiredRoles.includes(userRole as any)) {
+      if (requiredRoles.length > 0 && userRole && !requiredRoles.includes(userRole)) {
         // Redirect to access denied page or dashboard
         return NextResponse.redirect(new URL('/dashboard?error=access_denied', req.url));
       }

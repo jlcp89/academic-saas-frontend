@@ -45,6 +45,10 @@ interface RichTextEditorProps {
   error?: string;
 }
 
+type ToolbarButton = 
+  | { icon: React.ComponentType<{ className?: string }>; command: string; title: string; value?: string; action?: never }
+  | { icon: React.ComponentType<{ className?: string }>; command: string; title: string; action: () => void; value?: never };
+
 export function RichTextEditor({
   value,
   onChange,
@@ -147,7 +151,7 @@ export function RichTextEditor({
     execCommand('formatBlock', tag);
   };
 
-  const toolbarButtons = [
+  const toolbarButtons: { group: string; buttons: ToolbarButton[] }[] = [
     {
       group: 'text',
       buttons: [
