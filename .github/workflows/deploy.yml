@@ -152,12 +152,23 @@ jobs:
             ls -la .next/ || echo "No .next directory found"
             ls -la .next/standalone/ || echo "No standalone directory found"
             
-            # Verificar ubicación de Node.js y npm
+            # Verificar e instalar Node.js si no existe
             echo "🔍 Verificando Node.js y npm..."
-            which node || echo "node not found"
-            which npm || echo "npm not found"
-            node --version || echo "node version check failed"
-            npm --version || echo "npm version check failed"
+            if ! command -v node &> /dev/null; then
+              echo "📦 Node.js no encontrado, instalando..."
+              
+              # Instalar Node.js 18 usando NodeSource repository
+              curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
+              sudo yum install -y nodejs
+              
+              echo "✅ Node.js instalado:"
+              node --version
+              npm --version
+            else
+              echo "✅ Node.js ya está instalado:"
+              node --version
+              npm --version
+            fi
             
             # Crear o actualizar el servicio systemd
             echo "🔧 Configurando servicio systemd con npm start..."
@@ -291,12 +302,23 @@ jobs:
             ls -la .next/ || echo "No .next directory found"
             ls -la .next/standalone/ || echo "No standalone directory found"
             
-            # Verificar ubicación de Node.js y npm
+            # Verificar e instalar Node.js si no existe
             echo "🔍 Verificando Node.js y npm..."
-            which node || echo "node not found"
-            which npm || echo "npm not found"
-            node --version || echo "node version check failed"
-            npm --version || echo "npm version check failed"
+            if ! command -v node &> /dev/null; then
+              echo "📦 Node.js no encontrado, instalando..."
+              
+              # Instalar Node.js 18 usando NodeSource repository
+              curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
+              sudo yum install -y nodejs
+              
+              echo "✅ Node.js instalado:"
+              node --version
+              npm --version
+            else
+              echo "✅ Node.js ya está instalado:"
+              node --version
+              npm --version
+            fi
             
             # Crear o actualizar el servicio systemd
             echo "🔧 Configurando servicio systemd con npm start..."
