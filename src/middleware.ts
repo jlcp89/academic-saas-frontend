@@ -49,7 +49,14 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: ({ token }) => !!token,
+      authorized: ({ token, req }) => {
+        // Allow auth pages without authentication
+        if (req.nextUrl.pathname.startsWith('/auth/')) {
+          return true;
+        }
+        // Require authentication for all other pages
+        return !!token;
+      },
     },
   }
 );
