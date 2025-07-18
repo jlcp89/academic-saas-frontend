@@ -424,7 +424,7 @@ export default function SubmissionsPage() {
             size="xl"
           >
             <CreateSubmissionForm
-              assignment={selectedSubmission?.assignment_info!}
+              assignment={selectedSubmission?.assignment_info || {} as Assignment}
               onSuccess={() => {
                 setShowCreateForm(false);
                 refetch();

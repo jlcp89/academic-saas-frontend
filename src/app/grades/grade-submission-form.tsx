@@ -433,7 +433,7 @@ export function GradeSubmissionForm({ submissionId, onSuccess, onCancel }: Grade
           <li>• Provide specific, constructive feedback</li>
           <li>• Consider partial credit for incomplete but demonstrative work</li>
           <li>• Be consistent with grading criteria across all students</li>
-          <li>• Use "Returned" status if the student needs to revise and resubmit</li>
+          <li>• Use &quot;Returned&quot; status if the student needs to revise and resubmit</li>
         </ul>
       </div>
     </form>

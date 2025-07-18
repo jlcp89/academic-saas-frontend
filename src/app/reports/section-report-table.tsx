@@ -54,8 +54,8 @@ export function SectionReportTable({ filters }: SectionReportTableProps) {
     }
     
     return sortDirection === 'asc' 
-      ? (aValue as any) - (bValue as any)
-      : (bValue as any) - (aValue as any);
+      ? Number(aValue) - Number(bValue)
+      : Number(bValue) - Number(aValue);
   }) : [];
 
   const getGradeColor = (grade: number) => {

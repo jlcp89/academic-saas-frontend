@@ -402,7 +402,7 @@ export function createTableColumn<TData>(
     sortable?: boolean;
     filterable?: boolean;
     width?: number;
-    cell?: (value: any) => React.ReactNode;
+    cell?: (value: unknown) => React.ReactNode;
   }
 ): ColumnDef<TData> {
   return {

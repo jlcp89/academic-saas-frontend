@@ -26,7 +26,7 @@ export function MainLayout({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
 
-  // Don't show layout on auth pages
+  // Don&apos;t show layout on auth pages
   if (pathname.startsWith('/auth/')) {
     return <>{children}</>;
   }

@@ -17,7 +17,7 @@ const ROUTE_PERMISSIONS: Record<string, string[]> = {
 };
 
 export default withAuth(
-  function middleware(req: any) {
+  function middleware(req: NextRequest & { nextauth?: { token?: { userData?: { role?: string } } } }) {
     const token = req.nextauth?.token;
     const pathname = req.nextUrl.pathname;
 

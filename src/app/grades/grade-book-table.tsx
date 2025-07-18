@@ -70,9 +70,9 @@ export function GradeBookTable({ gradeBook, onGradeSubmission, onRefresh }: Grad
     
     return acc;
   }, {} as Record<number, {
-    student: any;
-    enrollment: any;
-    assignments: Record<number, any>;
+    student: { id: number; first_name: string; last_name: string; email: string };
+    enrollment: { id: number; status: string };
+    assignments: Record<number, { points_earned?: number; status: string; submitted_at?: string }>;
     average: number;
     totalPoints: number;
     maxPoints: number;
@@ -111,7 +111,7 @@ export function GradeBookTable({ gradeBook, onGradeSubmission, onRefresh }: Grad
     return 'text-red-600';
   };
 
-  const renderAssignmentCell = (studentEntry: any, assignment: Assignment) => {
+  const renderAssignmentCell = (studentEntry: { assignments: Record<number, { points_earned?: number; status: string; submitted_at?: string }> }, assignment: Assignment) => {
     const entry = studentEntry.assignments[assignment.id];
     
     if (!entry || !entry.submission) {

@@ -28,7 +28,7 @@ const changePasswordSchema = z.object({
   new_password: z.string().min(8, 'Password must be at least 8 characters').max(100, 'Password must be less than 100 characters'),
   confirm_password: z.string(),
 }).refine((data) => data.new_password === data.confirm_password, {
-  message: "Passwords don't match",
+  message: "Passwords don&apos;t match",
   path: ["confirm_password"],
 });
 
@@ -256,7 +256,7 @@ export function EditUserForm({ user, onSuccess, onCancel }: EditUserFormProps) {
                   />
                   {!canChangeRole && (
                     <p className="text-xs text-gray-500">
-                      You don't have permission to change this user's role
+                      You don&apos;t have permission to change this user&apos;s role
                     </p>
                   )}
                 </div>
@@ -274,7 +274,7 @@ export function EditUserForm({ user, onSuccess, onCancel }: EditUserFormProps) {
                   />
                   {!canChangeStatus && (
                     <p className="text-xs text-gray-500">
-                      You don't have permission to change this user's status
+                      You don&apos;t have permission to change this user&apos;s status
                     </p>
                   )}
                 </div>

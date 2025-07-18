@@ -218,7 +218,7 @@ export function CreateAssignmentForm({ onSuccess, onCancel }: CreateAssignmentFo
               <EnhancedSelect
                 options={ASSIGNMENT_TYPES.map(type => ({ value: type.value, label: type.label }))}
                 value={selectedType}
-                onValueChange={(value) => setValue('assignment_type', value as any)}
+                onValueChange={(value) => setValue('assignment_type', value as 'HOMEWORK' | 'QUIZ' | 'EXAM' | 'PROJECT' | 'DISCUSSION')}
                 placeholder="Select assignment type"
                 error={errors.assignment_type?.message}
               />

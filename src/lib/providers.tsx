@@ -14,7 +14,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           queries: {
             staleTime: 5 * 60 * 1000, // 5 minutes
             retry: (failureCount, error: Error & { status?: number }) => {
-              // Don't retry on 401/403 errors
+              // Don&apos;t retry on 401/403 errors
               if (error?.status === 401 || error?.status === 403) {
                 return false;
               }

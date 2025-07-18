@@ -396,7 +396,7 @@ export function BulkGradeForm({ gradeBook, onSuccess, onCancel }: BulkGradeFormP
           <li>• Use bulk actions to apply the same grade or feedback to all students</li>
           <li>• Customize individual grades and feedback as needed</li>
           <li>• Only submissions with valid points will be graded</li>
-          <li>• All grades will be marked as "GRADED" status</li>
+          <li>• All grades will be marked as &quot;GRADED&quot; status</li>
         </ul>
       </div>
     </div>

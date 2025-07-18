@@ -130,7 +130,7 @@ export function CreateSchoolForm({ onSuccess, onCancel }: CreateSchoolFormProps)
                 </span>
               </div>
               <p className="text-xs text-gray-500">
-                This will be used for the school's unique URL
+                This will be used for the school&apos;s unique URL
               </p>
             </div>
 

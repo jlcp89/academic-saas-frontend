@@ -66,7 +66,7 @@ export function ProtectedRoute({
             <Shield className="h-12 w-12 mx-auto mb-4 text-red-600" />
             <CardTitle>Access Denied</CardTitle>
             <CardDescription>
-              You don't have permission to access this page.
+              You don&apos;t have permission to access this page.
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center space-y-4">
@@ -92,7 +92,7 @@ export function ProtectedRoute({
             <AlertCircle className="h-12 w-12 mx-auto mb-4 text-orange-600" />
             <CardTitle>Insufficient Permissions</CardTitle>
             <CardDescription>
-              You don't have the required permissions to {action} {resource}.
+              You don&apos;t have the required permissions to {action} {resource}.
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center space-y-4">

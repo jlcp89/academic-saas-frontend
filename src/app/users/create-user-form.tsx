@@ -23,7 +23,7 @@ const createUserSchema = z.object({
   confirmPassword: z.string(),
   role: z.nativeEnum(UserRole),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
+  message: "Passwords don&apos;t match",
   path: ["confirmPassword"],
 });
 
