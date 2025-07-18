@@ -146,6 +146,10 @@ jobs:
             echo "📁 Verificando contenido desplegado..."
             ls -la
             
+            # Verificar que el archivo server.js existe
+            echo "🔍 Verificando archivos de Next.js standalone..."
+            ls -la .next/standalone/
+            
             # Crear o actualizar el servicio systemd
             echo "🔧 Configurando servicio systemd..."
             sudo tee /etc/systemd/system/academic-saas-frontend.service > /dev/null << EOF
@@ -156,12 +160,13 @@ jobs:
             [Service]
             Type=simple
             User=ec2-user
-            WorkingDirectory=/home/ec2-user/academic-saas-frontend
+            WorkingDirectory=/home/ec2-user/academic-saas-frontend/.next/standalone
             ExecStart=/usr/bin/node server.js
             Restart=always
             RestartSec=10
             Environment=NODE_ENV=production
             Environment=PORT=3000
+            Environment=HOSTNAME=0.0.0.0
             EnvironmentFile=/home/ec2-user/academic-saas-frontend/.env.local
             
             [Install]
@@ -271,6 +276,10 @@ jobs:
             echo "📁 Verificando contenido desplegado..."
             ls -la
             
+            # Verificar que el archivo server.js existe
+            echo "🔍 Verificando archivos de Next.js standalone..."
+            ls -la .next/standalone/
+            
             # Crear o actualizar el servicio systemd
             echo "🔧 Configurando servicio systemd..."
             sudo tee /etc/systemd/system/academic-saas-frontend.service > /dev/null << EOF
@@ -281,12 +290,13 @@ jobs:
             [Service]
             Type=simple
             User=ec2-user
-            WorkingDirectory=/home/ec2-user/academic-saas-frontend
+            WorkingDirectory=/home/ec2-user/academic-saas-frontend/.next/standalone
             ExecStart=/usr/bin/node server.js
             Restart=always
             RestartSec=10
             Environment=NODE_ENV=production
             Environment=PORT=3000
+            Environment=HOSTNAME=0.0.0.0
             EnvironmentFile=/home/ec2-user/academic-saas-frontend/.env.local
             
             [Install]
