@@ -114,3 +114,8 @@
  ✓ Compiled in 0ms
  GET /dashboard 200 in 338ms
  GET /schools 200 in 344ms
+ GET /api/auth/session 200 in 282ms
+ GET /api/auth/session 200 in 94ms
+ GET /api/auth/session 200 in 290ms
+ GET /api/auth/session 200 in 95ms
+ GET /api/auth/session 200 in 321ms
