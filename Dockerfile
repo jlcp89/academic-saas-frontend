@@ -8,7 +8,7 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -21,6 +21,13 @@ ENV NEXT_TELEMETRY_DISABLED 1
 
 # Build application
 RUN npm run build
+
+# Production dependencies
+FROM base AS prod-deps
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev && npm cache clean --force
 
 # Production image, copy all the files and run next
 FROM base AS runner
@@ -35,6 +42,9 @@ RUN apk add --no-cache curl
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
+
+# Copy production dependencies
+COPY --from=prod-deps /app/node_modules ./node_modules
 
 # Copy built application
 COPY --from=builder /app/public ./public
