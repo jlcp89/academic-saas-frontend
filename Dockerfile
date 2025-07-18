@@ -1,5 +1,9 @@
 # Multi-stage build for optimized production image
 FROM node:20-alpine AS base
+# Set npm registry and increase timeout
+RUN npm config set registry https://registry.npmjs.org/
+RUN npm config set fetch-retry-mintimeout 20000
+RUN npm config set fetch-retry-maxtimeout 120000
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -8,13 +12,15 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-RUN npm ci --only=production
+# Use npm install instead of npm ci for better compatibility
+RUN npm install --production --legacy-peer-deps
 
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+# Use npm install instead of npm ci for better compatibility
+RUN npm install --legacy-peer-deps
 COPY . .
 
 # Build arguments for environment variables
