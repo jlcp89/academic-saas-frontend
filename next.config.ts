@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
   
   // Optimize for production
   experimental: {
-    optimizeCss: true,
+    // optimizeCss: true, // Disabled due to critters module issue
   },
   
   // Security headers

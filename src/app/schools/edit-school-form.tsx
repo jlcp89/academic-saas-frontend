@@ -204,7 +204,7 @@ export function EditSchoolForm({ school, onSuccess, onCancel }: EditSchoolFormPr
                     </span>
                   </div>
                   <p className="text-xs text-gray-500">
-                    Changing this will affect the school's URL
+                    Changing this will affect the school&apos;s URL
                   </p>
                 </div>
 
@@ -332,7 +332,7 @@ export function EditSchoolForm({ school, onSuccess, onCancel }: EditSchoolFormPr
                         </p>
                       </div>
                       <p className="text-sm text-red-700 mt-1">
-                        This school's subscription expired on {format(new Date(school.subscription.end_date), 'PPP')}. 
+                        This school&apos;s subscription expired on {format(new Date(school.subscription.end_date), 'PPP')}. 
                         Please renew to continue service.
                       </p>
                     </div>
