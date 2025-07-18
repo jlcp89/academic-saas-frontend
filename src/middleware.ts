@@ -1,6 +1,5 @@
 import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
 
 // Define route permissions
 const ROUTE_PERMISSIONS: Record<string, string[]> = {
@@ -17,7 +16,7 @@ const ROUTE_PERMISSIONS: Record<string, string[]> = {
 };
 
 export default withAuth(
-  function middleware(req: NextRequest & { nextauth?: { token?: { userData?: { role?: string } } } }) {
+  function middleware(req) {
     const token = req.nextauth?.token;
     const pathname = req.nextUrl.pathname;
 

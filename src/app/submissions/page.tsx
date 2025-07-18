@@ -15,7 +15,7 @@ import { useSubmissions, useDeleteSubmission } from '@/lib/api/submissions';
 import { useAssignments } from '@/lib/api/assignments';
 import { useStudents } from '@/lib/api/users';
 import { useAuth } from '@/contexts/auth-context';
-import { Submission, UserRole } from '@/types';
+import { Submission, Assignment, UserRole } from '@/types';
 import { format, differenceInHours, isAfter } from 'date-fns';
 import { 
   Plus, 

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { SectionGradeBook } from '@/lib/api/grading';
+import { SectionGradeBook, GradeBookEntry } from '@/lib/api/grading';
 import { Assignment } from '@/types';
 import { format } from 'date-fns';
 import { 
@@ -72,7 +72,7 @@ export function GradeBookTable({ gradeBook, onGradeSubmission, onRefresh }: Grad
   }, {} as Record<number, {
     student: { id: number; first_name: string; last_name: string; email: string };
     enrollment: { id: number; status: string };
-    assignments: Record<number, { points_earned?: number; status: string; submitted_at?: string }>;
+    assignments: Record<number, GradeBookEntry>;
     average: number;
     totalPoints: number;
     maxPoints: number;
@@ -111,7 +111,7 @@ export function GradeBookTable({ gradeBook, onGradeSubmission, onRefresh }: Grad
     return 'text-red-600';
   };
 
-  const renderAssignmentCell = (studentEntry: { assignments: Record<number, { points_earned?: number; status: string; submitted_at?: string }> }, assignment: Assignment) => {
+  const renderAssignmentCell = (studentEntry: { assignments: Record<number, GradeBookEntry> }, assignment: Assignment) => {
     const entry = studentEntry.assignments[assignment.id];
     
     if (!entry || !entry.submission) {
