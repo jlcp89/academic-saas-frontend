@@ -1,252 +1,146 @@
-name: Deploy Frontend to AWS
+name: Deploy Frontend to AWS EC2
+
+permissions:
+  id-token: write
+  contents: read
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+      - feature/good-cicd
   pull_request:
-    branches: [ main ]
+    types: [opened, reopened, synchronize]
+    branches:
+      - main
 
 env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY: academic-saas-frontend
-  NODE_VERSION: '18'
 
 jobs:
-  test:
-    name: Run Tests
+  # Build and push Docker image to ECR
+  build:
+    name: Build and Push Docker Image
     runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Run type checking
-      run: npx tsc --noEmit
-
-    - name: Run ESLint
-      run: npm run lint
-
-    - name: Test build
-      env:
-        NEXT_PUBLIC_API_URL: http://localhost:8000
-        NEXTAUTH_URL: http://localhost:3000
-        NEXTAUTH_SECRET: test-secret-key-for-ci
-      run: |
-        npm run build
-
-  deploy:
-    name: Deploy Frontend
-    runs-on: ubuntu-latest
-    needs: test
-    if: github.ref == 'refs/heads/main'
-    environment: development
+    outputs:
+      image-tag: ${{ steps.image.outputs.tag }}
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-    - name: Build application
-      env:
-        NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
-        NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
-        NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-      run: |
-        npm run build
+      - name: Build Docker image
+        id: image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Build the Docker image
+          docker build \
+            --build-arg NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
+            --build-arg NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }} \
+            --build-arg NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }} \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
+            .
+          
+          # Push to ECR
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          
+          echo "tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
+  # Deploy to DEV environment
+  deploy-dev:
+    name: Deploy to DEV Environment
+    needs: build
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    environment: dev
 
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
-
-    - name: Build, tag, and push image to Amazon ECR
-      id: build-image
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        IMAGE_TAG: ${{ github.sha }}
-      run: |
-        # Build a docker container and push it to ECR
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
-
-    - name: Deploy to Development Environment
-      env:
-        IMAGE_URI: ${{ steps.build-image.outputs.image }}
-      run: |
-        # Check if we're in minimal dev mode (single instance)
-        DEV_INSTANCE_IP="${{ secrets.DEV_INSTANCE_IP }}"
-        
-        if [ -n "$DEV_INSTANCE_IP" ]; then
-          echo "Deploying to single development instance: $DEV_INSTANCE_IP"
-          
-          # Setup SSH key
-          echo "${{ secrets.EC2_SSH_KEY }}" > /tmp/ec2-key.pem
-          chmod 600 /tmp/ec2-key.pem
-          
-          # Create environment file
-          {
-            echo "NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}"
-            echo "NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}"
-            echo "NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}"
-            echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}"
-            echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-          } > /tmp/frontend.env
-          
-          # Deploy via SSH
-          ECR_REGISTRY="${{ steps.login-ecr.outputs.registry }}"
-          scp -i /tmp/ec2-key.pem -o StrictHostKeyChecking=no /tmp/frontend.env ec2-user@$DEV_INSTANCE_IP:/tmp/frontend.env
-          
-          # Create deployment script
-          {
-            echo "#!/bin/bash"
-            echo "set -e"
-            echo "echo 'Starting frontend deployment...'"
-            echo "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin \$1"
-            echo "docker pull \$2"
-            echo "sudo mkdir -p /opt/academic-saas"
-            echo "sudo cp /tmp/frontend.env /opt/academic-saas/.env.frontend"
-            echo "sudo chown root:root /opt/academic-saas/.env.frontend"
-            echo "sudo chmod 600 /opt/academic-saas/.env.frontend"
-            echo "docker stop academic-saas-frontend || true"
-            echo "docker rm academic-saas-frontend || true"
-            echo "docker run -d --name academic-saas-frontend --restart unless-stopped -p 3000:3000 --env-file /opt/academic-saas/.env.frontend \$2"
-            echo "sleep 30"
-            echo "curl -f http://localhost:3000/ || exit 1"
-            echo "echo 'Frontend deployment completed successfully'"
-            echo "rm -f /tmp/frontend.env"
-          } > /tmp/deploy-frontend.sh
-          
-          # Execute deployment
-          scp -i /tmp/ec2-key.pem -o StrictHostKeyChecking=no /tmp/deploy-frontend.sh ec2-user@$DEV_INSTANCE_IP:/tmp/deploy-frontend.sh
-          ssh -i /tmp/ec2-key.pem -o StrictHostKeyChecking=no ec2-user@$DEV_INSTANCE_IP "chmod +x /tmp/deploy-frontend.sh && /tmp/deploy-frontend.sh $ECR_REGISTRY $IMAGE_URI"
-          
-          # Clean up
-          rm -f /tmp/ec2-key.pem /tmp/frontend.env
-        else
-          echo "Deploying to Auto Scaling Group"
-          ASG_NAME="academic-saas-dev-frontend-asg"
-          
-          # Get instance IPs from ASG
-          INSTANCE_IDS=$(aws autoscaling describe-auto-scaling-groups \
-            --auto-scaling-group-names $ASG_NAME \
-            --query 'AutoScalingGroups[0].Instances[?LifecycleState==`InService`].InstanceId' \
-            --output text)
-          
-          if [ -z "$INSTANCE_IDS" ]; then
-            echo "No running instances found in ASG"
-            exit 1
-          fi
-          
-          # Deploy to each instance
-          for INSTANCE_ID in $INSTANCE_IDS; do
-            INSTANCE_IP=$(aws ec2 describe-instances \
-              --instance-ids $INSTANCE_ID \
-              --query 'Reservations[0].Instances[0].PublicIpAddress' \
-              --output text)
+    steps:
+      - name: Deploy to EC2 (dev)
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST_DEV }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # Login to ECR
+            aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
             
-            if [ "$INSTANCE_IP" != "null" ] && [ "$INSTANCE_IP" != "" ]; then
-              echo "Deploying to instance $INSTANCE_ID ($INSTANCE_IP)"
-              
-              # Setup SSH key
-              echo "${{ secrets.EC2_SSH_KEY }}" > /tmp/ec2-key.pem
-              chmod 600 /tmp/ec2-key.pem
-              
-              # Create environment file
-              {
-                echo "NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}"
-                echo "NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}"
-                echo "NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}"
-                echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}"
-                echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-              } > /tmp/frontend.env
-              
-              # Deploy via SSH
-              ECR_REGISTRY="${{ steps.login-ecr.outputs.registry }}"
-              scp -i /tmp/ec2-key.pem -o StrictHostKeyChecking=no /tmp/frontend.env ubuntu@$INSTANCE_IP:/tmp/frontend.env
-              
-              # Create deployment script
-              {
-                echo "#!/bin/bash"
-                echo "set -e"
-                echo "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin \$1"
-                echo "docker pull \$2"
-                echo "sudo mkdir -p /opt/academic-saas"
-                echo "sudo cp /tmp/frontend.env /opt/academic-saas/.env.frontend"
-                echo "sudo chown root:root /opt/academic-saas/.env.frontend"
-                echo "sudo chmod 600 /opt/academic-saas/.env.frontend"
-                echo "docker stop academic-saas-frontend || true"
-                echo "docker rm academic-saas-frontend || true"
-                echo "docker run -d --name academic-saas-frontend --restart unless-stopped -p 3000:3000 --env-file /opt/academic-saas/.env.frontend \$2"
-                echo "sleep 30"
-                echo "curl -f http://localhost:3000/ || exit 1"
-                echo "echo 'Frontend deployment completed successfully'"
-                echo "rm -f /tmp/frontend.env"
-              } > /tmp/deploy-frontend.sh
-              
-              # Execute deployment
-              scp -i /tmp/ec2-key.pem -o StrictHostKeyChecking=no /tmp/deploy-frontend.sh ubuntu@$INSTANCE_IP:/tmp/deploy-frontend.sh
-              ssh -i /tmp/ec2-key.pem -o StrictHostKeyChecking=no ubuntu@$INSTANCE_IP "chmod +x /tmp/deploy-frontend.sh && /tmp/deploy-frontend.sh $ECR_REGISTRY $IMAGE_URI"
-              
-              # Clean up
-              rm -f /tmp/ec2-key.pem
-            else
-              echo "Instance $INSTANCE_ID has no public IP, skipping"
-            fi
-          done
-        fi
+            # Stop existing container
+            docker stop academic-saas-frontend || true
+            docker rm academic-saas-frontend || true
+            
+            # Pull new image
+            docker pull ${{ secrets.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ needs.build.outputs.image-tag }}
+            
+            # Run new container
+            docker run -d \
+              --name academic-saas-frontend \
+              --restart unless-stopped \
+              -p 3000:3000 \
+              -e NODE_ENV=development \
+              -e NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_DEV }} \
+              -e NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_DEV }} \
+              -e NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }} \
+              ${{ secrets.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ needs.build.outputs.image-tag }}
+            
+            # Clean up old images
+            docker image prune -f
+            
+            echo "DEV deployment completed"
 
-    - name: Verify deployment
-      run: |
-        # Wait for deployment to complete
-        sleep 120
-        
-        DEV_INSTANCE_IP="${{ secrets.DEV_INSTANCE_IP }}"
-        
-        if [ -n "$DEV_INSTANCE_IP" ]; then
-          # Test single development instance
-          FRONTEND_URL="http://$DEV_INSTANCE_IP:3000"
-          echo "Testing frontend at $FRONTEND_URL"
-          curl -f $FRONTEND_URL/ || exit 1
-          echo "✅ Frontend deployment verification completed"
-        else
-          # Test via load balancer
-          FRONTEND_URL="http://academic-saas-dev-frontend-alb-*.us-east-1.elb.amazonaws.com"
-          curl -f $FRONTEND_URL/ || exit 1
-          echo "✅ Frontend deployment verification completed"
-        fi
+  # Deploy to PROD environment
+  deploy-prod:
+    name: Deploy to PROD Environment
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: prod
 
-    - name: Notify deployment status
-      if: always()
-      run: |
-        if [ "${{ job.status }}" == "success" ]; then
-          echo "🎉 Frontend deployment successful!"
-          echo "✅ Application is live and healthy"
-          echo "🌐 Access at: http://${{ secrets.DEV_INSTANCE_IP }}:3000"
-        else
-          echo "❌ Frontend deployment failed!"
-          echo "💥 Please check the logs for more details"
-        fi
+    steps:
+      - name: Deploy to EC2 (prod)
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST_PROD }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # Login to ECR
+            aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
+            
+            # Stop existing container
+            docker stop academic-saas-frontend || true
+            docker rm academic-saas-frontend || true
+            
+            # Pull new image
+            docker pull ${{ secrets.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
+            
+            # Run new container
+            docker run -d \
+              --name academic-saas-frontend \
+              --restart unless-stopped \
+              -p 3000:3000 \
+              -e NODE_ENV=production \
+              -e NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_PROD }} \
+              -e NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_PROD }} \
+              -e NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }} \
+              ${{ secrets.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
+            
+            # Clean up old images
+            docker image prune -f
+            
+            echo "PROD deployment completed"
