@@ -113,8 +113,8 @@ jobs:
           --name academic-saas-frontend \
           --restart unless-stopped \
           --network host \
-          -e NEXT_PUBLIC_API_URL="http://107.21.145.151:8000" \
-          -e NEXTAUTH_URL="http://107.21.145.151:3000" \
+          -e NEXT_PUBLIC_API_URL="${{ secrets.NEXT_PUBLIC_API_URL }}" \
+          -e NEXTAUTH_URL="${{ secrets.NEXTAUTH_URL }}" \
           -e NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}" \
           ${{ needs.test-and-build.outputs.image-uri }}
         
