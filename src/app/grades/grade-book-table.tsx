@@ -110,7 +110,7 @@ export function GradeBookTable({ gradeBook, onGradeSubmission, onRefresh }: Grad
     return 'text-red-600';
   };
 
-  const renderAssignmentCell = (studentEntry: any, assignment: any) => {
+  const renderAssignmentCell = (studentEntry: any, assignment: Assignment) => {
     const entry = studentEntry.assignments[assignment.id];
     
     if (!entry || !entry.submission) {

@@ -15,7 +15,7 @@ import { useEnrollments, useDeleteEnrollment } from '@/lib/api/enrollments';
 import { useSections } from '@/lib/api/sections';
 import { useStudents } from '@/lib/api/users';
 import { useAuth } from '@/contexts/auth-context';
-import { Enrollment } from '@/types';
+import { Enrollment, UserRole } from '@/types';
 import { format } from 'date-fns';
 import { 
   Plus, 
@@ -265,7 +265,7 @@ export default function EnrollmentsPage() {
 
   if (error) {
     return (
-      <ProtectedRoute requiredRoles={['SUPERADMIN', 'ADMIN', 'PROFESSOR', 'STUDENT']}>
+      <ProtectedRoute requiredRoles={[UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.PROFESSOR, UserRole.STUDENT]}>
         <EnrollmentsLayout>
           <div className="text-center py-8">
             <p className="text-red-600">Error loading enrollments: {error.message}</p>
@@ -279,7 +279,7 @@ export default function EnrollmentsPage() {
   }
 
   return (
-    <ProtectedRoute requiredRoles={['SUPERADMIN', 'ADMIN', 'PROFESSOR', 'STUDENT']}>
+    <ProtectedRoute requiredRoles={[UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.PROFESSOR, UserRole.STUDENT]}>
       <EnrollmentsLayout>
         <div className="space-y-6">
           {/* Statistics Cards */}
