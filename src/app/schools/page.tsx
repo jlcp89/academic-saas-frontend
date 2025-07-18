@@ -18,7 +18,7 @@ import {
   useDeactivateSchool 
 } from '@/lib/api/schools';
 import { useAuth } from '@/contexts/auth-context';
-import { School } from '@/types';
+import { School, UserRole } from '@/types';
 import { format } from 'date-fns';
 import { 
   Plus, 
@@ -300,7 +300,7 @@ export default function SchoolsPage() {
 
   if (error) {
     return (
-      <ProtectedRoute requiredRoles={['SUPERADMIN']}>
+      <ProtectedRoute requiredRoles={[UserRole.SUPERADMIN]}>
         <SchoolsLayout>
           <div className="text-center py-8">
             <p className="text-red-600">Error loading schools: {error.message}</p>
@@ -314,7 +314,7 @@ export default function SchoolsPage() {
   }
 
   return (
-    <ProtectedRoute requiredRoles={['SUPERADMIN']}>
+    <ProtectedRoute requiredRoles={[UserRole.SUPERADMIN]}>
       <SchoolsLayout>
         <div className="space-y-6">
           {/* Statistics Cards */}
