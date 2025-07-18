@@ -15,7 +15,7 @@ import { useSections, useDeleteSection } from '@/lib/api/sections';
 import { useSubjects } from '@/lib/api/subjects';
 import { useProfessors } from '@/lib/api/users';
 import { useAuth } from '@/contexts/auth-context';
-import { Section } from '@/types';
+import { Section, UserRole } from '@/types';
 import { format, isAfter, isBefore } from 'date-fns';
 import { 
   Plus, 
@@ -275,7 +275,7 @@ export default function SectionsPage() {
 
   if (error) {
     return (
-      <ProtectedRoute requiredRoles={['SUPERADMIN', 'ADMIN', 'PROFESSOR']}>
+      <ProtectedRoute requiredRoles={[UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.PROFESSOR]}>
         <SectionsLayout>
           <div className="text-center py-8">
             <p className="text-red-600">Error loading sections: {error.message}</p>
@@ -289,7 +289,7 @@ export default function SectionsPage() {
   }
 
   return (
-    <ProtectedRoute requiredRoles={['SUPERADMIN', 'ADMIN', 'PROFESSOR']}>
+    <ProtectedRoute requiredRoles={[UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.PROFESSOR]}>
       <SectionsLayout>
         <div className="space-y-6">
           {/* Statistics Cards */}

@@ -21,7 +21,7 @@ const createUserSchema = z.object({
   last_name: z.string().min(1, 'Last name is required').max(50, 'Last name must be less than 50 characters'),
   password: z.string().min(8, 'Password must be at least 8 characters').max(100, 'Password must be less than 100 characters'),
   confirmPassword: z.string(),
-  role: z.enum(['SUPERADMIN', 'ADMIN', 'PROFESSOR', 'STUDENT'] as const),
+  role: z.nativeEnum(UserRole),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -49,7 +49,7 @@ export function CreateUserForm({ onSuccess, onCancel }: CreateUserFormProps) {
   } = useForm<CreateUserFormData>({
     resolver: zodResolver(createUserSchema),
     defaultValues: {
-      role: 'STUDENT',
+      role: UserRole.STUDENT,
     },
   });
 
@@ -68,21 +68,21 @@ export function CreateUserForm({ onSuccess, onCancel }: CreateUserFormProps) {
   // Role options based on current user's permissions
   const getRoleOptions = () => {
     const baseOptions = [
-      { value: 'STUDENT', label: 'Student' },
-      { value: 'PROFESSOR', label: 'Professor' },
+      { value: UserRole.STUDENT, label: 'Student' },
+      { value: UserRole.PROFESSOR, label: 'Professor' },
     ];
 
-    if (currentUser?.role === 'SUPERADMIN') {
+    if (currentUser?.role === UserRole.SUPERADMIN) {
       return [
-        { value: 'SUPERADMIN', label: 'Super Admin' },
-        { value: 'ADMIN', label: 'Admin' },
+        { value: UserRole.SUPERADMIN, label: 'Super Admin' },
+        { value: UserRole.ADMIN, label: 'Admin' },
         ...baseOptions,
       ];
     }
 
-    if (currentUser?.role === 'ADMIN') {
+    if (currentUser?.role === UserRole.ADMIN) {
       return [
-        { value: 'ADMIN', label: 'Admin' },
+        { value: UserRole.ADMIN, label: 'Admin' },
         ...baseOptions,
       ];
     }

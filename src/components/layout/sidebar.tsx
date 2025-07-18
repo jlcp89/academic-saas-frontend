@@ -42,7 +42,7 @@ const MENU_ITEMS: MenuItem[] = [
     label: 'Dashboard',
     icon: Home,
     href: '/dashboard',
-    roles: ['SUPERADMIN', 'ADMIN', 'PROFESSOR', 'STUDENT'],
+    roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.PROFESSOR, UserRole.STUDENT],
     description: 'Overview and statistics'
   },
   {
@@ -50,7 +50,7 @@ const MENU_ITEMS: MenuItem[] = [
     label: 'Schools',
     icon: Building,
     href: '/schools',
-    roles: ['SUPERADMIN'],
+    roles: [UserRole.SUPERADMIN],
     description: 'Manage schools and subscriptions'
   },
   {
@@ -58,7 +58,7 @@ const MENU_ITEMS: MenuItem[] = [
     label: 'Users',
     icon: Users,
     href: '/users',
-    roles: ['SUPERADMIN', 'ADMIN'],
+    roles: [UserRole.SUPERADMIN, UserRole.ADMIN],
     description: 'User management and roles'
   },
   {
@@ -66,7 +66,7 @@ const MENU_ITEMS: MenuItem[] = [
     label: 'Subjects',
     icon: BookOpen,
     href: '/subjects',
-    roles: ['SUPERADMIN', 'ADMIN'],
+    roles: [UserRole.SUPERADMIN, UserRole.ADMIN],
     description: 'Subject catalog management'
   },
   {
@@ -74,7 +74,7 @@ const MENU_ITEMS: MenuItem[] = [
     label: 'Sections',
     icon: Calendar,
     href: '/sections',
-    roles: ['SUPERADMIN', 'ADMIN', 'PROFESSOR'],
+    roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.PROFESSOR],
     description: 'Class sections and schedules'
   },
   {
@@ -82,7 +82,7 @@ const MENU_ITEMS: MenuItem[] = [
     label: 'Enrollments',
     icon: UserCheck,
     href: '/enrollments',
-    roles: ['SUPERADMIN', 'ADMIN', 'PROFESSOR', 'STUDENT'],
+    roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.PROFESSOR, UserRole.STUDENT],
     description: 'Student enrollment management'
   },
   {
@@ -90,7 +90,7 @@ const MENU_ITEMS: MenuItem[] = [
     label: 'Assignments',
     icon: FileText,
     href: '/assignments',
-    roles: ['SUPERADMIN', 'ADMIN', 'PROFESSOR', 'STUDENT'],
+    roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.PROFESSOR, UserRole.STUDENT],
     description: 'Assignment management'
   },
   {
@@ -98,7 +98,7 @@ const MENU_ITEMS: MenuItem[] = [
     label: 'Submissions',
     icon: PenTool,
     href: '/submissions',
-    roles: ['SUPERADMIN', 'ADMIN', 'PROFESSOR', 'STUDENT'],
+    roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.PROFESSOR, UserRole.STUDENT],
     description: 'Student submissions'
   },
   {
@@ -106,7 +106,7 @@ const MENU_ITEMS: MenuItem[] = [
     label: 'Grades',
     icon: Award,
     href: '/grades',
-    roles: ['SUPERADMIN', 'ADMIN', 'PROFESSOR'],
+    roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.PROFESSOR],
     description: 'Grade management'
   },
   {
@@ -114,7 +114,7 @@ const MENU_ITEMS: MenuItem[] = [
     label: 'Reports',
     icon: BarChart3,
     href: '/reports',
-    roles: ['SUPERADMIN', 'ADMIN', 'PROFESSOR'],
+    roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.PROFESSOR],
     description: 'Analytics and reporting'
   },
 ];

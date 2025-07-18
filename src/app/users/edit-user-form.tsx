@@ -19,7 +19,7 @@ const editUserSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
   first_name: z.string().min(1, 'First name is required').max(50, 'First name must be less than 50 characters'),
   last_name: z.string().min(1, 'Last name is required').max(50, 'Last name must be less than 50 characters'),
-  role: z.enum(['SUPERADMIN', 'ADMIN', 'PROFESSOR', 'STUDENT'] as const),
+  role: z.nativeEnum(UserRole),
   is_active: z.boolean(),
 });
 
@@ -121,21 +121,21 @@ export function EditUserForm({ user, onSuccess, onCancel }: EditUserFormProps) {
   // Role options based on current user's permissions
   const getRoleOptions = () => {
     const baseOptions = [
-      { value: 'STUDENT', label: 'Student' },
-      { value: 'PROFESSOR', label: 'Professor' },
+      { value: UserRole.STUDENT, label: 'Student' },
+      { value: UserRole.PROFESSOR, label: 'Professor' },
     ];
 
-    if (currentUser?.role === 'SUPERADMIN') {
+    if (currentUser?.role === UserRole.SUPERADMIN) {
       return [
-        { value: 'SUPERADMIN', label: 'Super Admin' },
-        { value: 'ADMIN', label: 'Admin' },
+        { value: UserRole.SUPERADMIN, label: 'Super Admin' },
+        { value: UserRole.ADMIN, label: 'Admin' },
         ...baseOptions,
       ];
     }
 
-    if (currentUser?.role === 'ADMIN') {
+    if (currentUser?.role === UserRole.ADMIN) {
       return [
-        { value: 'ADMIN', label: 'Admin' },
+        { value: UserRole.ADMIN, label: 'Admin' },
         ...baseOptions,
       ];
     }
@@ -144,9 +144,9 @@ export function EditUserForm({ user, onSuccess, onCancel }: EditUserFormProps) {
   };
 
   const roleOptions = getRoleOptions();
-  const canChangeRole = currentUser?.role === 'SUPERADMIN' || (currentUser?.role === 'ADMIN' && user.role !== 'SUPERADMIN');
-  const canChangeStatus = currentUser?.role === 'SUPERADMIN' || (currentUser?.role === 'ADMIN' && user.role !== 'SUPERADMIN');
-  const canChangePassword = currentUser?.id === user.id || currentUser?.role === 'SUPERADMIN' || (currentUser?.role === 'ADMIN' && user.role !== 'SUPERADMIN');
+  const canChangeRole = currentUser?.role === UserRole.SUPERADMIN || (currentUser?.role === UserRole.ADMIN && user.role !== UserRole.SUPERADMIN);
+  const canChangeStatus = currentUser?.role === UserRole.SUPERADMIN || (currentUser?.role === UserRole.ADMIN && user.role !== UserRole.SUPERADMIN);
+  const canChangePassword = currentUser?.id === user.id || currentUser?.role === UserRole.SUPERADMIN || (currentUser?.role === UserRole.ADMIN && user.role !== UserRole.SUPERADMIN);
 
   return (
     <div className="space-y-6">

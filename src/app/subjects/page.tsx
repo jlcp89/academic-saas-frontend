@@ -13,7 +13,7 @@ import { Modal, ConfirmDialog } from '@/components/ui/dialog';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { useSubjects, useDeleteSubject } from '@/lib/api/subjects';
 import { useAuth } from '@/contexts/auth-context';
-import { Subject } from '@/types';
+import { Subject, UserRole } from '@/types';
 import { format } from 'date-fns';
 import { 
   Plus, 
@@ -200,7 +200,7 @@ export default function SubjectsPage() {
 
   if (error) {
     return (
-      <ProtectedRoute requiredRoles={['SUPERADMIN', 'ADMIN']}>
+      <ProtectedRoute requiredRoles={[UserRole.SUPERADMIN, UserRole.ADMIN]}>
         <SubjectsLayout>
           <div className="text-center py-8">
             <p className="text-red-600">Error loading subjects: {error.message}</p>
@@ -214,7 +214,7 @@ export default function SubjectsPage() {
   }
 
   return (
-    <ProtectedRoute requiredRoles={['SUPERADMIN', 'ADMIN']}>
+    <ProtectedRoute requiredRoles={[UserRole.SUPERADMIN, UserRole.ADMIN]}>
       <SubjectsLayout>
         <div className="space-y-6">
           {/* Statistics Cards */}
