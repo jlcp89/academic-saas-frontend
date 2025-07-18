@@ -2,7 +2,7 @@ name: Deploy Frontend to AWS
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, dev ]
   pull_request:
     branches: [ main, dev ]
 
@@ -146,7 +146,7 @@ jobs:
     name: Deploy Frontend to DEV
     runs-on: ubuntu-latest
     needs: test
-    if: github.event.pull_request.base.ref == 'dev'
+    if: github.ref == 'refs/heads/dev' || github.event.pull_request.base.ref == 'dev'
     environment: development
 
     steps:
