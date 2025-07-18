@@ -146,12 +146,21 @@ jobs:
             echo "📁 Verificando contenido desplegado..."
             ls -la
             
-            # Verificar que el archivo server.js existe
-            echo "🔍 Verificando archivos de Next.js standalone..."
-            ls -la .next/standalone/
+            # Verificar estructura de archivos
+            echo "🔍 Verificando estructura de archivos..."
+            find . -name "server.js" -type f || echo "server.js not found"
+            ls -la .next/ || echo "No .next directory found"
+            ls -la .next/standalone/ || echo "No standalone directory found"
+            
+            # Verificar ubicación de Node.js y npm
+            echo "🔍 Verificando Node.js y npm..."
+            which node || echo "node not found"
+            which npm || echo "npm not found"
+            node --version || echo "node version check failed"
+            npm --version || echo "npm version check failed"
             
             # Crear o actualizar el servicio systemd
-            echo "🔧 Configurando servicio systemd..."
+            echo "🔧 Configurando servicio systemd con npm start..."
             sudo tee /etc/systemd/system/academic-saas-frontend.service > /dev/null << EOF
             [Unit]
             Description=Academic SaaS Frontend
@@ -160,8 +169,8 @@ jobs:
             [Service]
             Type=simple
             User=ec2-user
-            WorkingDirectory=/home/ec2-user/academic-saas-frontend/.next/standalone
-            ExecStart=/usr/bin/node server.js
+            WorkingDirectory=/home/ec2-user/academic-saas-frontend
+            ExecStart=/usr/bin/npm start
             Restart=always
             RestartSec=10
             Environment=NODE_ENV=production
@@ -276,12 +285,21 @@ jobs:
             echo "📁 Verificando contenido desplegado..."
             ls -la
             
-            # Verificar que el archivo server.js existe
-            echo "🔍 Verificando archivos de Next.js standalone..."
-            ls -la .next/standalone/
+            # Verificar estructura de archivos
+            echo "🔍 Verificando estructura de archivos..."
+            find . -name "server.js" -type f || echo "server.js not found"
+            ls -la .next/ || echo "No .next directory found"
+            ls -la .next/standalone/ || echo "No standalone directory found"
+            
+            # Verificar ubicación de Node.js y npm
+            echo "🔍 Verificando Node.js y npm..."
+            which node || echo "node not found"
+            which npm || echo "npm not found"
+            node --version || echo "node version check failed"
+            npm --version || echo "npm version check failed"
             
             # Crear o actualizar el servicio systemd
-            echo "🔧 Configurando servicio systemd..."
+            echo "🔧 Configurando servicio systemd con npm start..."
             sudo tee /etc/systemd/system/academic-saas-frontend.service > /dev/null << EOF
             [Unit]
             Description=Academic SaaS Frontend
@@ -290,8 +308,8 @@ jobs:
             [Service]
             Type=simple
             User=ec2-user
-            WorkingDirectory=/home/ec2-user/academic-saas-frontend/.next/standalone
-            ExecStart=/usr/bin/node server.js
+            WorkingDirectory=/home/ec2-user/academic-saas-frontend
+            ExecStart=/usr/bin/npm start
             Restart=always
             RestartSec=10
             Environment=NODE_ENV=production
