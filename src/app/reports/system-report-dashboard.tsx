@@ -181,7 +181,7 @@ export function SystemReportDashboard({ filters }: SystemReportDashboardProps) {
                 <div key={index} className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className="w-16 text-sm font-medium text-gray-700">
-                      {grade.range}
+                      {grade.grade}
                     </div>
                     <div className="flex-1 bg-gray-200 rounded-full h-3">
                       <div 
@@ -220,8 +220,8 @@ export function SystemReportDashboard({ filters }: SystemReportDashboardProps) {
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-medium text-gray-900">{type.count} assignments</p>
-                      <p className={`text-sm ${getGradeColor(type.avg_grade)}`}>
-                        {type.avg_grade.toFixed(1)}% avg
+                      <p className="text-sm text-gray-600">
+                        {type.count} total
                       </p>
                     </div>
                   </div>
@@ -274,7 +274,7 @@ export function SystemReportDashboard({ filters }: SystemReportDashboardProps) {
                       <span>{format(new Date(data.date), 'MMM d, yyyy')}</span>
                     </td>
                     <td className="text-center py-2">{data.new_users}</td>
-                    <td className="text-center py-2">{data.total_users}</td>
+                    <td className="text-center py-2">-</td>
                     <td className="text-center py-2">
                       {index > 0 && (
                         <span className={`text-sm ${data.new_users > 0 ? 'text-green-600' : 'text-gray-500'}`}>
@@ -312,7 +312,7 @@ export function SystemReportDashboard({ filters }: SystemReportDashboardProps) {
               </thead>
               <tbody>
                 {systemReport.monthly_activity.map((activity, index) => {
-                  const totalActivity = activity.logins + activity.submissions + activity.assignments_created;
+                  const totalActivity = activity.new_users + activity.new_submissions + activity.new_assignments;
                   return (
                     <tr key={index} className="border-b">
                       <td className="py-3 flex items-center space-x-2">
@@ -322,19 +322,19 @@ export function SystemReportDashboard({ filters }: SystemReportDashboardProps) {
                       <td className="text-center py-3">
                         <div className="flex items-center justify-center space-x-2">
                           <Users className="h-4 w-4 text-blue-600" />
-                          <span>{activity.logins}</span>
+                          <span>{activity.new_users}</span>
                         </div>
                       </td>
                       <td className="text-center py-3">
                         <div className="flex items-center justify-center space-x-2">
                           <Target className="h-4 w-4 text-green-600" />
-                          <span>{activity.submissions}</span>
+                          <span>{activity.new_submissions}</span>
                         </div>
                       </td>
                       <td className="text-center py-3">
                         <div className="flex items-center justify-center space-x-2">
                           <FileText className="h-4 w-4 text-purple-600" />
-                          <span>{activity.assignments_created}</span>
+                          <span>{activity.new_assignments}</span>
                         </div>
                       </td>
                       <td className="text-center py-3">

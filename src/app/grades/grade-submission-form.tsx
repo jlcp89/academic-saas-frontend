@@ -134,7 +134,7 @@ export function GradeSubmissionForm({ submissionId, onSuccess, onCancel }: Grade
     );
   }
 
-  const typeConfig = ASSIGNMENT_TYPE_CONFIG[submission.assignment_info.assignment_type];
+  const typeConfig = ASSIGNMENT_TYPE_CONFIG[submission.assignment_info.assignment_type as keyof typeof ASSIGNMENT_TYPE_CONFIG];
   const TypeIcon = typeConfig.icon;
   const dueDate = new Date(submission.assignment_info.due_date);
   const isLate = submission.submitted_at && isAfter(new Date(submission.submitted_at), dueDate);

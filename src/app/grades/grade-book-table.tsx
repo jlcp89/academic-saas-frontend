@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { SectionGradeBook } from '@/lib/api/grading';
+import { Assignment } from '@/types';
 import { format } from 'date-fns';
 import { 
   User,
@@ -123,7 +124,7 @@ export function GradeBookTable({ gradeBook, onGradeSubmission, onRefresh }: Grad
 
     const submission = entry.submission;
     const typeConfig = ASSIGNMENT_TYPE_CONFIG[assignment.assignment_type];
-    const statusConfig = SUBMISSION_STATUS_CONFIG[submission.status];
+    const statusConfig = SUBMISSION_STATUS_CONFIG[submission.status as keyof typeof SUBMISSION_STATUS_CONFIG];
     const StatusIcon = statusConfig.icon;
 
     return (
