@@ -70,7 +70,7 @@ jobs:
           
           # Clonar repositorio
           echo "📥 Clonando repositorio..."
-          git clone --depth 1 --branch ${{ github.event.pull_request.head.ref }} https://github.com/jlcp89/academic-saas-frontend.git temp-frontend
+          git clone --depth 1 --branch ${{ github.ref_name }} https://github.com/jlcp89/academic-saas-frontend.git temp-frontend
           cp -r temp-frontend/* .
           cp -r temp-frontend/.* . 2>/dev/null || true
           rm -rf temp-frontend
@@ -189,7 +189,7 @@ jobs:
           
           # Clonar repositorio
           echo "📥 Clonando repositorio..."
-          git clone --depth 1 --branch ${{ github.event.pull_request.head.ref }} https://github.com/jlcp89/academic-saas-frontend.git temp-frontend
+          git clone --depth 1 --branch ${{ github.ref_name }} https://github.com/jlcp89/academic-saas-frontend.git temp-frontend
           cp -r temp-frontend/* .
           cp -r temp-frontend/.* . 2>/dev/null || true
           rm -rf temp-frontend
