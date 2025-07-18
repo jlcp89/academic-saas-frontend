@@ -119,3 +119,5 @@
  GET /api/auth/session 200 in 290ms
  GET /api/auth/session 200 in 95ms
  GET /api/auth/session 200 in 321ms
+ GET /api/auth/session 200 in 287ms
+ GET /api/auth/session 200 in 258ms

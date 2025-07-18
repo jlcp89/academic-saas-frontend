@@ -1,146 +1,194 @@
 name: Deploy Frontend to AWS EC2
 
-permissions:
-  id-token: write
-  contents: read
-
 on:
-  push:
-    branches:
-      - main
-      - feature/good-cicd
   pull_request:
-    types: [opened, reopened, synchronize]
+    types: [opened, reopened, synchronize, closed]
     branches:
+      - dev
       - main
-
-env:
-  AWS_REGION: us-east-1
-  ECR_REPOSITORY: academic-saas-frontend
 
 jobs:
-  # Build and push Docker image to ECR
-  build:
-    name: Build and Push Docker Image
-    runs-on: ubuntu-latest
-    outputs:
-      image-tag: ${{ steps.image.outputs.tag }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build Docker image
-        id: image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          # Build the Docker image
-          docker build \
-            --build-arg NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
-            --build-arg NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }} \
-            --build-arg NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }} \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
-            .
-          
-          # Push to ECR
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          
-          echo "tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
-
-  # Deploy to DEV environment
-  deploy-dev:
-    name: Deploy to DEV Environment
-    needs: build
-    if: github.event_name == 'pull_request'
+  # Deploy to dev environment
+  deploy_dev:
+    name: Deploy DEV Environment
+    if: github.event.pull_request.base.ref == 'dev'
     runs-on: ubuntu-latest
     environment: dev
 
     steps:
-      - name: Deploy to EC2 (dev)
+      - name: Deploy Frontend to EC2 (dev)
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST_DEV }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # Login to ECR
-            aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
+            export ENVIRONMENT=dev
+            export NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_DEV }}
+            export NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_DEV }}
+            export NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET_DEV }}
             
-            # Stop existing container
-            docker stop academic-saas-frontend || true
-            docker rm academic-saas-frontend || true
+            cd /home/ec2-user
+            echo "Removing previous frontend deployment..."
+            sudo rm -rf academic-saas-frontend
             
-            # Pull new image
-            docker pull ${{ secrets.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ needs.build.outputs.image-tag }}
+            echo "Cloning frontend repository (PR branch: ${{ github.event.pull_request.head.ref }})..."
+            git clone --depth 1 --branch ${{ github.event.pull_request.head.ref }} --single-branch https://${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository_owner }}/academic-saas-frontend.git academic-saas-frontend
             
-            # Run new container
-            docker run -d \
-              --name academic-saas-frontend \
+            cd academic-saas-frontend
+            
+            echo "Creating environment file..."
+            cat > .env.production << EOF
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_DEV }}
+            NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_DEV }}
+            NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET_DEV }}
+            NODE_ENV=production
+            EOF
+            
+            echo "Building Docker image..."
+            sudo docker build \
+              --build-arg NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_DEV }} \
+              --build-arg NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_DEV }} \
+              --build-arg NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET_DEV }} \
+              -t academic-saas-frontend:dev .
+            
+            echo "Stopping existing frontend containers..."
+            sudo docker stop academic-saas-frontend-dev || true
+            sudo docker rm academic-saas-frontend-dev || true
+            
+            echo "Starting frontend container..."
+            sudo docker run -d \
+              --name academic-saas-frontend-dev \
               --restart unless-stopped \
               -p 3000:3000 \
-              -e NODE_ENV=development \
               -e NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_DEV }} \
               -e NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_DEV }} \
-              -e NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }} \
-              ${{ secrets.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ needs.build.outputs.image-tag }}
+              -e NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET_DEV }} \
+              -e NODE_ENV=production \
+              academic-saas-frontend:dev
             
-            # Clean up old images
-            docker image prune -f
+            echo "Waiting for frontend to start..."
+            sleep 10
             
-            echo "DEV deployment completed"
+            echo "Health check..."
+            curl -f http://localhost:3000 || echo "Health check warning: Frontend may still be starting"
+            
+            echo "DEV frontend deployment finished."
 
-  # Deploy to PROD environment
-  deploy-prod:
-    name: Deploy to PROD Environment
-    needs: build
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  # Deploy to production environment
+  deploy_prod:
+    name: Deploy PROD Environment
+    if: |
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.action == 'closed' &&
+      github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     environment: prod
 
     steps:
-      - name: Deploy to EC2 (prod)
+      - name: Deploy Frontend to EC2 (prod)
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST_PROD }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # Login to ECR
-            aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
+            export ENVIRONMENT=prod
+            export NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_PROD }}
+            export NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_PROD }}
+            export NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET_PROD }}
             
-            # Stop existing container
-            docker stop academic-saas-frontend || true
-            docker rm academic-saas-frontend || true
+            cd /home/ec2-user
+            echo "Creating backup of current frontend deployment..."
+            if [ -d academic-saas-frontend ]; then
+              sudo cp -r academic-saas-frontend academic-saas-frontend-backup-$(date +%Y%m%d-%H%M%S)
+            fi
             
-            # Pull new image
-            docker pull ${{ secrets.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
+            echo "Removing previous frontend deployment..."
+            sudo rm -rf academic-saas-frontend
             
-            # Run new container
-            docker run -d \
-              --name academic-saas-frontend \
+            echo "Cloning frontend repository (main branch)..."
+            git clone --depth 1 --branch main --single-branch https://${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository_owner }}/academic-saas-frontend.git academic-saas-frontend
+            
+            cd academic-saas-frontend
+            
+            echo "Creating production environment file..."
+            cat > .env.production << EOF
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_PROD }}
+            NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_PROD }}
+            NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET_PROD }}
+            NODE_ENV=production
+            EOF
+            
+            echo "Building Docker image..."
+            sudo docker build \
+              --build-arg NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_PROD }} \
+              --build-arg NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_PROD }} \
+              --build-arg NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET_PROD }} \
+              -t academic-saas-frontend:prod .
+            
+            echo "Stopping existing frontend containers..."
+            sudo docker stop academic-saas-frontend-prod || true
+            sudo docker rm academic-saas-frontend-prod || true
+            
+            echo "Starting frontend container..."
+            sudo docker run -d \
+              --name academic-saas-frontend-prod \
               --restart unless-stopped \
               -p 3000:3000 \
-              -e NODE_ENV=production \
               -e NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_PROD }} \
               -e NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_PROD }} \
-              -e NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }} \
-              ${{ secrets.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
+              -e NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET_PROD }} \
+              -e NODE_ENV=production \
+              academic-saas-frontend:prod
             
-            # Clean up old images
-            docker image prune -f
+            echo "Waiting for frontend to start..."
+            sleep 30
             
-            echo "PROD deployment completed"
+            echo "Health check..."
+            curl -f http://localhost:3000 || (echo "Frontend health check failed" && exit 1)
+            
+            echo "PROD frontend deployment finished."
+
+  # Cleanup old images and backups
+  cleanup:
+    name: Cleanup Docker Images
+    needs: [deploy_dev, deploy_prod]
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Cleanup on DEV server
+        if: github.event.pull_request.base.ref == 'dev'
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST_DEV }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            echo "Cleaning up old Docker images..."
+            sudo docker image prune -f
+            sudo docker system prune -f --volumes
+            
+            echo "Removing old backups (keeping last 5)..."
+            cd /home/ec2-user
+            ls -dt academic-saas-frontend-backup-* 2>/dev/null | tail -n +6 | xargs sudo rm -rf
+      
+      - name: Cleanup on PROD server
+        if: |
+          github.event.pull_request.base.ref == 'main' &&
+          github.event.action == 'closed' &&
+          github.event.pull_request.merged == true
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST_PROD }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            echo "Cleaning up old Docker images..."
+            sudo docker image prune -f
+            sudo docker system prune -f --volumes
+            
+            echo "Removing old backups (keeping last 5)..."
+            cd /home/ec2-user
+            ls -dt academic-saas-frontend-backup-* 2>/dev/null | tail -n +6 | xargs sudo rm -rf
