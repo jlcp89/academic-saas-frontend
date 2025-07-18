@@ -2,6 +2,9 @@
 
 A modern, responsive frontend for the Academic SaaS Platform built with Next.js, TypeScript, and Tailwind CSS.
 
+## CI/CD Status
+🚀 Automated deployment pipeline configured for dev and production environments.
+
 ## Features
 
 - **Modern Stack**: Next.js 15+ with App Router, TypeScript, Tailwind CSS

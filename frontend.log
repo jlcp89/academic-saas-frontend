@@ -98,3 +98,26 @@
  GET /api/auth/session 200 in 290ms
  GET /favicon.ico?favicon.45db1c09.ico 200 in 530ms
  GET /api/auth/session 200 in 125ms
+ GET /dashboard 200 in 206ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 534ms
+ GET /api/auth/session 200 in 318ms
+ GET /api/auth/session 200 in 146ms
+ GET /dashboard 200 in 271ms
+ GET /api/auth/session 200 in 395ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 648ms
+ GET /api/auth/session 200 in 246ms
+ GET /dashboard 200 in 158ms
+ GET /api/auth/session 200 in 294ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 540ms
+ GET /api/auth/session 200 in 110ms
+ ✓ Compiled in 484ms
+ ✓ Compiled in 0ms
+ GET /dashboard 200 in 338ms
+ GET /schools 200 in 344ms
+ GET /api/auth/session 200 in 282ms
+ GET /api/auth/session 200 in 94ms
+ GET /api/auth/session 200 in 290ms
+ GET /api/auth/session 200 in 95ms
+ GET /api/auth/session 200 in 321ms
+ GET /api/auth/session 200 in 287ms
+ GET /api/auth/session 200 in 258ms

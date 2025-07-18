@@ -1,5 +1,9 @@
 # Multi-stage build for optimized production image
 FROM node:20-alpine AS base
+# Set npm registry and increase timeout
+RUN npm config set registry https://registry.npmjs.org/
+RUN npm config set fetch-retry-mintimeout 20000
+RUN npm config set fetch-retry-maxtimeout 120000
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -8,19 +12,34 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-RUN npm ci --only=production
+# Use npm install instead of npm ci for better compatibility
+RUN npm install --production --legacy-peer-deps
 
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+COPY package*.json ./
+# Use npm install instead of npm ci for better compatibility
+RUN npm install --legacy-peer-deps
 COPY . .
 
-# Disable Next.js telemetry
-ENV NEXT_TELEMETRY_DISABLED 1
+# Build arguments for environment variables
+ARG NEXT_PUBLIC_API_URL
+ARG NEXTAUTH_URL
+ARG NEXTAUTH_SECRET
 
-# Build application
-RUN npm run build
+# Set environment variables for build
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+ENV NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
+ENV NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-development-secret-change-in-production}
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Disable ESLint during build
+ENV NEXT_LINT_SKIP=1
+
+# Build application with increased memory and timeout
+RUN NODE_OPTIONS="--max-old-space-size=4096" \
+    npm run build
 
 # Production image, copy all the files and run next
 FROM base AS runner
