@@ -155,23 +155,15 @@ jobs:
             # Verificar e instalar Node.js si no existe
             echo "🔍 Verificando Node.js y npm..."
             if ! command -v node &> /dev/null; then
-              echo "📦 Node.js no encontrado, instalando con nvm..."
+              echo "📦 Node.js no encontrado, instalando desde Amazon Linux EPEL..."
               
-              # Instalar nvm (Node Version Manager)
-              curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-              export NVM_DIR="$HOME/.nvm"
-              [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+              # Instalar EPEL repository
+              sudo yum install -y epel-release
               
-              # Instalar Node.js 18 usando nvm
-              nvm install 18
-              nvm use 18
-              nvm alias default 18
+              # Instalar Node.js y npm desde repositorios de Amazon Linux
+              sudo yum install -y nodejs npm
               
-              # Agregar Node.js al PATH para systemd
-              sudo ln -sf $HOME/.nvm/versions/node/v18.*/bin/node /usr/local/bin/node
-              sudo ln -sf $HOME/.nvm/versions/node/v18.*/bin/npm /usr/local/bin/npm
-              
-              echo "✅ Node.js instalado via nvm:"
+              echo "✅ Node.js instalado desde Amazon Linux:"
               node --version
               npm --version
             else
@@ -191,7 +183,7 @@ jobs:
             Type=simple
             User=ec2-user
             WorkingDirectory=/home/ec2-user/academic-saas-frontend
-            ExecStart=/usr/local/bin/npm start
+            ExecStart=/usr/bin/npm start
             Restart=always
             RestartSec=10
             Environment=NODE_ENV=production
@@ -315,23 +307,15 @@ jobs:
             # Verificar e instalar Node.js si no existe
             echo "🔍 Verificando Node.js y npm..."
             if ! command -v node &> /dev/null; then
-              echo "📦 Node.js no encontrado, instalando con nvm..."
+              echo "📦 Node.js no encontrado, instalando desde Amazon Linux EPEL..."
               
-              # Instalar nvm (Node Version Manager)
-              curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-              export NVM_DIR="$HOME/.nvm"
-              [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+              # Instalar EPEL repository
+              sudo yum install -y epel-release
               
-              # Instalar Node.js 18 usando nvm
-              nvm install 18
-              nvm use 18
-              nvm alias default 18
+              # Instalar Node.js y npm desde repositorios de Amazon Linux
+              sudo yum install -y nodejs npm
               
-              # Agregar Node.js al PATH para systemd
-              sudo ln -sf $HOME/.nvm/versions/node/v18.*/bin/node /usr/local/bin/node
-              sudo ln -sf $HOME/.nvm/versions/node/v18.*/bin/npm /usr/local/bin/npm
-              
-              echo "✅ Node.js instalado via nvm:"
+              echo "✅ Node.js instalado desde Amazon Linux:"
               node --version
               npm --version
             else
@@ -351,7 +335,7 @@ jobs:
             Type=simple
             User=ec2-user
             WorkingDirectory=/home/ec2-user/academic-saas-frontend
-            ExecStart=/usr/local/bin/npm start
+            ExecStart=/usr/bin/npm start
             Restart=always
             RestartSec=10
             Environment=NODE_ENV=production
