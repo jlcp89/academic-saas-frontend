@@ -74,11 +74,20 @@ jobs:
             cd academic-saas-frontend
             
             echo "Installing Node.js and dependencies..."
-            # Install Node.js if not present
+            # Install Node.js compatible with Amazon Linux 2 GLIBC
             if ! command -v node &> /dev/null; then
-              curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
-              sudo yum install -y nodejs
+              echo "Installing Node.js via amazon-linux-extras..."
+              # Use Amazon Linux Extras for compatible Node.js version
+              sudo amazon-linux-extras install -y nodejs16 || {
+                echo "Trying alternative Node.js installation..."
+                # Alternative: Install via package manager with older version
+                curl -fsSL https://rpm.nodesource.com/setup_16.x | sudo bash -
+                sudo yum install -y nodejs
+              }
             fi
+            
+            echo "Node.js version: $(node --version)"
+            echo "NPM version: $(npm --version)"
             
             echo "Installing dependencies..."
             npm ci
@@ -168,11 +177,20 @@ jobs:
             cd academic-saas-frontend
             
             echo "Installing Node.js and dependencies..."
-            # Install Node.js if not present
+            # Install Node.js compatible with Amazon Linux 2 GLIBC
             if ! command -v node &> /dev/null; then
-              curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
-              sudo yum install -y nodejs
+              echo "Installing Node.js via amazon-linux-extras..."
+              # Use Amazon Linux Extras for compatible Node.js version
+              sudo amazon-linux-extras install -y nodejs16 || {
+                echo "Trying alternative Node.js installation..."
+                # Alternative: Install via package manager with older version
+                curl -fsSL https://rpm.nodesource.com/setup_16.x | sudo bash -
+                sudo yum install -y nodejs
+              }
             fi
+            
+            echo "Node.js version: $(node --version)"
+            echo "NPM version: $(npm --version)"
             
             echo "Installing dependencies..."
             npm ci
