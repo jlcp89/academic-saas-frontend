@@ -198,44 +198,42 @@ The development environment is currently deployed and accessible at:
 
 #### Automatic Deployment (GitHub Actions)
 
-1. **Push to main branch** triggers automatic deployment
-2. **GitHub Actions** builds and pushes Docker images to ECR
-3. **EC2 instances** automatically pull and deploy the new images
+1. **Push to dev branch** triggers automatic deployment to development environment
+2. **GitHub Actions** runs the deployment script via SSH
+3. **EC2 instance** builds and runs the application using systemd services
 
 #### Manual Deployment
 
 ```bash
-# Deploy frontend
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 860639121390.dkr.ecr.us-east-1.amazonaws.com
-
 # Access EC2 instance
 ssh -i ~/.ssh/academic_saas_aws ec2-user@52.20.22.173
 
-# Deploy latest frontend image
-docker pull 860639121390.dkr.ecr.us-east-1.amazonaws.com/academic-saas-frontend:latest
-docker stop academic-saas-frontend || true
-docker rm academic-saas-frontend || true
-docker run -d --name academic-saas-frontend --restart unless-stopped --network host -e NEXT_PUBLIC_API_URL=http://52.20.22.173:8000 -e NEXTAUTH_URL=http://52.20.22.173:3000 -e NEXTAUTH_SECRET=dev-secret-key-change-in-production 860639121390.dkr.ecr.us-east-1.amazonaws.com/academic-saas-frontend:latest
+# Run deployment script
+cd /home/ec2-user/academic-saas-frontend
+./deploy_dev.sh
+
+# Check service status
+sudo systemctl status academic-saas-frontend
 ```
 
 ### Infrastructure
 
 **Current Setup:**
 - **AWS EC2**: t2.micro instance (52.20.22.173)
-- **Docker Containers**: PostgreSQL, Redis, Django, Next.js
-- **ECR**: Container registry for images
-- **GitHub Actions**: CI/CD pipeline
+- **Services**: Next.js (systemd), Django (systemd), PostgreSQL, Nginx
+- **Process Management**: systemd services for auto-restart
+- **GitHub Actions**: CI/CD pipeline with SSH deployment
 
 **Monitoring:**
 ```bash
-# Check container status
-docker ps
+# Check service status
+sudo systemctl status academic-saas-frontend
 
 # View logs
-docker logs academic-saas-frontend
+sudo journalctl -u academic-saas-frontend -f
 
-# Restart container
-docker restart academic-saas-frontend
+# Restart service
+sudo systemctl restart academic-saas-frontend
 ```
 
 ### Environment Variables (Production)
@@ -277,9 +275,9 @@ NEXTAUTH_SECRET=dev-secret-key-change-in-production
 - Infrastructure: ✅ Deployed (AWS EC2)
 - Backend: ✅ Active (http://52.20.22.173:8000)
 - Frontend: ✅ Active (http://52.20.22.173:3000)
-- Database: ✅ PostgreSQL in Docker
-- Cache: ✅ Redis in Docker
-- CI/CD: ✅ GitHub Actions configured
+- Database: ✅ PostgreSQL service
+- Web Server: ✅ Nginx reverse proxy
+- CI/CD: ✅ GitHub Actions with systemd deployment
 
 ## License
 
