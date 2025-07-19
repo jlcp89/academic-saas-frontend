@@ -110,10 +110,10 @@ npm run build
 log_info "🔄 Configurando servicio systemd..."
 
 # Detener servicio existente si existe
-sudo systemctl stop academic-saas-frontend 2>/dev/null || log_info "No hay servicio previo ejecutándose"
+sudo systemctl stop academic-frontend 2>/dev/null || log_info "No hay servicio previo ejecutándose"
 
 # Crear servicio systemd
-sudo tee /etc/systemd/system/academic-saas-frontend.service > /dev/null << EOF
+sudo tee /etc/systemd/system/academic-frontend.service > /dev/null << EOF
 [Unit]
 Description=Academic SaaS Frontend
 After=network.target
@@ -136,66 +136,16 @@ EOF
 
 # Recargar systemd y habilitar servicio
 sudo systemctl daemon-reload
-sudo systemctl enable academic-saas-frontend.service
+sudo systemctl enable academic-frontend.service
 
-# Configurar Nginx
-log_info "🌐 Configurando Nginx..."
-
-sudo tee /etc/nginx/conf.d/academic-saas-frontend.conf > /dev/null << 'EOF'
-server {
-    listen 80;
-    server_name 52.20.22.173;
-
-    # Frontend (Next.js)
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_cache_bypass \$http_upgrade;
-        proxy_read_timeout 86400;
-    }
-
-    # Backend API (Django)
-    location /api/ {
-        proxy_pass http://localhost:8000;
-        proxy_http_version 1.1;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
-
-    # Django Admin
-    location /admin/ {
-        proxy_pass http://localhost:8000;
-        proxy_http_version 1.1;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
-
-    # Django Static Files
-    location /static/ {
-        proxy_pass http://localhost:8000;
-        proxy_http_version 1.1;
-        proxy_set_header Host \$host;
-    }
-}
-EOF
+# Nginx is configured by the backend deployment
 
 # Crear directorio de logs si no existe
 mkdir -p /home/ec2-user/logs
 
-# Iniciar servicios
-log_info "🚀 Iniciando servicios..."
-sudo systemctl start academic-saas-frontend
-sudo systemctl restart nginx
+# Iniciar servicio frontend
+log_info "🚀 Iniciando servicio frontend..."
+sudo systemctl start academic-frontend
 
 # ================================================================
 # VERIFICACIÓN
@@ -210,7 +160,7 @@ if curl -f http://localhost/ > /dev/null 2>&1; then
     log_info "🌐 URL: http://52.20.22.173"
 else
     log_error "❌ Error: La aplicación no responde a través de Nginx"
-    sudo systemctl status academic-saas-frontend --no-pager
+    sudo systemctl status academic-frontend --no-pager
     sudo systemctl status nginx --no-pager
     exit 1
 fi
@@ -227,8 +177,8 @@ log_info "   • Backend API:   http://52.20.22.173/api/"
 log_info "   • Django Admin:  http://52.20.22.173/admin/"
 log_info ""
 log_info "📋 Comandos útiles:"
-log_info "   • sudo systemctl status academic-saas-frontend  # Ver estado"
-log_info "   • sudo journalctl -u academic-saas-frontend -f  # Ver logs"
-log_info "   • sudo systemctl restart academic-saas-frontend # Reiniciar"
+log_info "   • sudo systemctl status academic-frontend  # Ver estado"
+log_info "   • sudo journalctl -u academic-frontend -f  # Ver logs"
+log_info "   • sudo systemctl restart academic-frontend # Reiniciar"
 log_info "   • sudo systemctl restart nginx                 # Reiniciar Nginx"
 log_info "   • ./deploy_dev.sh --force-deps                 # Reinstalar dependencias"
