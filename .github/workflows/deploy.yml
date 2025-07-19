@@ -86,14 +86,14 @@ jobs:
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             
-            # Install Node.js 16.20.2 (known to work with Amazon Linux 2)
-            nvm install 16.20.2
-            nvm use 16.20.2
-            nvm alias default 16.20.2
+            # Install Node.js 18.20.4 (compatible with Next.js and Amazon Linux 2)
+            nvm install 18.20.4
+            nvm use 18.20.4
+            nvm alias default 18.20.4
             
             # Create symlinks for global access
-            sudo ln -sf $HOME/.nvm/versions/node/v16.20.2/bin/node /usr/bin/node
-            sudo ln -sf $HOME/.nvm/versions/node/v16.20.2/bin/npm /usr/bin/npm
+            sudo ln -sf $HOME/.nvm/versions/node/v18.20.4/bin/node /usr/bin/node
+            sudo ln -sf $HOME/.nvm/versions/node/v18.20.4/bin/npm /usr/bin/npm
             
             echo "Node.js version: $(node --version)"
             echo "NPM version: $(npm --version)"
@@ -102,7 +102,7 @@ jobs:
             # Source NVM for subsequent commands
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            nvm use 16.20.2
+            nvm use 18.20.4
             
             npm ci
             
@@ -209,14 +209,14 @@ jobs:
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             
-            # Install Node.js 16.20.2 (known to work with Amazon Linux 2)
-            nvm install 16.20.2
-            nvm use 16.20.2
-            nvm alias default 16.20.2
+            # Install Node.js 18.20.4 (compatible with Next.js and Amazon Linux 2)
+            nvm install 18.20.4
+            nvm use 18.20.4
+            nvm alias default 18.20.4
             
             # Create symlinks for global access
-            sudo ln -sf $HOME/.nvm/versions/node/v16.20.2/bin/node /usr/bin/node
-            sudo ln -sf $HOME/.nvm/versions/node/v16.20.2/bin/npm /usr/bin/npm
+            sudo ln -sf $HOME/.nvm/versions/node/v18.20.4/bin/node /usr/bin/node
+            sudo ln -sf $HOME/.nvm/versions/node/v18.20.4/bin/npm /usr/bin/npm
             
             echo "Node.js version: $(node --version)"
             echo "NPM version: $(npm --version)"
@@ -225,7 +225,7 @@ jobs:
             # Source NVM for subsequent commands
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            nvm use 16.20.2
+            nvm use 18.20.4
             
             npm ci
             
