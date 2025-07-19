@@ -52,19 +52,6 @@ jobs:
     environment: development
     
     steps:
-    - name: Check EC2 Instance Status
-      run: |
-        echo "Checking if EC2 instance is reachable..."
-        if ! timeout 10 nc -zv ${{ secrets.EC2_HOST_DEV }} 22; then
-          echo "❌ ERROR: Cannot connect to EC2 instance at ${{ secrets.EC2_HOST_DEV }}:22"
-          echo "Please check:"
-          echo "1. EC2 instance is running"
-          echo "2. Security group allows SSH (port 22) from GitHub Actions"
-          echo "3. EC2_HOST_DEV secret is correct"
-          exit 1
-        fi
-        echo "✅ EC2 instance is reachable"
-
     - name: Deploy Frontend to EC2 Dev
       uses: appleboy/ssh-action@master
       with:
@@ -72,133 +59,58 @@ jobs:
         username: ec2-user
         key: ${{ secrets.EC2_SSH_KEY }}
         timeout: 30m
+        command_timeout: 30m
         script: |
-          #!/bin/bash
-          # Deployment script for Next.js frontend
+          # Kill any existing Node processes without causing SSH to exit
+          echo "Cleaning up old processes..."
+          sudo killall -q node || true
+          sleep 2
           
-          echo "🚀 Starting frontend deployment..."
-          echo "Instance: ${{ secrets.EC2_HOST_DEV }}"
-          echo "Time: $(date)"
-          
-          # Function to handle errors gracefully
-          handle_error() {
-            echo "Error occurred: $1"
-            exit 1
-          }
-          
-          # Move to home directory
-          cd /home/ec2-user || handle_error "Failed to change directory"
-          
-          # Stop existing service
-          echo "Stopping existing Next.js service..."
-          if pgrep -f "next.*start" > /dev/null; then
-            sudo pkill -f "next.*start" || true
-            echo "Next.js process stopped"
-          else
-            echo "No Next.js process found"
+          # Remove old deployment
+          cd /home/ec2-user
+          rm -rf academic-saas-frontend-old
+          if [ -d academic-saas-frontend ]; then
+            mv academic-saas-frontend academic-saas-frontend-old
           fi
           
-          if pgrep -f "node.*server.js" > /dev/null; then
-            sudo pkill -f "node.*server.js" || true
-            echo "Node.js process stopped"
-          else
-            echo "No Node.js process found"
-          fi
-          
-          sleep 3
-          
-          # Clean previous deployment
-          echo "Cleaning previous deployment..."
-          sudo rm -rf academic-saas-frontend-old || true
-          [ -d academic-saas-frontend ] && mv academic-saas-frontend academic-saas-frontend-old
-          
-          # Clone repository
+          # Clone fresh code
           echo "Cloning repository..."
-          git clone --depth 1 --branch dev --single-branch https://${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository_owner }}/academic-saas-frontend.git academic-saas-frontend
-          
+          git clone --depth 1 --branch dev https://${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository_owner }}/academic-saas-frontend.git
           cd academic-saas-frontend
           
-          # Ensure Node.js 18 is installed
-          if [ ! -f /usr/local/bin/node ] || [ "$(/usr/local/bin/node --version)" != "v18.20.5" ]; then
-            echo "Installing Node.js 18..."
+          # Install Node.js if needed
+          if [ ! -f /usr/local/bin/node ]; then
+            echo "Installing Node.js..."
             cd /tmp
-            rm -f node-v18.20.5-linux-x64-glibc-217.tar.gz
             wget -q https://unofficial-builds.nodejs.org/download/release/v18.20.5/node-v18.20.5-linux-x64-glibc-217.tar.gz
             sudo tar -xzf node-v18.20.5-linux-x64-glibc-217.tar.gz -C /usr/local --strip-components=1
             cd /home/ec2-user/academic-saas-frontend
           fi
           
-          echo "Node.js version: $(/usr/local/bin/node --version)"
-          echo "NPM version: $(/usr/local/bin/npm --version)"
-          
-          # Set environment variables
-          export NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
-          export NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}
-          export NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
-          export NODE_ENV=production
-          export PATH=/usr/local/bin:$PATH
-          
-          # Create .env.production.local file
-          cat > .env.production.local << EOF
-          NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
-          NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}
-          NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
-          EOF
-          
-          # Install only production dependencies
-          echo "Installing production dependencies..."
-          /usr/local/bin/npm ci --production
-          
+          # Build the app
           echo "Building application..."
+          export PATH=/usr/local/bin:$PATH
+          /usr/local/bin/npm ci --production
+          NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
+          NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }} \
+          NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }} \
           /usr/local/bin/npm run build
           
-          # Create startup script
-          cat > start.sh << 'EOF'
-          #!/bin/bash
+          # Start the app
+          echo "Starting application..."
           export NODE_ENV=production
-          export PATH=/usr/local/bin:$PATH
-          exec /usr/local/bin/npm start
-          EOF
-          chmod +x start.sh
+          nohup /usr/local/bin/npm start > /tmp/nextjs.log 2>&1 &
           
-          # Start application
-          echo "Starting Next.js application..."
-          nohup ./start.sh > /tmp/nextjs.log 2>&1 &
-          echo $! > /tmp/nextjs.pid
-          
-          # Wait for startup
-          echo "Waiting for Next.js to start..."
-          for i in {1..15}; do
-            if curl -s -f http://localhost:3000/ > /dev/null; then
-              echo "✅ Next.js started successfully!"
-              break
-            fi
-            echo "Attempt $i/15: Waiting for startup..."
-            sleep 3
-            if [ $i -eq 15 ]; then
-              echo "❌ Failed to start Next.js"
-              echo "=== Last 50 lines of logs ==="
-              tail -n 50 /tmp/nextjs.log || echo "No logs available"
-              exit 1
-            fi
-          done
-          
-          # Update nginx if configured
-          echo "Checking nginx configuration..."
-          if [ -f "/home/ec2-user/academic-saas-backend/nginx.conf" ]; then
-            sudo cp /home/ec2-user/academic-saas-backend/nginx.conf /etc/nginx/nginx.conf
-            if sudo nginx -t; then
-              sudo systemctl reload nginx
-              echo "✅ Nginx configuration updated"
-            else
-              echo "⚠️ Nginx config test failed, skipping reload"
-            fi
+          # Wait and verify
+          sleep 10
+          if curl -s http://localhost:3000 > /dev/null; then
+            echo "✅ Deployment successful!"
+            echo "URL: http://${{ secrets.EC2_HOST_DEV }}"
+          else
+            echo "❌ Deployment failed"
+            tail -20 /tmp/nextjs.log
+            exit 1
           fi
-          
-          echo "✅ Frontend deployed successfully!"
-          echo "🌐 URL: http://${{ secrets.EC2_HOST_DEV }}"
-          echo "🎨 Frontend: http://${{ secrets.EC2_HOST_DEV }}/ (via nginx)"
-          echo "🔧 Backend API: http://${{ secrets.EC2_HOST_DEV }}/api/"
 
   deploy-prod:
     name: Deploy to Production Environment  
@@ -208,19 +120,6 @@ jobs:
     environment: production
     
     steps:
-    - name: Check EC2 Instance Status
-      run: |
-        echo "Checking if EC2 instance is reachable..."
-        if ! timeout 10 nc -zv ${{ secrets.EC2_HOST_PROD }} 22; then
-          echo "❌ ERROR: Cannot connect to EC2 instance at ${{ secrets.EC2_HOST_PROD }}:22"
-          echo "Please check:"
-          echo "1. EC2 instance is running"
-          echo "2. Security group allows SSH (port 22) from GitHub Actions"
-          echo "3. EC2_HOST_PROD secret is correct"
-          exit 1
-        fi
-        echo "✅ EC2 instance is reachable"
-
     - name: Deploy Frontend to EC2 Prod
       uses: appleboy/ssh-action@master
       with:
@@ -228,122 +127,56 @@ jobs:
         username: ec2-user
         key: ${{ secrets.EC2_SSH_KEY }}
         timeout: 30m
+        command_timeout: 30m
         script: |
-          #!/bin/bash
-          # Deployment script for Next.js frontend (PRODUCTION)
+          # Kill any existing Node processes without causing SSH to exit
+          echo "Cleaning up old processes..."
+          sudo killall -q node || true
+          sleep 2
           
-          echo "🚀 Starting frontend deployment to PRODUCTION..."
-          echo "Instance: ${{ secrets.EC2_HOST_PROD }}"
-          echo "Time: $(date)"
-          
-          # Function to handle errors gracefully
-          handle_error() {
-            echo "Error occurred: $1"
-            exit 1
-          }
-          
-          # Move to home directory
-          cd /home/ec2-user || handle_error "Failed to change directory"
-          
-          # Create backup
-          echo "Creating backup of current deployment..."
+          # Backup and remove old deployment
+          cd /home/ec2-user
           if [ -d academic-saas-frontend ]; then
-            sudo cp -r academic-saas-frontend academic-saas-frontend-backup-$(date +%Y%m%d-%H%M%S) || true
+            cp -r academic-saas-frontend academic-saas-frontend-backup-$(date +%Y%m%d-%H%M%S)
+            rm -rf academic-saas-frontend-old
+            mv academic-saas-frontend academic-saas-frontend-old
           fi
           
-          # Stop existing service
-          echo "Stopping existing Next.js service..."
-          if pgrep -f "next.*start" > /dev/null; then
-            sudo pkill -f "next.*start" || true
-            echo "Next.js process stopped"
-          else
-            echo "No Next.js process found"
-          fi
-          
-          if pgrep -f "node.*server.js" > /dev/null; then
-            sudo pkill -f "node.*server.js" || true
-            echo "Node.js process stopped"
-          else
-            echo "No Node.js process found"
-          fi
-          
-          sleep 3
-          
-          # Clean previous deployment
-          echo "Cleaning previous deployment..."
-          sudo rm -rf academic-saas-frontend-old || true
-          [ -d academic-saas-frontend ] && mv academic-saas-frontend academic-saas-frontend-old
-          
-          # Clone repository
+          # Clone fresh code
           echo "Cloning repository..."
-          git clone --depth 1 --branch main --single-branch https://${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository_owner }}/academic-saas-frontend.git academic-saas-frontend
-          
+          git clone --depth 1 --branch main https://${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository_owner }}/academic-saas-frontend.git
           cd academic-saas-frontend
           
-          # Ensure Node.js 18 is installed
-          if [ ! -f /usr/local/bin/node ] || [ "$(/usr/local/bin/node --version)" != "v18.20.5" ]; then
-            echo "Installing Node.js 18..."
+          # Install Node.js if needed
+          if [ ! -f /usr/local/bin/node ]; then
+            echo "Installing Node.js..."
             cd /tmp
-            rm -f node-v18.20.5-linux-x64-glibc-217.tar.gz
             wget -q https://unofficial-builds.nodejs.org/download/release/v18.20.5/node-v18.20.5-linux-x64-glibc-217.tar.gz
             sudo tar -xzf node-v18.20.5-linux-x64-glibc-217.tar.gz -C /usr/local --strip-components=1
             cd /home/ec2-user/academic-saas-frontend
           fi
           
-          echo "Node.js version: $(/usr/local/bin/node --version)"
-          echo "NPM version: $(/usr/local/bin/npm --version)"
-          
-          # Set environment variables
-          export NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_PROD }}
-          export NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_PROD }}
-          export NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
-          export NODE_ENV=production
-          export PATH=/usr/local/bin:$PATH
-          
-          # Create .env.production.local file
-          cat > .env.production.local << EOF
-          NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_PROD }}
-          NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_PROD }}
-          NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
-          EOF
-          
-          # Install only production dependencies
-          echo "Installing production dependencies..."
-          /usr/local/bin/npm ci --production
-          
+          # Build the app
           echo "Building application..."
+          export PATH=/usr/local/bin:$PATH
+          /usr/local/bin/npm ci --production
+          NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_PROD }} \
+          NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_PROD }} \
+          NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }} \
           /usr/local/bin/npm run build
           
-          # Create startup script
-          cat > start.sh << 'EOF'
-          #!/bin/bash
+          # Start the app
+          echo "Starting application..."
           export NODE_ENV=production
-          export PATH=/usr/local/bin:$PATH
-          exec /usr/local/bin/npm start
-          EOF
-          chmod +x start.sh
+          nohup /usr/local/bin/npm start > /tmp/nextjs.log 2>&1 &
           
-          # Start application
-          echo "Starting Next.js application..."
-          nohup ./start.sh > /tmp/nextjs.log 2>&1 &
-          echo $! > /tmp/nextjs.pid
-          
-          # Wait for startup
-          echo "Waiting for Next.js to start..."
-          for i in {1..15}; do
-            if curl -s -f http://localhost:3000/ > /dev/null; then
-              echo "✅ Next.js started successfully!"
-              break
-            fi
-            echo "Attempt $i/15: Waiting for startup..."
-            sleep 3
-            if [ $i -eq 15 ]; then
-              echo "❌ Failed to start Next.js"
-              echo "=== Last 50 lines of logs ==="
-              tail -n 50 /tmp/nextjs.log || echo "No logs available"
-              exit 1
-            fi
-          done
-          
-          echo "✅ Frontend deployed successfully in PRODUCTION!"
-          echo "🌐 URL: http://${{ secrets.EC2_HOST_PROD }}"
+          # Wait and verify
+          sleep 10
+          if curl -s http://localhost:3000 > /dev/null; then
+            echo "✅ Deployment successful!"
+            echo "URL: http://${{ secrets.EC2_HOST_PROD }}"
+          else
+            echo "❌ Deployment failed"
+            tail -20 /tmp/nextjs.log
+            exit 1
+          fi
