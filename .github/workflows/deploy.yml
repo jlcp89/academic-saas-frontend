@@ -44,269 +44,149 @@ jobs:
         NEXTAUTH_SECRET: test-secret-key-for-ci
       run: npm run build
 
-  build:
-    name: Build Docker Image
-    runs-on: ubuntu-latest
-    needs: test
-    if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main'
-    outputs: 
-      image_filename: ${{ steps.create_image_filename.outputs.filename }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Create image filename
-        id: create_image_filename
-        run: echo "filename=academic-saas-frontend-${{ github.sha }}.tar" >> $GITHUB_OUTPUT
-
-      - name: Build Docker image
-        env:
-          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
-          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
-          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-        run: |
-          docker build -t academic-saas-frontend:${{ github.sha }} \
-            --build-arg NEXT_PUBLIC_API_URL="${{ secrets.NEXT_PUBLIC_API_URL }}" \
-            --build-arg NEXTAUTH_URL="${{ secrets.NEXTAUTH_URL }}" \
-            --build-arg NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}" \
-            .
-
-      - name: Save Docker image to tar file
-        run: docker save academic-saas-frontend:${{ github.sha }} -o ${{ steps.create_image_filename.outputs.filename }}
-
-      - name: Upload Docker image artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-docker-image
-          path: ${{ steps.create_image_filename.outputs.filename }}
-          retention-days: 5
 
   deploy-dev:
     name: Deploy to Dev Environment
-    needs: build
+    needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/dev'
     environment: development
-    env:
-      IMAGE_FILENAME: ${{ needs.build.outputs.image_filename }}
     steps:
-      - name: Download Docker image
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-docker-image
-
-      - name: Verify downloaded image
-        run: |
-          echo "📦 Verificando imagen Docker descargada:"
-          ls -lh ${{ env.IMAGE_FILENAME }}
-
-      - name: Copy Docker image to EC2 Dev
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.EC2_HOST_DEV }}
-          username: ec2-user
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: ${{ env.IMAGE_FILENAME }}
-          target: "/home/ec2-user/"    
-
-      - name: Deploy on EC2 Dev
+      - name: Deploy Frontend to EC2 Dev
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST_DEV }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            set -e
-            echo "🚀 Iniciando despliegue de frontend con Docker en DEV..."
+            export NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+            export NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}
+            export NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+            export NODE_ENV=production
             
-            # Navegar al directorio home
             cd /home/ec2-user
+            echo "Removing previous frontend deployment..."
+            sudo rm -rf academic-saas-frontend
             
-            # Verificar e instalar Docker si no existe
-            echo "🔍 Verificando Docker..."
-            if ! command -v docker &> /dev/null; then
-              echo "📦 Docker no encontrado, instalando..."
-              sudo yum update -y
-              sudo yum install -y docker
-              sudo service docker start
-              sudo usermod -a -G docker ec2-user
-              echo "✅ Docker instalado y configurado"
-            else
-              echo "✅ Docker ya está instalado"
-              sudo service docker start
+            echo "Cloning frontend repository (dev branch)..."
+            git clone --depth 1 --branch dev --single-branch https://${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository_owner }}/academic-saas-frontend.git academic-saas-frontend
+            
+            cd academic-saas-frontend
+            
+            echo "Installing Node.js and dependencies..."
+            # Install Node.js if not present
+            if ! command -v node &> /dev/null; then
+              curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
+              sudo yum install -y nodejs
             fi
             
-            # Cargar la imagen Docker
-            echo "📦 Cargando imagen Docker..."
-            docker load -i ${{ env.IMAGE_FILENAME }}
+            echo "Installing dependencies..."
+            npm ci
             
-            # Limpiar archivo de imagen
-            rm ${{ env.IMAGE_FILENAME }}
+            echo "Building application..."
+            npm run build
             
-            # Detener y eliminar contenedor existente si existe
-            echo "🔄 Limpiando contenedores existentes..."
-            docker stop academic-saas-frontend || true
-            docker rm academic-saas-frontend || true
+            echo "Stopping existing nginx service..."
+            sudo systemctl stop nginx || true
             
-            # Ejecutar nuevo contenedor
-            echo "🚀 Iniciando contenedor..."
-            docker run -d \
-              --name academic-saas-frontend \
-              --restart unless-stopped \
-              -p 3000:3000 \
-              -e NEXT_PUBLIC_API_URL="${{ secrets.NEXT_PUBLIC_API_URL }}" \
-              -e NEXTAUTH_URL="${{ secrets.NEXTAUTH_URL }}" \
-              -e NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}" \
-              -e NODE_ENV=production \
-              academic-saas-frontend:${{ github.sha }}
+            echo "Configuring nginx for frontend..."
+            sudo rm -rf /var/www/html/*
+            sudo cp -r .next/standalone/* /var/www/html/
+            sudo cp -r .next/static /var/www/html/.next/
+            sudo cp -r public/* /var/www/html/ || true
             
-            # Esperar y verificar que el contenedor esté funcionando
-            echo "⏳ Esperando que el contenedor esté listo..."
-            sleep 15
+            echo "Setting permissions..."
+            sudo chown -R nginx:nginx /var/www/html
+            sudo chmod -R 755 /var/www/html
             
-            # Verificar estado del contenedor
-            docker ps | grep academic-saas-frontend
-            docker logs academic-saas-frontend --tail 20
+            echo "Starting nginx service..."
+            sudo systemctl start nginx
+            sudo systemctl enable nginx
             
-            # Verificar que la aplicación responda
-            if curl -f http://localhost:3000/ > /dev/null 2>&1; then
-              echo "✅ Frontend desplegado exitosamente en DEV!"
-              echo "🌐 URL: http://${{ secrets.EC2_HOST_DEV }}:3000"
+            echo "Waiting for nginx to start..."
+            sleep 10
+            
+            echo "Verifying deployment..."
+            if curl -f http://localhost/ > /dev/null 2>&1; then
+              echo "✅ Frontend deployed successfully in DEV!"
+              echo "🌐 URL: http://${{ secrets.EC2_HOST_DEV }}"
             else
-              echo "❌ Error: La aplicación no responde en puerto 3000"
-              docker logs academic-saas-frontend
+              echo "❌ Error: Application not responding"
+              sudo systemctl status nginx
+              sudo nginx -t
               exit 1
             fi
-
-      - name: Verify deployment
-        run: |
-          echo "🔍 Verificando despliegue externo..."
-          sleep 10
-          curl -f http://${{ secrets.EC2_HOST_DEV }}:3000/ || exit 1
-          echo "✅ Verificación completada exitosamente!"
-
-      - name: Notify deployment status
-        if: always()
-        run: |
-          if [ "${{ job.status }}" == "success" ]; then
-            echo "🎉 Frontend DEV deployment successful!"
-            echo "✅ Application is live and healthy"
-            echo "🌐 Access at: http://${{ secrets.EC2_HOST_DEV }}:3000"
-          else
-            echo "❌ Frontend DEV deployment failed!"
-            echo "🔍 Check the logs above for more details"
-          fi
 
   deploy-prod:
     name: Deploy to Production Environment  
-    needs: build
+    needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     environment: production
-    env:
-      IMAGE_FILENAME: ${{ needs.build.outputs.image_filename }}
     steps:
-      - name: Download Docker image
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-docker-image
-
-      - name: Verify downloaded image
-        run: |
-          echo "📦 Verificando imagen Docker descargada:"
-          ls -lh ${{ env.IMAGE_FILENAME }}
-
-      - name: Copy Docker image to EC2 Prod
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.EC2_HOST_PROD }}
-          username: ec2-user
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: ${{ env.IMAGE_FILENAME }}
-          target: "/home/ec2-user/"
-
-      - name: Deploy on EC2 Prod
+      - name: Deploy Frontend to EC2 Prod
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST_PROD }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            set -e
-            echo "🚀 Iniciando despliegue de frontend con Docker en PRODUCTION..."
+            export NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_PROD }}
+            export NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_PROD }}
+            export NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+            export NODE_ENV=production
             
-            # Navegar al directorio home
             cd /home/ec2-user
+            echo "Creating backup of current frontend deployment..."
+            sudo cp -r academic-saas-frontend academic-saas-frontend-backup-$(date +%Y%m%d-%H%M%S) || true
             
-            # Verificar e instalar Docker si no existe
-            echo "🔍 Verificando Docker..."
-            if ! command -v docker &> /dev/null; then
-              echo "📦 Docker no encontrado, instalando..."
-              sudo yum update -y
-              sudo yum install -y docker
-              sudo service docker start
-              sudo usermod -a -G docker ec2-user
-              echo "✅ Docker instalado y configurado"
-            else
-              echo "✅ Docker ya está instalado"
-              sudo service docker start
+            echo "Removing previous frontend deployment..."
+            sudo rm -rf academic-saas-frontend
+            
+            echo "Cloning frontend repository (main branch)..."
+            git clone --depth 1 --branch main --single-branch https://${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository_owner }}/academic-saas-frontend.git academic-saas-frontend
+            
+            cd academic-saas-frontend
+            
+            echo "Installing Node.js and dependencies..."
+            # Install Node.js if not present
+            if ! command -v node &> /dev/null; then
+              curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
+              sudo yum install -y nodejs
             fi
             
-            # Cargar la imagen Docker
-            echo "📦 Cargando imagen Docker..."
-            docker load -i ${{ env.IMAGE_FILENAME }}
+            echo "Installing dependencies..."
+            npm ci
             
-            # Limpiar archivo de imagen
-            rm ${{ env.IMAGE_FILENAME }}
+            echo "Building application..."
+            npm run build
             
-            # Detener y eliminar contenedor existente si existe
-            echo "🔄 Limpiando contenedores existentes..."
-            docker stop academic-saas-frontend || true
-            docker rm academic-saas-frontend || true
+            echo "Stopping existing nginx service..."
+            sudo systemctl stop nginx || true
             
-            # Ejecutar nuevo contenedor
-            echo "🚀 Iniciando contenedor..."
-            docker run -d \
-              --name academic-saas-frontend \
-              --restart unless-stopped \
-              -p 3000:3000 \
-              -e NEXT_PUBLIC_API_URL="${{ secrets.NEXT_PUBLIC_API_URL_PROD }}" \
-              -e NEXTAUTH_URL="${{ secrets.NEXTAUTH_URL_PROD }}" \
-              -e NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}" \
-              -e NODE_ENV=production \
-              academic-saas-frontend:${{ github.sha }}
+            echo "Configuring nginx for frontend..."
+            sudo rm -rf /var/www/html/*
+            sudo cp -r .next/standalone/* /var/www/html/
+            sudo cp -r .next/static /var/www/html/.next/
+            sudo cp -r public/* /var/www/html/ || true
             
-            # Esperar y verificar que el contenedor esté funcionando
-            echo "⏳ Esperando que el contenedor esté listo..."
-            sleep 15
+            echo "Setting permissions..."
+            sudo chown -R nginx:nginx /var/www/html
+            sudo chmod -R 755 /var/www/html
             
-            # Verificar estado del contenedor
-            docker ps | grep academic-saas-frontend
-            docker logs academic-saas-frontend --tail 20
+            echo "Starting nginx service..."
+            sudo systemctl start nginx
+            sudo systemctl enable nginx
             
-            # Verificar que la aplicación responda
-            if curl -f http://localhost:3000/ > /dev/null 2>&1; then
-              echo "✅ Frontend desplegado exitosamente en PRODUCTION!"
+            echo "Waiting for nginx to start..."
+            sleep 10
+            
+            echo "Health check..."
+            if curl -f http://localhost/ > /dev/null 2>&1; then
+              echo "✅ Frontend deployed successfully in PRODUCTION!"
             else
-              echo "❌ Error: La aplicación no responde en puerto 3000"
-              docker logs academic-saas-frontend
+              echo "❌ Error: Application not responding"
+              sudo systemctl status nginx
+              sudo nginx -t
               exit 1
             fi
-
-      - name: Verify deployment
-        run: |
-          echo "🔍 Verificando despliegue externo..."
-          sleep 10
-          curl -f http://${{ secrets.EC2_HOST_PROD }}:3000/ || exit 1
-          echo "✅ Verificación completada exitosamente!"
-
-      - name: Notify deployment status
-        if: always()
-        run: |
-          if [ "${{ job.status }}" == "success" ]; then
-            echo "🎉 Frontend PRODUCTION deployment successful!"
-            echo "✅ Application is live and healthy"
-          else
-            echo "❌ Frontend PRODUCTION deployment failed!"
-            echo "🔍 Check the logs above for more details"
-          fi
