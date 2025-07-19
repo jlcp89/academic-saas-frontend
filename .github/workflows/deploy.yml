@@ -73,18 +73,38 @@ jobs:
         key: ${{ secrets.EC2_SSH_KEY }}
         timeout: 30m
         script: |
-          set -e
+          #!/bin/bash
+          # Deployment script for Next.js frontend
           
           echo "🚀 Starting frontend deployment..."
           echo "Instance: ${{ secrets.EC2_HOST_DEV }}"
           echo "Time: $(date)"
           
-          cd /home/ec2-user
+          # Function to handle errors gracefully
+          handle_error() {
+            echo "Error occurred: $1"
+            exit 1
+          }
+          
+          # Move to home directory
+          cd /home/ec2-user || handle_error "Failed to change directory"
           
           # Stop existing service
           echo "Stopping existing Next.js service..."
-          sudo pkill -f "next.*start" || echo "No Next.js process found"
-          sudo pkill -f "node.*server.js" || echo "No Node.js process found"
+          if pgrep -f "next.*start" > /dev/null; then
+            sudo pkill -f "next.*start" || true
+            echo "Next.js process stopped"
+          else
+            echo "No Next.js process found"
+          fi
+          
+          if pgrep -f "node.*server.js" > /dev/null; then
+            sudo pkill -f "node.*server.js" || true
+            echo "Node.js process stopped"
+          else
+            echo "No Node.js process found"
+          fi
+          
           sleep 3
           
           # Clean previous deployment
@@ -209,13 +229,21 @@ jobs:
         key: ${{ secrets.EC2_SSH_KEY }}
         timeout: 30m
         script: |
-          set -e
+          #!/bin/bash
+          # Deployment script for Next.js frontend (PRODUCTION)
           
           echo "🚀 Starting frontend deployment to PRODUCTION..."
           echo "Instance: ${{ secrets.EC2_HOST_PROD }}"
           echo "Time: $(date)"
           
-          cd /home/ec2-user
+          # Function to handle errors gracefully
+          handle_error() {
+            echo "Error occurred: $1"
+            exit 1
+          }
+          
+          # Move to home directory
+          cd /home/ec2-user || handle_error "Failed to change directory"
           
           # Create backup
           echo "Creating backup of current deployment..."
@@ -225,8 +253,20 @@ jobs:
           
           # Stop existing service
           echo "Stopping existing Next.js service..."
-          sudo pkill -f "next.*start" || echo "No Next.js process found"
-          sudo pkill -f "node.*server.js" || echo "No Node.js process found"
+          if pgrep -f "next.*start" > /dev/null; then
+            sudo pkill -f "next.*start" || true
+            echo "Next.js process stopped"
+          else
+            echo "No Next.js process found"
+          fi
+          
+          if pgrep -f "node.*server.js" > /dev/null; then
+            sudo pkill -f "node.*server.js" || true
+            echo "Node.js process stopped"
+          else
+            echo "No Node.js process found"
+          fi
+          
           sleep 3
           
           # Clean previous deployment
