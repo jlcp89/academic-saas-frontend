@@ -44,220 +44,291 @@ jobs:
         NEXTAUTH_SECRET: test-secret-key-for-ci
       run: npm run build
 
-
-  deploy-dev:
-    name: Deploy to Dev Environment
+  build-and-deploy-dev:
+    name: Build and Deploy to Dev Environment
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/dev'
     environment: development
+    
     steps:
-      - name: Deploy Frontend to EC2 Dev
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.EC2_HOST_DEV }}
-          username: ec2-user
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            export NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
-            export NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}
-            export NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
-            export NODE_ENV=production
-            
-            cd /home/ec2-user
-            echo "Removing previous frontend deployment..."
-            sudo rm -rf academic-saas-frontend
-            
-            echo "Cloning frontend repository (dev branch)..."
-            git clone --depth 1 --branch dev --single-branch https://${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository_owner }}/academic-saas-frontend.git academic-saas-frontend
-            
-            cd academic-saas-frontend
-            
-            echo "Installing Node.js and dependencies..."
-            
-            # Remove existing Node.js installation
-            echo "Removing existing Node.js installation..."
-            sudo yum remove -y nodejs npm || true
-            sudo rm -rf /usr/bin/node /usr/bin/npm /usr/lib/node_modules || true
-            sudo rm -rf /usr/local/lib/node* /usr/local/bin/node* /usr/local/bin/npm* || true
-            sudo rm -rf $HOME/.nvm || true
-            
-            # Install Node.js 18 using unofficial builds for Amazon Linux 2 (glibc 2.17)
-            echo "Installing Node.js 18 (unofficial build for Amazon Linux 2)..."
-            cd /tmp
-            wget https://unofficial-builds.nodejs.org/download/release/v18.20.5/node-v18.20.5-linux-x64-glibc-217.tar.gz
-            
-            # Extract to /usr/local
-            sudo tar -xzf node-v18.20.5-linux-x64-glibc-217.tar.gz -C /usr/local --strip-components=1
-            
-            # Verify installation
-            echo "Node.js version: $(/usr/local/bin/node --version)"
-            echo "NPM version: $(/usr/local/bin/npm --version)"
-            
-            # Add to PATH for this session
-            export PATH=/usr/local/bin:$PATH
-            
-            cd /home/ec2-user/academic-saas-frontend
-            
-            echo "Installing dependencies..."
-            /usr/local/bin/npm ci
-            
-            echo "Building application with environment variables..."
-            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
-            NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }} \
-            NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }} \
-            /usr/local/bin/npm run build
-            
-            echo "Stopping existing Next.js service..."
-            sudo pkill -f "next.*start" || echo "No Next.js process found"
-            sudo pkill -f "node.*server.js" || echo "No Node.js process found"
-            
-            echo "Starting Next.js application..."
-            # Start Next.js in production mode on port 3000
-            nohup /usr/local/bin/npm start > /tmp/nextjs.log 2>&1 &
-            echo $! > /tmp/nextjs.pid
-            
-            echo "Waiting for Next.js to start..."
-            sleep 15
-            
-            # Verify Next.js is running
-            if [ -f /tmp/nextjs.pid ]; then
-              NEXTJS_PID=$(cat /tmp/nextjs.pid)
-              if ps -p $NEXTJS_PID > /dev/null 2>&1; then
-                echo "✅ Next.js started successfully with PID: $NEXTJS_PID"
-              else
-                echo "❌ Next.js process not running"
-                cat /tmp/nextjs.log || echo "No logs available"
-                exit 1
-              fi
-            fi
-            
-            echo "Updating nginx configuration..."
-            # Copy the updated nginx config from backend repo
-            if [ -f "/home/ec2-user/academic-saas-backend/nginx.conf" ]; then
-              sudo cp /home/ec2-user/academic-saas-backend/nginx.conf /etc/nginx/nginx.conf
-              sudo nginx -t || { echo "Nginx config test failed"; exit 1; }
-              sudo systemctl reload nginx
-              echo "✅ Nginx configuration updated"
-            fi
-            
-            echo "Verifying frontend deployment..."
-            for i in {1..5}; do
-              if curl -f http://localhost:3000/ > /dev/null 2>&1; then
-                echo "✅ Frontend deployed successfully in DEV!"
-                echo "🌐 URL: http://${{ secrets.EC2_HOST_DEV }}"
-                echo "🎨 Frontend: http://${{ secrets.EC2_HOST_DEV }}/ (via nginx)"
-                echo "🔧 Backend API: http://${{ secrets.EC2_HOST_DEV }}/api/"
-                break
-              else
-                echo "Attempt $i/5: Waiting for frontend to respond..."
-                sleep 3
-                if [ $i -eq 5 ]; then
-                  echo "❌ Frontend deployment failed"
-                  echo "Next.js logs:"
-                  cat /tmp/nextjs.log || echo "No logs available"
-                  exit 1
-                fi
-              fi
-            done
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-  deploy-prod:
-    name: Deploy to Production Environment  
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build application
+      env:
+        NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+        NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+        NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+      run: |
+        echo "Building Next.js application..."
+        npm run build
+        
+        # Create deployment package
+        echo "Creating deployment package..."
+        mkdir -p deployment-package
+        cp -r .next deployment-package/
+        cp -r public deployment-package/
+        cp package*.json deployment-package/
+        
+        # Create standalone package.json with only production dependencies
+        cd deployment-package
+        npm ci --only=production
+        
+        # Create start script
+        cat > start.sh << 'EOF'
+        #!/bin/bash
+        export NEXT_PUBLIC_API_URL=$1
+        export NEXTAUTH_URL=$2
+        export NEXTAUTH_SECRET=$3
+        export NODE_ENV=production
+        export PATH=/usr/local/bin:$PATH
+        /usr/local/bin/npm start
+        EOF
+        chmod +x start.sh
+        
+        # Create archive
+        cd ..
+        tar -czf deployment-package.tar.gz deployment-package/
+
+    - name: Upload deployment package
+      uses: actions/upload-artifact@v4
+      with:
+        name: deployment-package-dev
+        path: deployment-package.tar.gz
+        retention-days: 1
+
+    - name: Copy deployment package to EC2
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.EC2_HOST_DEV }}
+        username: ec2-user
+        key: ${{ secrets.EC2_SSH_KEY }}
+        source: "deployment-package.tar.gz"
+        target: "/tmp/"
+
+    - name: Deploy to EC2 Dev
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.EC2_HOST_DEV }}
+        username: ec2-user
+        key: ${{ secrets.EC2_SSH_KEY }}
+        timeout: 10m
+        script: |
+          set -e
+          
+          echo "🚀 Starting frontend deployment..."
+          
+          cd /home/ec2-user
+          
+          # Stop existing service
+          echo "Stopping existing Next.js service..."
+          sudo pkill -f "next.*start" || echo "No Next.js process found"
+          sudo pkill -f "node.*server.js" || echo "No Node.js process found"
+          sleep 3
+          
+          # Clean previous deployment
+          echo "Cleaning previous deployment..."
+          sudo rm -rf academic-saas-frontend-old || true
+          [ -d academic-saas-frontend ] && mv academic-saas-frontend academic-saas-frontend-old
+          
+          # Create deployment directory and extract
+          mkdir -p academic-saas-frontend
+          cd academic-saas-frontend
+          tar -xzf /tmp/deployment-package.tar.gz --strip-components=1
+          rm /tmp/deployment-package.tar.gz
+          
+          # Ensure Node.js 18 is installed
+          if [ ! -f /usr/local/bin/node ] || [ "$(/usr/local/bin/node --version)" != "v18.20.5" ]; then
+            echo "Installing Node.js 18..."
+            cd /tmp
+            wget -q https://unofficial-builds.nodejs.org/download/release/v18.20.5/node-v18.20.5-linux-x64-glibc-217.tar.gz
+            sudo tar -xzf node-v18.20.5-linux-x64-glibc-217.tar.gz -C /usr/local --strip-components=1
+            cd -
+          fi
+          
+          echo "Node.js version: $(/usr/local/bin/node --version)"
+          
+          # Start application
+          echo "Starting Next.js application..."
+          nohup ./start.sh "${{ secrets.NEXT_PUBLIC_API_URL }}" "${{ secrets.NEXTAUTH_URL }}" "${{ secrets.NEXTAUTH_SECRET }}" > /tmp/nextjs.log 2>&1 &
+          echo $! > /tmp/nextjs.pid
+          
+          # Wait for startup
+          echo "Waiting for Next.js to start..."
+          for i in {1..10}; do
+            if curl -s -f http://localhost:3000/ > /dev/null; then
+              echo "✅ Next.js started successfully!"
+              break
+            fi
+            echo "Attempt $i/10: Waiting for startup..."
+            sleep 3
+            if [ $i -eq 10 ]; then
+              echo "❌ Failed to start Next.js"
+              cat /tmp/nextjs.log
+              exit 1
+            fi
+          done
+          
+          # Update nginx if needed
+          echo "Checking nginx configuration..."
+          if [ -f "/home/ec2-user/academic-saas-backend/nginx.conf" ]; then
+            sudo cp /home/ec2-user/academic-saas-backend/nginx.conf /etc/nginx/nginx.conf
+            sudo nginx -t && sudo systemctl reload nginx
+            echo "✅ Nginx configuration updated"
+          fi
+          
+          echo "✅ Frontend deployed successfully!"
+          echo "🌐 URL: http://${{ secrets.EC2_HOST_DEV }}"
+          echo "🎨 Frontend: http://${{ secrets.EC2_HOST_DEV }}/ (via nginx)"
+          echo "🔧 Backend API: http://${{ secrets.EC2_HOST_DEV }}/api/"
+
+  build-and-deploy-prod:
+    name: Build and Deploy to Production Environment  
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     environment: production
+    
     steps:
-      - name: Deploy Frontend to EC2 Prod
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.EC2_HOST_PROD }}
-          username: ec2-user
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            export NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_PROD }}
-            export NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_PROD }}
-            export NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
-            export NODE_ENV=production
-            
-            cd /home/ec2-user
-            echo "Creating backup of current frontend deployment..."
-            sudo cp -r academic-saas-frontend academic-saas-frontend-backup-$(date +%Y%m%d-%H%M%S) || true
-            
-            echo "Removing previous frontend deployment..."
-            sudo rm -rf academic-saas-frontend
-            
-            echo "Cloning frontend repository (main branch)..."
-            git clone --depth 1 --branch main --single-branch https://${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository_owner }}/academic-saas-frontend.git academic-saas-frontend
-            
-            cd academic-saas-frontend
-            
-            echo "Installing Node.js and dependencies..."
-            
-            # Remove existing Node.js installation
-            echo "Removing existing Node.js installation..."
-            sudo yum remove -y nodejs npm || true
-            sudo rm -rf /usr/bin/node /usr/bin/npm /usr/lib/node_modules || true
-            sudo rm -rf /usr/local/lib/node* /usr/local/bin/node* /usr/local/bin/npm* || true
-            sudo rm -rf $HOME/.nvm || true
-            
-            # Install Node.js 18 using unofficial builds for Amazon Linux 2 (glibc 2.17)
-            echo "Installing Node.js 18 (unofficial build for Amazon Linux 2)..."
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build application
+      env:
+        NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL_PROD }}
+        NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL_PROD }}
+        NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+      run: |
+        echo "Building Next.js application..."
+        npm run build
+        
+        # Create deployment package
+        echo "Creating deployment package..."
+        mkdir -p deployment-package
+        cp -r .next deployment-package/
+        cp -r public deployment-package/
+        cp package*.json deployment-package/
+        
+        # Create standalone package.json with only production dependencies
+        cd deployment-package
+        npm ci --only=production
+        
+        # Create start script
+        cat > start.sh << 'EOF'
+        #!/bin/bash
+        export NEXT_PUBLIC_API_URL=$1
+        export NEXTAUTH_URL=$2
+        export NEXTAUTH_SECRET=$3
+        export NODE_ENV=production
+        export PATH=/usr/local/bin:$PATH
+        /usr/local/bin/npm start
+        EOF
+        chmod +x start.sh
+        
+        # Create archive
+        cd ..
+        tar -czf deployment-package.tar.gz deployment-package/
+
+    - name: Upload deployment package
+      uses: actions/upload-artifact@v4
+      with:
+        name: deployment-package-prod
+        path: deployment-package.tar.gz
+        retention-days: 1
+
+    - name: Copy deployment package to EC2
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.EC2_HOST_PROD }}
+        username: ec2-user
+        key: ${{ secrets.EC2_SSH_KEY }}
+        source: "deployment-package.tar.gz"
+        target: "/tmp/"
+
+    - name: Deploy to EC2 Prod
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.EC2_HOST_PROD }}
+        username: ec2-user
+        key: ${{ secrets.EC2_SSH_KEY }}
+        timeout: 10m
+        script: |
+          set -e
+          
+          echo "🚀 Starting frontend deployment..."
+          
+          cd /home/ec2-user
+          
+          # Create backup
+          echo "Creating backup of current deployment..."
+          sudo cp -r academic-saas-frontend academic-saas-frontend-backup-$(date +%Y%m%d-%H%M%S) || true
+          
+          # Stop existing service
+          echo "Stopping existing Next.js service..."
+          sudo pkill -f "next.*start" || echo "No Next.js process found"
+          sudo pkill -f "node.*server.js" || echo "No Node.js process found"
+          sleep 3
+          
+          # Clean previous deployment
+          echo "Cleaning previous deployment..."
+          sudo rm -rf academic-saas-frontend-old || true
+          [ -d academic-saas-frontend ] && mv academic-saas-frontend academic-saas-frontend-old
+          
+          # Create deployment directory and extract
+          mkdir -p academic-saas-frontend
+          cd academic-saas-frontend
+          tar -xzf /tmp/deployment-package.tar.gz --strip-components=1
+          rm /tmp/deployment-package.tar.gz
+          
+          # Ensure Node.js 18 is installed
+          if [ ! -f /usr/local/bin/node ] || [ "$(/usr/local/bin/node --version)" != "v18.20.5" ]; then
+            echo "Installing Node.js 18..."
             cd /tmp
-            wget https://unofficial-builds.nodejs.org/download/release/v18.20.5/node-v18.20.5-linux-x64-glibc-217.tar.gz
-            
-            # Extract to /usr/local
+            wget -q https://unofficial-builds.nodejs.org/download/release/v18.20.5/node-v18.20.5-linux-x64-glibc-217.tar.gz
             sudo tar -xzf node-v18.20.5-linux-x64-glibc-217.tar.gz -C /usr/local --strip-components=1
-            
-            # Verify installation
-            echo "Node.js version: $(/usr/local/bin/node --version)"
-            echo "NPM version: $(/usr/local/bin/npm --version)"
-            
-            # Add to PATH for this session
-            export PATH=/usr/local/bin:$PATH
-            
-            cd /home/ec2-user/academic-saas-frontend
-            
-            echo "Installing dependencies..."
-            /usr/local/bin/npm ci
-            
-            echo "Building application with environment variables..."
-            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_PROD }} \
-            NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_PROD }} \
-            NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }} \
-            /usr/local/bin/npm run build
-            
-            echo "Stopping existing Next.js service..."
-            sudo pkill -f "next.*start" || echo "No Next.js process found"
-            sudo pkill -f "node.*server.js" || echo "No Node.js process found"
-            
-            echo "Starting Next.js application..."
-            # Start Next.js in production mode on port 3000
-            nohup /usr/local/bin/npm start > /tmp/nextjs.log 2>&1 &
-            echo $! > /tmp/nextjs.pid
-            
-            echo "Waiting for Next.js to start..."
-            sleep 15
-            
-            # Verify Next.js is running
-            if [ -f /tmp/nextjs.pid ]; then
-              NEXTJS_PID=$(cat /tmp/nextjs.pid)
-              if ps -p $NEXTJS_PID > /dev/null 2>&1; then
-                echo "✅ Next.js started successfully with PID: $NEXTJS_PID"
-              else
-                echo "❌ Next.js process not running"
-                cat /tmp/nextjs.log || echo "No logs available"
-                exit 1
-              fi
+            cd -
+          fi
+          
+          echo "Node.js version: $(/usr/local/bin/node --version)"
+          
+          # Start application
+          echo "Starting Next.js application..."
+          nohup ./start.sh "${{ secrets.NEXT_PUBLIC_API_URL_PROD }}" "${{ secrets.NEXTAUTH_URL_PROD }}" "${{ secrets.NEXTAUTH_SECRET }}" > /tmp/nextjs.log 2>&1 &
+          echo $! > /tmp/nextjs.pid
+          
+          # Wait for startup
+          echo "Waiting for Next.js to start..."
+          for i in {1..10}; do
+            if curl -s -f http://localhost:3000/ > /dev/null; then
+              echo "✅ Next.js started successfully!"
+              break
             fi
-            
-            echo "Health check..."
-            for i in {1..5}; do
-              if curl -f http://localhost:3000/ > /dev/null 2>&1; then
-                echo "✅ Frontend deployed successfully in PRODUCTION!"
-                break
-              else
-                echo "Attempt $i/5: Waiting for frontend to respond..."
-                sleep 3
-              fi
-            done
+            echo "Attempt $i/10: Waiting for startup..."
+            sleep 3
+            if [ $i -eq 10 ]; then
+              echo "❌ Failed to start Next.js"
+              cat /tmp/nextjs.log
+              exit 1
+            fi
+          done
+          
+          echo "✅ Frontend deployed successfully in PRODUCTION!"
