@@ -52,19 +52,41 @@ jobs:
     environment: development
     
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build application
+      env:
+        NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+        NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+        NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+      run: |
+        npm run build
+        # Prepare standalone deployment
+        cp -r public .next/standalone/
+        cp -r .next/static .next/standalone/.next/
+
     - name: Deploy Frontend to EC2 Dev
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.EC2_HOST_DEV }}
         username: ec2-user
         key: ${{ secrets.EC2_SSH_KEY }}
-        timeout: 30m
-        command_timeout: 30m
+        timeout: 15m
+        command_timeout: 15m
         script: |
-          # Kill any existing Node processes for frontend
-          echo "Cleaning up old processes..."
-          sudo killall -q node || true
-          sleep 2
+          # Stop existing service
+          echo "Stopping frontend service..."
+          sudo systemctl stop academic-frontend || true
           
           # Remove old deployment
           cd /home/ec2-user
@@ -73,9 +95,8 @@ jobs:
             mv academic-saas-frontend academic-saas-frontend-old
           fi
           
-          # Clone fresh code
-          echo "Cloning repository..."
-          git clone --depth 1 --branch dev https://${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository_owner }}/academic-saas-frontend.git
+          # Create deployment directory
+          mkdir -p academic-saas-frontend
           cd academic-saas-frontend
           
           # Install Node.js if needed
@@ -87,22 +108,6 @@ jobs:
             cd /home/ec2-user/academic-saas-frontend
           fi
           
-          # Build the app
-          echo "Building application..."
-          export PATH=/usr/local/bin:$PATH
-          /usr/local/bin/npm ci
-          NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
-          NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }} \
-          NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }} \
-          /usr/local/bin/npm run build
-          
-          # Use the standalone build
-          cd .next/standalone
-          
-          # Copy static files
-          cp -r ../../public .
-          cp -r ../.next/static .next/
-          
           # Create systemd service file for frontend
           sudo tee /etc/systemd/system/academic-frontend.service > /dev/null <<EOF
           [Unit]
@@ -112,8 +117,10 @@ jobs:
           [Service]
           Type=simple
           User=ec2-user
-          WorkingDirectory=/home/ec2-user/academic-saas-frontend/.next/standalone
+          WorkingDirectory=/home/ec2-user/academic-saas-frontend
           Environment="NODE_ENV=production"
+          Environment="PORT=3000"
+          Environment="HOSTNAME=0.0.0.0"
           Environment="NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}"
           Environment="NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}"
           Environment="NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}"
@@ -127,10 +134,43 @@ jobs:
           WantedBy=multi-user.target
           EOF
           
-          # Start the service
           sudo systemctl daemon-reload
           sudo systemctl enable academic-frontend
-          sudo systemctl restart academic-frontend
+          
+          echo "Ready to receive files..."
+
+    - name: Create deployment archive
+      run: |
+        cd .next/standalone
+        tar -czf ../../standalone.tar.gz .
+        cd ../..
+
+    - name: Copy build to EC2
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.EC2_HOST_DEV }}
+        username: ec2-user
+        key: ${{ secrets.EC2_SSH_KEY }}
+        source: standalone.tar.gz
+        target: /tmp
+
+    - name: Start frontend service
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.EC2_HOST_DEV }}
+        username: ec2-user
+        key: ${{ secrets.EC2_SSH_KEY }}
+        timeout: 5m
+        command_timeout: 5m
+        script: |
+          cd /home/ec2-user/academic-saas-frontend
+          
+          # Extract standalone build
+          tar -xzf /tmp/standalone.tar.gz
+          rm /tmp/standalone.tar.gz
+          
+          # Start the service
+          sudo systemctl start academic-frontend
           
           # Wait and verify through Nginx
           sleep 10
@@ -158,19 +198,41 @@ jobs:
     environment: production
     
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build application
+      env:
+        NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL_PROD }}
+        NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL_PROD }}
+        NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+      run: |
+        npm run build
+        # Prepare standalone deployment
+        cp -r public .next/standalone/
+        cp -r .next/static .next/standalone/.next/
+
     - name: Deploy Frontend to EC2 Prod
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.EC2_HOST_PROD }}
         username: ec2-user
         key: ${{ secrets.EC2_SSH_KEY }}
-        timeout: 30m
-        command_timeout: 30m
+        timeout: 15m
+        command_timeout: 15m
         script: |
-          # Kill any existing Node processes for frontend
-          echo "Cleaning up old processes..."
-          sudo killall -q node || true
-          sleep 2
+          # Stop existing service
+          echo "Stopping frontend service..."
+          sudo systemctl stop academic-frontend || true
           
           # Backup and remove old deployment
           cd /home/ec2-user
@@ -180,9 +242,8 @@ jobs:
             mv academic-saas-frontend academic-saas-frontend-old
           fi
           
-          # Clone fresh code
-          echo "Cloning repository..."
-          git clone --depth 1 --branch main https://${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository_owner }}/academic-saas-frontend.git
+          # Create deployment directory
+          mkdir -p academic-saas-frontend
           cd academic-saas-frontend
           
           # Install Node.js if needed
@@ -194,22 +255,6 @@ jobs:
             cd /home/ec2-user/academic-saas-frontend
           fi
           
-          # Build the app
-          echo "Building application..."
-          export PATH=/usr/local/bin:$PATH
-          /usr/local/bin/npm ci
-          NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_PROD }} \
-          NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_PROD }} \
-          NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }} \
-          /usr/local/bin/npm run build
-          
-          # Use the standalone build
-          cd .next/standalone
-          
-          # Copy static files
-          cp -r ../../public .
-          cp -r ../.next/static .next/
-          
           # Create systemd service file for frontend
           sudo tee /etc/systemd/system/academic-frontend.service > /dev/null <<EOF
           [Unit]
@@ -219,8 +264,10 @@ jobs:
           [Service]
           Type=simple
           User=ec2-user
-          WorkingDirectory=/home/ec2-user/academic-saas-frontend/.next/standalone
+          WorkingDirectory=/home/ec2-user/academic-saas-frontend
           Environment="NODE_ENV=production"
+          Environment="PORT=3000"
+          Environment="HOSTNAME=0.0.0.0"
           Environment="NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_PROD }}"
           Environment="NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_PROD }}"
           Environment="NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}"
@@ -234,10 +281,41 @@ jobs:
           WantedBy=multi-user.target
           EOF
           
-          # Start the service
           sudo systemctl daemon-reload
           sudo systemctl enable academic-frontend
-          sudo systemctl restart academic-frontend
+          
+          echo "Ready to receive files..."
+
+    - name: Transfer standalone build to EC2
+      run: |
+        # Create deployment package
+        cd .next/standalone
+        tar -czf ../../frontend-standalone.tar.gz .
+        cd ../..
+        
+        # Transfer using SSH
+        echo "${{ secrets.EC2_SSH_KEY }}" > deploy_key
+        chmod 600 deploy_key
+        scp -o StrictHostKeyChecking=no -i deploy_key frontend-standalone.tar.gz ec2-user@${{ secrets.EC2_HOST_PROD }}:/tmp/
+        rm deploy_key frontend-standalone.tar.gz
+
+    - name: Start frontend service
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.EC2_HOST_PROD }}
+        username: ec2-user
+        key: ${{ secrets.EC2_SSH_KEY }}
+        timeout: 5m
+        command_timeout: 5m
+        script: |
+          cd /home/ec2-user/academic-saas-frontend
+          
+          # Extract standalone build
+          tar -xzf /tmp/standalone.tar.gz
+          rm /tmp/standalone.tar.gz
+          
+          # Start the service
+          sudo systemctl start academic-frontend
           
           # Wait and verify through Nginx
           sleep 10
