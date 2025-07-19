@@ -52,56 +52,16 @@ jobs:
     environment: development
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Build application
-      env:
-        NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
-        NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
-        NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-      run: npm run build
-
-    - name: Create deployment archive
-      run: |
-        # Copy static files to standalone
-        cp -r public .next/standalone/
-        cp -r .next/static .next/standalone/.next/
-        
-        # Create deployment archive from standalone build
-        cd .next/standalone
-        tar -czf ../../deploy.tar.gz .
-        cd ../..
-        ls -la deploy.tar.gz
-
-    - name: Copy files to EC2
-      uses: appleboy/scp-action@master
-      with:
-        host: ${{ secrets.EC2_HOST_DEV }}
-        username: ec2-user
-        key: ${{ secrets.EC2_SSH_KEY }}
-        source: "deploy.tar.gz"
-        target: "/tmp/"
-
     - name: Deploy Frontend to EC2 Dev
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.EC2_HOST_DEV }}
         username: ec2-user
         key: ${{ secrets.EC2_SSH_KEY }}
-        timeout: 10m
-        command_timeout: 10m
+        timeout: 30m
+        command_timeout: 30m
         script: |
-          # Kill any existing Node processes without causing SSH to exit
+          # Kill any existing Node processes for frontend
           echo "Cleaning up old processes..."
           sudo killall -q node || true
           sleep 2
@@ -113,45 +73,80 @@ jobs:
             mv academic-saas-frontend academic-saas-frontend-old
           fi
           
-          # Create new deployment directory
-          mkdir -p academic-saas-frontend
+          # Clone fresh code
+          echo "Cloning repository..."
+          git clone --depth 1 --branch dev https://${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository_owner }}/academic-saas-frontend.git
           cd academic-saas-frontend
-          
-          # Extract deployment files
-          if [ ! -f /tmp/deploy.tar.gz ]; then
-            echo "❌ Deployment archive not found!"
-            exit 1
-          fi
-          tar -xzf /tmp/deploy.tar.gz
-          rm /tmp/deploy.tar.gz
           
           # Install Node.js if needed
           if [ ! -f /usr/local/bin/node ]; then
             echo "Installing Node.js..."
             cd /tmp
-            wget -q https://unofficial-builds.nodejs.org/download/release/v18.20.5/node-v18.20.5-linux-x64-glibc-217.tar.gz
-            sudo tar -xzf node-v18.20.5-linux-x64-glibc-217.tar.gz -C /usr/local --strip-components=1
+            wget -q https://nodejs.org/dist/v18.20.4/node-v18.20.4-linux-x64.tar.xz
+            sudo tar -xf node-v18.20.4-linux-x64.tar.xz -C /usr/local --strip-components=1
             cd /home/ec2-user/academic-saas-frontend
           fi
           
-          # No need to install dependencies - standalone build includes them
+          # Build the app
+          echo "Building application..."
+          export PATH=/usr/local/bin:$PATH
+          /usr/local/bin/npm ci
+          NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
+          NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }} \
+          NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }} \
+          /usr/local/bin/npm run build
           
-          # Start the app
-          echo "Starting application..."
-          export NODE_ENV=production
-          export NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
-          export NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}
-          export NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
-          nohup /usr/local/bin/node server.js > /tmp/nextjs.log 2>&1 &
+          # Use the standalone build
+          cd .next/standalone
           
-          # Wait and verify
+          # Copy static files
+          cp -r ../../public .
+          cp -r ../.next/static .next/
+          
+          # Create systemd service file for frontend
+          sudo tee /etc/systemd/system/academic-frontend.service > /dev/null <<EOF
+          [Unit]
+          Description=Academic SaaS Frontend
+          After=network.target
+          
+          [Service]
+          Type=simple
+          User=ec2-user
+          WorkingDirectory=/home/ec2-user/academic-saas-frontend/.next/standalone
+          Environment="NODE_ENV=production"
+          Environment="NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}"
+          Environment="NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}"
+          Environment="NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}"
+          ExecStart=/usr/local/bin/node server.js
+          Restart=always
+          RestartSec=10
+          StandardOutput=append:/home/ec2-user/academic-saas-frontend/frontend.log
+          StandardError=append:/home/ec2-user/academic-saas-frontend/frontend-error.log
+          
+          [Install]
+          WantedBy=multi-user.target
+          EOF
+          
+          # Start the service
+          sudo systemctl daemon-reload
+          sudo systemctl enable academic-frontend
+          sudo systemctl restart academic-frontend
+          
+          # Wait and verify through Nginx
           sleep 10
-          if curl -s http://localhost:3000 > /dev/null; then
-            echo "✅ Deployment successful!"
-            echo "URL: http://${{ secrets.EC2_HOST_DEV }}"
+          if sudo systemctl is-active --quiet academic-frontend; then
+            echo "✅ Frontend service is running!"
+            # Verify through Nginx
+            if curl -s -o /dev/null -w "%{http_code}" http://localhost | grep -q "200\|301\|302"; then
+              echo "✅ Frontend accessible through Nginx!"
+              echo "URL: http://${{ secrets.EC2_HOST_DEV }}"
+            else
+              echo "⚠️  Frontend running but not accessible through Nginx"
+              echo "Check Nginx configuration"
+            fi
           else
-            echo "❌ Deployment failed"
-            tail -20 /tmp/nextjs.log
+            echo "❌ Frontend service failed to start"
+            sudo journalctl -u academic-frontend -n 50
             exit 1
           fi
 
@@ -163,56 +158,16 @@ jobs:
     environment: production
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Build application
-      env:
-        NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL_PROD }}
-        NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL_PROD }}
-        NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-      run: npm run build
-
-    - name: Create deployment archive
-      run: |
-        # Copy static files to standalone
-        cp -r public .next/standalone/
-        cp -r .next/static .next/standalone/.next/
-        
-        # Create deployment archive from standalone build
-        cd .next/standalone
-        tar -czf ../../deploy.tar.gz .
-        cd ../..
-        ls -la deploy.tar.gz
-
-    - name: Copy files to EC2
-      uses: appleboy/scp-action@master
-      with:
-        host: ${{ secrets.EC2_HOST_PROD }}
-        username: ec2-user
-        key: ${{ secrets.EC2_SSH_KEY }}
-        source: "deploy.tar.gz"
-        target: "/tmp/"
-
     - name: Deploy Frontend to EC2 Prod
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.EC2_HOST_PROD }}
         username: ec2-user
         key: ${{ secrets.EC2_SSH_KEY }}
-        timeout: 10m
-        command_timeout: 10m
+        timeout: 30m
+        command_timeout: 30m
         script: |
-          # Kill any existing Node processes without causing SSH to exit
+          # Kill any existing Node processes for frontend
           echo "Cleaning up old processes..."
           sudo killall -q node || true
           sleep 2
@@ -225,44 +180,79 @@ jobs:
             mv academic-saas-frontend academic-saas-frontend-old
           fi
           
-          # Create new deployment directory
-          mkdir -p academic-saas-frontend
+          # Clone fresh code
+          echo "Cloning repository..."
+          git clone --depth 1 --branch main https://${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository_owner }}/academic-saas-frontend.git
           cd academic-saas-frontend
-          
-          # Extract deployment files
-          if [ ! -f /tmp/deploy.tar.gz ]; then
-            echo "❌ Deployment archive not found!"
-            exit 1
-          fi
-          tar -xzf /tmp/deploy.tar.gz
-          rm /tmp/deploy.tar.gz
           
           # Install Node.js if needed
           if [ ! -f /usr/local/bin/node ]; then
             echo "Installing Node.js..."
             cd /tmp
-            wget -q https://unofficial-builds.nodejs.org/download/release/v18.20.5/node-v18.20.5-linux-x64-glibc-217.tar.gz
-            sudo tar -xzf node-v18.20.5-linux-x64-glibc-217.tar.gz -C /usr/local --strip-components=1
+            wget -q https://nodejs.org/dist/v18.20.4/node-v18.20.4-linux-x64.tar.xz
+            sudo tar -xf node-v18.20.4-linux-x64.tar.xz -C /usr/local --strip-components=1
             cd /home/ec2-user/academic-saas-frontend
           fi
           
-          # No need to install dependencies - standalone build includes them
+          # Build the app
+          echo "Building application..."
+          export PATH=/usr/local/bin:$PATH
+          /usr/local/bin/npm ci
+          NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_PROD }} \
+          NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_PROD }} \
+          NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }} \
+          /usr/local/bin/npm run build
           
-          # Start the app
-          echo "Starting application..."
-          export NODE_ENV=production
-          export NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_PROD }}
-          export NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_PROD }}
-          export NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
-          nohup /usr/local/bin/node server.js > /tmp/nextjs.log 2>&1 &
+          # Use the standalone build
+          cd .next/standalone
           
-          # Wait and verify
+          # Copy static files
+          cp -r ../../public .
+          cp -r ../.next/static .next/
+          
+          # Create systemd service file for frontend
+          sudo tee /etc/systemd/system/academic-frontend.service > /dev/null <<EOF
+          [Unit]
+          Description=Academic SaaS Frontend
+          After=network.target
+          
+          [Service]
+          Type=simple
+          User=ec2-user
+          WorkingDirectory=/home/ec2-user/academic-saas-frontend/.next/standalone
+          Environment="NODE_ENV=production"
+          Environment="NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_PROD }}"
+          Environment="NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_PROD }}"
+          Environment="NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}"
+          ExecStart=/usr/local/bin/node server.js
+          Restart=always
+          RestartSec=10
+          StandardOutput=append:/home/ec2-user/academic-saas-frontend/frontend.log
+          StandardError=append:/home/ec2-user/academic-saas-frontend/frontend-error.log
+          
+          [Install]
+          WantedBy=multi-user.target
+          EOF
+          
+          # Start the service
+          sudo systemctl daemon-reload
+          sudo systemctl enable academic-frontend
+          sudo systemctl restart academic-frontend
+          
+          # Wait and verify through Nginx
           sleep 10
-          if curl -s http://localhost:3000 > /dev/null; then
-            echo "✅ Deployment successful!"
-            echo "URL: http://${{ secrets.EC2_HOST_PROD }}"
+          if sudo systemctl is-active --quiet academic-frontend; then
+            echo "✅ Frontend service is running!"
+            # Verify through Nginx
+            if curl -s -o /dev/null -w "%{http_code}" http://localhost | grep -q "200\|301\|302"; then
+              echo "✅ Frontend accessible through Nginx!"
+              echo "URL: http://${{ secrets.EC2_HOST_PROD }}"
+            else
+              echo "⚠️  Frontend running but not accessible through Nginx"
+              echo "Check Nginx configuration"
+            fi
           else
-            echo "❌ Deployment failed"
-            tail -20 /tmp/nextjs.log
+            echo "❌ Frontend service failed to start"
+            sudo journalctl -u academic-frontend -n 50
             exit 1
           fi
