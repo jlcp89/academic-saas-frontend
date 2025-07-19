@@ -187,10 +187,10 @@ function LoginForm() {
 
 The development environment is currently deployed and accessible at:
 
-- **Frontend**: http://107.21.145.151:3000
-- **Backend API**: http://107.21.145.151:8000
-- **Django Admin**: http://107.21.145.151:8000/admin/
-- **API Docs**: http://107.21.145.151:8000/api/docs/
+- **Frontend**: http://52.20.22.173:3000
+- **Backend API**: http://52.20.22.173:8000
+- **Django Admin**: http://52.20.22.173:8000/admin/
+- **API Docs**: http://52.20.22.173:8000/api/docs/
 
 **Credentials:** `admin / admin123`
 
@@ -209,19 +209,19 @@ The development environment is currently deployed and accessible at:
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 860639121390.dkr.ecr.us-east-1.amazonaws.com
 
 # Access EC2 instance
-ssh -i ~/.ssh/academic_saas_aws ec2-user@107.21.145.151
+ssh -i ~/.ssh/academic_saas_aws ec2-user@52.20.22.173
 
 # Deploy latest frontend image
 docker pull 860639121390.dkr.ecr.us-east-1.amazonaws.com/academic-saas-frontend:latest
 docker stop academic-saas-frontend || true
 docker rm academic-saas-frontend || true
-docker run -d --name academic-saas-frontend --restart unless-stopped --network host -e NEXT_PUBLIC_API_URL=http://107.21.145.151:8000 -e NEXTAUTH_URL=http://107.21.145.151:3000 -e NEXTAUTH_SECRET=dev-secret-key-change-in-production 860639121390.dkr.ecr.us-east-1.amazonaws.com/academic-saas-frontend:latest
+docker run -d --name academic-saas-frontend --restart unless-stopped --network host -e NEXT_PUBLIC_API_URL=http://52.20.22.173:8000 -e NEXTAUTH_URL=http://52.20.22.173:3000 -e NEXTAUTH_SECRET=dev-secret-key-change-in-production 860639121390.dkr.ecr.us-east-1.amazonaws.com/academic-saas-frontend:latest
 ```
 
 ### Infrastructure
 
 **Current Setup:**
-- **AWS EC2**: t2.micro instance (107.21.145.151)
+- **AWS EC2**: t2.micro instance (52.20.22.173)
 - **Docker Containers**: PostgreSQL, Redis, Django, Next.js
 - **ECR**: Container registry for images
 - **GitHub Actions**: CI/CD pipeline
@@ -241,8 +241,8 @@ docker restart academic-saas-frontend
 ### Environment Variables (Production)
 
 ```bash
-NEXT_PUBLIC_API_URL=http://107.21.145.151:8000
-NEXTAUTH_URL=http://107.21.145.151:3000
+NEXT_PUBLIC_API_URL=http://52.20.22.173:8000
+NEXTAUTH_URL=http://52.20.22.173:3000
 NEXTAUTH_SECRET=dev-secret-key-change-in-production
 ```
 
@@ -275,8 +275,8 @@ NEXTAUTH_SECRET=dev-secret-key-change-in-production
 ## Deployment Status
 
 - Infrastructure: ✅ Deployed (AWS EC2)
-- Backend: ✅ Active (http://107.21.145.151:8000)
-- Frontend: ✅ Active (http://107.21.145.151:3000)
+- Backend: ✅ Active (http://52.20.22.173:8000)
+- Frontend: ✅ Active (http://52.20.22.173:3000)
 - Database: ✅ PostgreSQL in Docker
 - Cache: ✅ Redis in Docker
 - CI/CD: ✅ GitHub Actions configured
