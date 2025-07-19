@@ -83,7 +83,10 @@ jobs:
             echo "Installing dependencies..."
             npm ci
             
-            echo "Building application..."
+            echo "Building application with environment variables..."
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
+            NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }} \
+            NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }} \
             npm run build
             
             echo "Stopping existing nginx service..."
@@ -91,9 +94,29 @@ jobs:
             
             echo "Configuring nginx for frontend..."
             sudo rm -rf /var/www/html/*
-            sudo cp -r .next/standalone/* /var/www/html/
-            sudo cp -r .next/static /var/www/html/.next/
-            sudo cp -r public/* /var/www/html/ || true
+            
+            # Copy Next.js standalone files
+            if [ -d ".next/standalone" ]; then
+              echo "Copying standalone files..."
+              sudo cp -r .next/standalone/* /var/www/html/
+            else
+              echo "Warning: .next/standalone not found, using regular build"
+              sudo mkdir -p /var/www/html
+              sudo cp -r .next /var/www/html/
+            fi
+            
+            # Copy static files
+            if [ -d ".next/static" ]; then
+              echo "Copying static files..."
+              sudo mkdir -p /var/www/html/.next/
+              sudo cp -r .next/static /var/www/html/.next/
+            fi
+            
+            # Copy public files
+            if [ -d "public" ]; then
+              echo "Copying public files..."
+              sudo cp -r public/* /var/www/html/ || true
+            fi
             
             echo "Setting permissions..."
             sudo chown -R nginx:nginx /var/www/html
@@ -158,7 +181,10 @@ jobs:
             echo "Installing dependencies..."
             npm ci
             
-            echo "Building application..."
+            echo "Building application with environment variables..."
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_PROD }} \
+            NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_PROD }} \
+            NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }} \
             npm run build
             
             echo "Stopping existing nginx service..."
@@ -166,9 +192,29 @@ jobs:
             
             echo "Configuring nginx for frontend..."
             sudo rm -rf /var/www/html/*
-            sudo cp -r .next/standalone/* /var/www/html/
-            sudo cp -r .next/static /var/www/html/.next/
-            sudo cp -r public/* /var/www/html/ || true
+            
+            # Copy Next.js standalone files
+            if [ -d ".next/standalone" ]; then
+              echo "Copying standalone files..."
+              sudo cp -r .next/standalone/* /var/www/html/
+            else
+              echo "Warning: .next/standalone not found, using regular build"
+              sudo mkdir -p /var/www/html
+              sudo cp -r .next /var/www/html/
+            fi
+            
+            # Copy static files
+            if [ -d ".next/static" ]; then
+              echo "Copying static files..."
+              sudo mkdir -p /var/www/html/.next/
+              sudo cp -r .next/static /var/www/html/.next/
+            fi
+            
+            # Copy public files
+            if [ -d "public" ]; then
+              echo "Copying public files..."
+              sudo cp -r public/* /var/www/html/ || true
+            fi
             
             echo "Setting permissions..."
             sudo chown -R nginx:nginx /var/www/html

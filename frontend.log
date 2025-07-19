@@ -36,3 +36,16 @@
  GET /api/auth/session 200 in 358ms
  GET /api/auth/csrf 200 in 159ms
  POST /api/auth/session 200 in 140ms
+ GET /api/auth/session 200 in 291ms
+ GET /api/auth/csrf 200 in 262ms
+ POST /api/auth/session 200 in 124ms
+ GET /api/auth/session 200 in 311ms
+ GET /api/auth/csrf 200 in 295ms
+ POST /api/auth/session 200 in 105ms
+ GET /api/auth/session 200 in 425ms
+ GET /api/auth/csrf 200 in 431ms
+ POST /api/auth/session 200 in 102ms
+ GET /api/auth/session 200 in 268ms
+ GET /api/auth/csrf 200 in 267ms
+ POST /api/auth/session 200 in 107ms
+[?25h
