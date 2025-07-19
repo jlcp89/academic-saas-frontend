@@ -69,35 +69,50 @@ jobs:
         NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
         NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
         NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-      run: |
-        npm run build
-        # Prepare standalone deployment
-        cp -r public .next/standalone/
-        cp -r .next/static .next/standalone/.next/
+      run: npm run build
 
-    - name: Deploy Frontend to EC2 Dev
+    - name: Create deployment archive
+      run: |
+        echo "Creating deployment archive..."
+        tar -czf deploy.tar.gz .next public node_modules package.json package-lock.json next.config.ts tsconfig.json
+
+    - name: Copy build to EC2
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.EC2_HOST_DEV }}
+        username: ec2-user
+        key: ${{ secrets.EC2_SSH_KEY }}
+        source: deploy.tar.gz
+        target: /tmp
+
+    - name: Deploy on EC2
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.EC2_HOST_DEV }}
         username: ec2-user
         key: ${{ secrets.EC2_SSH_KEY }}
-        timeout: 15m
-        command_timeout: 15m
         script: |
+          set -e
+          
           # Stop existing service
           echo "Stopping frontend service..."
           sudo systemctl stop academic-frontend || true
           
-          # Remove old deployment
+          # Clean old deployment
           cd /home/ec2-user
           rm -rf academic-saas-frontend-old
           if [ -d academic-saas-frontend ]; then
             mv academic-saas-frontend academic-saas-frontend-old
           fi
           
-          # Create deployment directory
+          # Create new deployment directory
           mkdir -p academic-saas-frontend
           cd academic-saas-frontend
+          
+          # Extract deployment
+          echo "Extracting deployment archive..."
+          tar -xzf /tmp/deploy.tar.gz
+          rm /tmp/deploy.tar.gz
           
           # Install Node.js if needed
           if [ ! -f /usr/local/bin/node ]; then
@@ -108,7 +123,7 @@ jobs:
             cd /home/ec2-user/academic-saas-frontend
           fi
           
-          # Create systemd service file for frontend
+          # Create systemd service
           sudo tee /etc/systemd/system/academic-frontend.service > /dev/null <<EOF
           [Unit]
           Description=Academic SaaS Frontend
@@ -124,7 +139,7 @@ jobs:
           Environment="NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}"
           Environment="NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}"
           Environment="NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}"
-          ExecStart=/usr/local/bin/node server.js
+          ExecStart=/usr/local/bin/npm start
           Restart=always
           RestartSec=10
           StandardOutput=append:/home/ec2-user/academic-saas-frontend/frontend.log
@@ -134,56 +149,17 @@ jobs:
           WantedBy=multi-user.target
           EOF
           
+          # Start service
+          echo "Starting frontend service..."
           sudo systemctl daemon-reload
           sudo systemctl enable academic-frontend
+          sudo systemctl restart academic-frontend
           
-          echo "Ready to receive files..."
-
-    - name: Create deployment archive
-      run: |
-        cd .next/standalone
-        tar -czf ../../standalone.tar.gz .
-        cd ../..
-
-    - name: Copy build to EC2
-      uses: appleboy/scp-action@master
-      with:
-        host: ${{ secrets.EC2_HOST_DEV }}
-        username: ec2-user
-        key: ${{ secrets.EC2_SSH_KEY }}
-        source: standalone.tar.gz
-        target: /tmp
-
-    - name: Start frontend service
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.EC2_HOST_DEV }}
-        username: ec2-user
-        key: ${{ secrets.EC2_SSH_KEY }}
-        timeout: 5m
-        command_timeout: 5m
-        script: |
-          cd /home/ec2-user/academic-saas-frontend
-          
-          # Extract standalone build
-          tar -xzf /tmp/standalone.tar.gz
-          rm /tmp/standalone.tar.gz
-          
-          # Start the service
-          sudo systemctl start academic-frontend
-          
-          # Wait and verify through Nginx
+          # Verify
           sleep 10
           if sudo systemctl is-active --quiet academic-frontend; then
             echo "✅ Frontend service is running!"
-            # Verify through Nginx
-            if curl -s -o /dev/null -w "%{http_code}" http://localhost | grep -q "200\|301\|302"; then
-              echo "✅ Frontend accessible through Nginx!"
-              echo "URL: http://${{ secrets.EC2_HOST_DEV }}"
-            else
-              echo "⚠️  Frontend running but not accessible through Nginx"
-              echo "Check Nginx configuration"
-            fi
+            echo "URL: http://${{ secrets.EC2_HOST_DEV }}"
           else
             echo "❌ Frontend service failed to start"
             sudo journalctl -u academic-frontend -n 50
@@ -215,26 +191,36 @@ jobs:
         NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL_PROD }}
         NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL_PROD }}
         NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-      run: |
-        npm run build
-        # Prepare standalone deployment
-        cp -r public .next/standalone/
-        cp -r .next/static .next/standalone/.next/
+      run: npm run build
 
-    - name: Deploy Frontend to EC2 Prod
+    - name: Create deployment archive
+      run: |
+        echo "Creating deployment archive..."
+        tar -czf deploy.tar.gz .next public node_modules package.json package-lock.json next.config.ts tsconfig.json
+
+    - name: Copy build to EC2
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.EC2_HOST_PROD }}
+        username: ec2-user
+        key: ${{ secrets.EC2_SSH_KEY }}
+        source: deploy.tar.gz
+        target: /tmp
+
+    - name: Deploy on EC2
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.EC2_HOST_PROD }}
         username: ec2-user
         key: ${{ secrets.EC2_SSH_KEY }}
-        timeout: 15m
-        command_timeout: 15m
         script: |
+          set -e
+          
           # Stop existing service
           echo "Stopping frontend service..."
           sudo systemctl stop academic-frontend || true
           
-          # Backup and remove old deployment
+          # Backup and clean old deployment
           cd /home/ec2-user
           if [ -d academic-saas-frontend ]; then
             cp -r academic-saas-frontend academic-saas-frontend-backup-$(date +%Y%m%d-%H%M%S)
@@ -242,9 +228,14 @@ jobs:
             mv academic-saas-frontend academic-saas-frontend-old
           fi
           
-          # Create deployment directory
+          # Create new deployment directory
           mkdir -p academic-saas-frontend
           cd academic-saas-frontend
+          
+          # Extract deployment
+          echo "Extracting deployment archive..."
+          tar -xzf /tmp/deploy.tar.gz
+          rm /tmp/deploy.tar.gz
           
           # Install Node.js if needed
           if [ ! -f /usr/local/bin/node ]; then
@@ -255,7 +246,7 @@ jobs:
             cd /home/ec2-user/academic-saas-frontend
           fi
           
-          # Create systemd service file for frontend
+          # Create systemd service
           sudo tee /etc/systemd/system/academic-frontend.service > /dev/null <<EOF
           [Unit]
           Description=Academic SaaS Frontend
@@ -271,7 +262,7 @@ jobs:
           Environment="NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_PROD }}"
           Environment="NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_PROD }}"
           Environment="NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}"
-          ExecStart=/usr/local/bin/node server.js
+          ExecStart=/usr/local/bin/npm start
           Restart=always
           RestartSec=10
           StandardOutput=append:/home/ec2-user/academic-saas-frontend/frontend.log
@@ -281,54 +272,17 @@ jobs:
           WantedBy=multi-user.target
           EOF
           
+          # Start service
+          echo "Starting frontend service..."
           sudo systemctl daemon-reload
           sudo systemctl enable academic-frontend
+          sudo systemctl restart academic-frontend
           
-          echo "Ready to receive files..."
-
-    - name: Transfer standalone build to EC2
-      run: |
-        # Create deployment package
-        cd .next/standalone
-        tar -czf ../../frontend-standalone.tar.gz .
-        cd ../..
-        
-        # Transfer using SSH
-        echo "${{ secrets.EC2_SSH_KEY }}" > deploy_key
-        chmod 600 deploy_key
-        scp -o StrictHostKeyChecking=no -i deploy_key frontend-standalone.tar.gz ec2-user@${{ secrets.EC2_HOST_PROD }}:/tmp/
-        rm deploy_key frontend-standalone.tar.gz
-
-    - name: Start frontend service
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.EC2_HOST_PROD }}
-        username: ec2-user
-        key: ${{ secrets.EC2_SSH_KEY }}
-        timeout: 5m
-        command_timeout: 5m
-        script: |
-          cd /home/ec2-user/academic-saas-frontend
-          
-          # Extract standalone build
-          tar -xzf /tmp/standalone.tar.gz
-          rm /tmp/standalone.tar.gz
-          
-          # Start the service
-          sudo systemctl start academic-frontend
-          
-          # Wait and verify through Nginx
+          # Verify
           sleep 10
           if sudo systemctl is-active --quiet academic-frontend; then
             echo "✅ Frontend service is running!"
-            # Verify through Nginx
-            if curl -s -o /dev/null -w "%{http_code}" http://localhost | grep -q "200\|301\|302"; then
-              echo "✅ Frontend accessible through Nginx!"
-              echo "URL: http://${{ secrets.EC2_HOST_PROD }}"
-            else
-              echo "⚠️  Frontend running but not accessible through Nginx"
-              echo "Check Nginx configuration"
-            fi
+            echo "URL: http://${{ secrets.EC2_HOST_PROD }}"
           else
             echo "❌ Frontend service failed to start"
             sudo journalctl -u academic-frontend -n 50
