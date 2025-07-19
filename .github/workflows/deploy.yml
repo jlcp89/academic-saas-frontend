@@ -80,19 +80,30 @@ jobs:
             sudo yum remove -y nodejs npm || true
             sudo rm -rf /usr/bin/node /usr/bin/npm /usr/lib/node_modules || true
             
-            # Install Node.js compatible with Amazon Linux 2 GLIBC
-            echo "Installing Node.js via amazon-linux-extras..."
-            sudo amazon-linux-extras install -y nodejs16 || {
-              echo "Trying alternative Node.js installation..."
-              # Alternative: Install via package manager with older version
-              curl -fsSL https://rpm.nodesource.com/setup_16.x | sudo bash -
-              sudo yum install -y nodejs
-            }
+            # Install Node.js using NVM for better compatibility control
+            echo "Installing Node.js via NVM..."
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            
+            # Install Node.js 16.20.2 (known to work with Amazon Linux 2)
+            nvm install 16.20.2
+            nvm use 16.20.2
+            nvm alias default 16.20.2
+            
+            # Create symlinks for global access
+            sudo ln -sf $HOME/.nvm/versions/node/v16.20.2/bin/node /usr/bin/node
+            sudo ln -sf $HOME/.nvm/versions/node/v16.20.2/bin/npm /usr/bin/npm
             
             echo "Node.js version: $(node --version)"
             echo "NPM version: $(npm --version)"
             
             echo "Installing dependencies..."
+            # Source NVM for subsequent commands
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm use 16.20.2
+            
             npm ci
             
             echo "Building application with environment variables..."
@@ -145,6 +156,12 @@ jobs:
               else
                 echo "Attempt $i/5: Waiting for frontend to respond..."
                 sleep 3
+                if [ $i -eq 5 ]; then
+                  echo "❌ Frontend deployment failed"
+                  echo "Next.js logs:"
+                  cat /tmp/nextjs.log || echo "No logs available"
+                  exit 1
+                fi
               fi
             done
 
@@ -186,19 +203,30 @@ jobs:
             sudo yum remove -y nodejs npm || true
             sudo rm -rf /usr/bin/node /usr/bin/npm /usr/lib/node_modules || true
             
-            # Install Node.js compatible with Amazon Linux 2 GLIBC
-            echo "Installing Node.js via amazon-linux-extras..."
-            sudo amazon-linux-extras install -y nodejs16 || {
-              echo "Trying alternative Node.js installation..."
-              # Alternative: Install via package manager with older version
-              curl -fsSL https://rpm.nodesource.com/setup_16.x | sudo bash -
-              sudo yum install -y nodejs
-            }
+            # Install Node.js using NVM for better compatibility control
+            echo "Installing Node.js via NVM..."
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            
+            # Install Node.js 16.20.2 (known to work with Amazon Linux 2)
+            nvm install 16.20.2
+            nvm use 16.20.2
+            nvm alias default 16.20.2
+            
+            # Create symlinks for global access
+            sudo ln -sf $HOME/.nvm/versions/node/v16.20.2/bin/node /usr/bin/node
+            sudo ln -sf $HOME/.nvm/versions/node/v16.20.2/bin/npm /usr/bin/npm
             
             echo "Node.js version: $(node --version)"
             echo "NPM version: $(npm --version)"
             
             echo "Installing dependencies..."
+            # Source NVM for subsequent commands
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm use 16.20.2
+            
             npm ci
             
             echo "Building application with environment variables..."
