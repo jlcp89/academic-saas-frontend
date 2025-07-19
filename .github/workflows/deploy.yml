@@ -75,42 +75,38 @@ jobs:
             
             echo "Installing Node.js and dependencies..."
             
-            # Remove existing incompatible Node.js installation
+            # Remove existing Node.js installation
             echo "Removing existing Node.js installation..."
             sudo yum remove -y nodejs npm || true
             sudo rm -rf /usr/bin/node /usr/bin/npm /usr/lib/node_modules || true
+            sudo rm -rf /usr/local/lib/node* /usr/local/bin/node* /usr/local/bin/npm* || true
+            sudo rm -rf $HOME/.nvm || true
             
-            # Install Node.js using NVM for better compatibility control
-            echo "Installing Node.js via NVM..."
-            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            # Install Node.js 18 using unofficial builds for Amazon Linux 2 (glibc 2.17)
+            echo "Installing Node.js 18 (unofficial build for Amazon Linux 2)..."
+            cd /tmp
+            wget https://unofficial-builds.nodejs.org/download/release/v18.20.5/node-v18.20.5-linux-x64-glibc-217.tar.gz
             
-            # Install Node.js 18.20.4 (compatible with Next.js and Amazon Linux 2)
-            nvm install 18.20.4
-            nvm use 18.20.4
-            nvm alias default 18.20.4
+            # Extract to /usr/local
+            sudo tar -xzf node-v18.20.5-linux-x64-glibc-217.tar.gz -C /usr/local --strip-components=1
             
-            # Create symlinks for global access
-            sudo ln -sf $HOME/.nvm/versions/node/v18.20.4/bin/node /usr/bin/node
-            sudo ln -sf $HOME/.nvm/versions/node/v18.20.4/bin/npm /usr/bin/npm
+            # Verify installation
+            echo "Node.js version: $(/usr/local/bin/node --version)"
+            echo "NPM version: $(/usr/local/bin/npm --version)"
             
-            echo "Node.js version: $(node --version)"
-            echo "NPM version: $(npm --version)"
+            # Add to PATH for this session
+            export PATH=/usr/local/bin:$PATH
+            
+            cd /home/ec2-user/academic-saas-frontend
             
             echo "Installing dependencies..."
-            # Source NVM for subsequent commands
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            nvm use 18.20.4
-            
-            npm ci
+            /usr/local/bin/npm ci
             
             echo "Building application with environment variables..."
             NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
             NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }} \
             NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }} \
-            npm run build
+            /usr/local/bin/npm run build
             
             echo "Stopping existing Next.js service..."
             sudo pkill -f "next.*start" || echo "No Next.js process found"
@@ -118,7 +114,7 @@ jobs:
             
             echo "Starting Next.js application..."
             # Start Next.js in production mode on port 3000
-            nohup npm start > /tmp/nextjs.log 2>&1 &
+            nohup /usr/local/bin/npm start > /tmp/nextjs.log 2>&1 &
             echo $! > /tmp/nextjs.pid
             
             echo "Waiting for Next.js to start..."
@@ -198,42 +194,38 @@ jobs:
             
             echo "Installing Node.js and dependencies..."
             
-            # Remove existing incompatible Node.js installation
+            # Remove existing Node.js installation
             echo "Removing existing Node.js installation..."
             sudo yum remove -y nodejs npm || true
             sudo rm -rf /usr/bin/node /usr/bin/npm /usr/lib/node_modules || true
+            sudo rm -rf /usr/local/lib/node* /usr/local/bin/node* /usr/local/bin/npm* || true
+            sudo rm -rf $HOME/.nvm || true
             
-            # Install Node.js using NVM for better compatibility control
-            echo "Installing Node.js via NVM..."
-            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            # Install Node.js 18 using unofficial builds for Amazon Linux 2 (glibc 2.17)
+            echo "Installing Node.js 18 (unofficial build for Amazon Linux 2)..."
+            cd /tmp
+            wget https://unofficial-builds.nodejs.org/download/release/v18.20.5/node-v18.20.5-linux-x64-glibc-217.tar.gz
             
-            # Install Node.js 18.20.4 (compatible with Next.js and Amazon Linux 2)
-            nvm install 18.20.4
-            nvm use 18.20.4
-            nvm alias default 18.20.4
+            # Extract to /usr/local
+            sudo tar -xzf node-v18.20.5-linux-x64-glibc-217.tar.gz -C /usr/local --strip-components=1
             
-            # Create symlinks for global access
-            sudo ln -sf $HOME/.nvm/versions/node/v18.20.4/bin/node /usr/bin/node
-            sudo ln -sf $HOME/.nvm/versions/node/v18.20.4/bin/npm /usr/bin/npm
+            # Verify installation
+            echo "Node.js version: $(/usr/local/bin/node --version)"
+            echo "NPM version: $(/usr/local/bin/npm --version)"
             
-            echo "Node.js version: $(node --version)"
-            echo "NPM version: $(npm --version)"
+            # Add to PATH for this session
+            export PATH=/usr/local/bin:$PATH
+            
+            cd /home/ec2-user/academic-saas-frontend
             
             echo "Installing dependencies..."
-            # Source NVM for subsequent commands
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            nvm use 18.20.4
-            
-            npm ci
+            /usr/local/bin/npm ci
             
             echo "Building application with environment variables..."
             NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_PROD }} \
             NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_PROD }} \
             NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }} \
-            npm run build
+            /usr/local/bin/npm run build
             
             echo "Stopping existing Next.js service..."
             sudo pkill -f "next.*start" || echo "No Next.js process found"
@@ -241,7 +233,7 @@ jobs:
             
             echo "Starting Next.js application..."
             # Start Next.js in production mode on port 3000
-            nohup npm start > /tmp/nextjs.log 2>&1 &
+            nohup /usr/local/bin/npm start > /tmp/nextjs.log 2>&1 &
             echo $! > /tmp/nextjs.pid
             
             echo "Waiting for Next.js to start..."
