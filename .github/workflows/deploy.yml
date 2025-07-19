@@ -44,89 +44,40 @@ jobs:
         NEXTAUTH_SECRET: test-secret-key-for-ci
       run: npm run build
 
-  build-and-deploy-dev:
-    name: Build and Deploy to Dev Environment
+  deploy-dev:
+    name: Deploy to Dev Environment
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/dev'
     environment: development
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Build application
-      env:
-        NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
-        NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
-        NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+    - name: Check EC2 Instance Status
       run: |
-        echo "Building Next.js application..."
-        npm run build
-        
-        # Create deployment package
-        echo "Creating deployment package..."
-        mkdir -p deployment-package
-        cp -r .next deployment-package/
-        cp -r public deployment-package/
-        cp package*.json deployment-package/
-        
-        # Create standalone package.json with only production dependencies
-        cd deployment-package
-        npm ci --only=production
-        
-        # Create start script
-        cat > start.sh << 'EOF'
-        #!/bin/bash
-        export NEXT_PUBLIC_API_URL=$1
-        export NEXTAUTH_URL=$2
-        export NEXTAUTH_SECRET=$3
-        export NODE_ENV=production
-        export PATH=/usr/local/bin:$PATH
-        /usr/local/bin/npm start
-        EOF
-        chmod +x start.sh
-        
-        # Create archive
-        cd ..
-        tar -czf deployment-package.tar.gz deployment-package/
+        echo "Checking if EC2 instance is reachable..."
+        if ! timeout 10 nc -zv ${{ secrets.EC2_HOST_DEV }} 22; then
+          echo "❌ ERROR: Cannot connect to EC2 instance at ${{ secrets.EC2_HOST_DEV }}:22"
+          echo "Please check:"
+          echo "1. EC2 instance is running"
+          echo "2. Security group allows SSH (port 22) from GitHub Actions"
+          echo "3. EC2_HOST_DEV secret is correct"
+          exit 1
+        fi
+        echo "✅ EC2 instance is reachable"
 
-    - name: Upload deployment package
-      uses: actions/upload-artifact@v4
-      with:
-        name: deployment-package-dev
-        path: deployment-package.tar.gz
-        retention-days: 1
-
-    - name: Copy deployment package to EC2
-      uses: appleboy/scp-action@master
-      with:
-        host: ${{ secrets.EC2_HOST_DEV }}
-        username: ec2-user
-        key: ${{ secrets.EC2_SSH_KEY }}
-        source: "deployment-package.tar.gz"
-        target: "/tmp/"
-
-    - name: Deploy to EC2 Dev
+    - name: Deploy Frontend to EC2 Dev
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.EC2_HOST_DEV }}
         username: ec2-user
         key: ${{ secrets.EC2_SSH_KEY }}
-        timeout: 10m
+        timeout: 30m
         script: |
           set -e
           
           echo "🚀 Starting frontend deployment..."
+          echo "Instance: ${{ secrets.EC2_HOST_DEV }}"
+          echo "Time: $(date)"
           
           cd /home/ec2-user
           
@@ -141,50 +92,87 @@ jobs:
           sudo rm -rf academic-saas-frontend-old || true
           [ -d academic-saas-frontend ] && mv academic-saas-frontend academic-saas-frontend-old
           
-          # Create deployment directory and extract
-          mkdir -p academic-saas-frontend
+          # Clone repository
+          echo "Cloning repository..."
+          git clone --depth 1 --branch dev --single-branch https://${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository_owner }}/academic-saas-frontend.git academic-saas-frontend
+          
           cd academic-saas-frontend
-          tar -xzf /tmp/deployment-package.tar.gz --strip-components=1
-          rm /tmp/deployment-package.tar.gz
           
           # Ensure Node.js 18 is installed
           if [ ! -f /usr/local/bin/node ] || [ "$(/usr/local/bin/node --version)" != "v18.20.5" ]; then
             echo "Installing Node.js 18..."
             cd /tmp
+            rm -f node-v18.20.5-linux-x64-glibc-217.tar.gz
             wget -q https://unofficial-builds.nodejs.org/download/release/v18.20.5/node-v18.20.5-linux-x64-glibc-217.tar.gz
             sudo tar -xzf node-v18.20.5-linux-x64-glibc-217.tar.gz -C /usr/local --strip-components=1
-            cd -
+            cd /home/ec2-user/academic-saas-frontend
           fi
           
           echo "Node.js version: $(/usr/local/bin/node --version)"
+          echo "NPM version: $(/usr/local/bin/npm --version)"
+          
+          # Set environment variables
+          export NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+          export NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}
+          export NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+          export NODE_ENV=production
+          export PATH=/usr/local/bin:$PATH
+          
+          # Create .env.production.local file
+          cat > .env.production.local << EOF
+          NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+          NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}
+          NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+          EOF
+          
+          # Install only production dependencies
+          echo "Installing production dependencies..."
+          /usr/local/bin/npm ci --production
+          
+          echo "Building application..."
+          /usr/local/bin/npm run build
+          
+          # Create startup script
+          cat > start.sh << 'EOF'
+          #!/bin/bash
+          export NODE_ENV=production
+          export PATH=/usr/local/bin:$PATH
+          exec /usr/local/bin/npm start
+          EOF
+          chmod +x start.sh
           
           # Start application
           echo "Starting Next.js application..."
-          nohup ./start.sh "${{ secrets.NEXT_PUBLIC_API_URL }}" "${{ secrets.NEXTAUTH_URL }}" "${{ secrets.NEXTAUTH_SECRET }}" > /tmp/nextjs.log 2>&1 &
+          nohup ./start.sh > /tmp/nextjs.log 2>&1 &
           echo $! > /tmp/nextjs.pid
           
           # Wait for startup
           echo "Waiting for Next.js to start..."
-          for i in {1..10}; do
+          for i in {1..15}; do
             if curl -s -f http://localhost:3000/ > /dev/null; then
               echo "✅ Next.js started successfully!"
               break
             fi
-            echo "Attempt $i/10: Waiting for startup..."
+            echo "Attempt $i/15: Waiting for startup..."
             sleep 3
-            if [ $i -eq 10 ]; then
+            if [ $i -eq 15 ]; then
               echo "❌ Failed to start Next.js"
-              cat /tmp/nextjs.log
+              echo "=== Last 50 lines of logs ==="
+              tail -n 50 /tmp/nextjs.log || echo "No logs available"
               exit 1
             fi
           done
           
-          # Update nginx if needed
+          # Update nginx if configured
           echo "Checking nginx configuration..."
           if [ -f "/home/ec2-user/academic-saas-backend/nginx.conf" ]; then
             sudo cp /home/ec2-user/academic-saas-backend/nginx.conf /etc/nginx/nginx.conf
-            sudo nginx -t && sudo systemctl reload nginx
-            echo "✅ Nginx configuration updated"
+            if sudo nginx -t; then
+              sudo systemctl reload nginx
+              echo "✅ Nginx configuration updated"
+            else
+              echo "⚠️ Nginx config test failed, skipping reload"
+            fi
           fi
           
           echo "✅ Frontend deployed successfully!"
@@ -192,95 +180,48 @@ jobs:
           echo "🎨 Frontend: http://${{ secrets.EC2_HOST_DEV }}/ (via nginx)"
           echo "🔧 Backend API: http://${{ secrets.EC2_HOST_DEV }}/api/"
 
-  build-and-deploy-prod:
-    name: Build and Deploy to Production Environment  
+  deploy-prod:
+    name: Deploy to Production Environment  
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     environment: production
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Build application
-      env:
-        NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL_PROD }}
-        NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL_PROD }}
-        NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+    - name: Check EC2 Instance Status
       run: |
-        echo "Building Next.js application..."
-        npm run build
-        
-        # Create deployment package
-        echo "Creating deployment package..."
-        mkdir -p deployment-package
-        cp -r .next deployment-package/
-        cp -r public deployment-package/
-        cp package*.json deployment-package/
-        
-        # Create standalone package.json with only production dependencies
-        cd deployment-package
-        npm ci --only=production
-        
-        # Create start script
-        cat > start.sh << 'EOF'
-        #!/bin/bash
-        export NEXT_PUBLIC_API_URL=$1
-        export NEXTAUTH_URL=$2
-        export NEXTAUTH_SECRET=$3
-        export NODE_ENV=production
-        export PATH=/usr/local/bin:$PATH
-        /usr/local/bin/npm start
-        EOF
-        chmod +x start.sh
-        
-        # Create archive
-        cd ..
-        tar -czf deployment-package.tar.gz deployment-package/
+        echo "Checking if EC2 instance is reachable..."
+        if ! timeout 10 nc -zv ${{ secrets.EC2_HOST_PROD }} 22; then
+          echo "❌ ERROR: Cannot connect to EC2 instance at ${{ secrets.EC2_HOST_PROD }}:22"
+          echo "Please check:"
+          echo "1. EC2 instance is running"
+          echo "2. Security group allows SSH (port 22) from GitHub Actions"
+          echo "3. EC2_HOST_PROD secret is correct"
+          exit 1
+        fi
+        echo "✅ EC2 instance is reachable"
 
-    - name: Upload deployment package
-      uses: actions/upload-artifact@v4
-      with:
-        name: deployment-package-prod
-        path: deployment-package.tar.gz
-        retention-days: 1
-
-    - name: Copy deployment package to EC2
-      uses: appleboy/scp-action@master
-      with:
-        host: ${{ secrets.EC2_HOST_PROD }}
-        username: ec2-user
-        key: ${{ secrets.EC2_SSH_KEY }}
-        source: "deployment-package.tar.gz"
-        target: "/tmp/"
-
-    - name: Deploy to EC2 Prod
+    - name: Deploy Frontend to EC2 Prod
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.EC2_HOST_PROD }}
         username: ec2-user
         key: ${{ secrets.EC2_SSH_KEY }}
-        timeout: 10m
+        timeout: 30m
         script: |
           set -e
           
-          echo "🚀 Starting frontend deployment..."
+          echo "🚀 Starting frontend deployment to PRODUCTION..."
+          echo "Instance: ${{ secrets.EC2_HOST_PROD }}"
+          echo "Time: $(date)"
           
           cd /home/ec2-user
           
           # Create backup
           echo "Creating backup of current deployment..."
-          sudo cp -r academic-saas-frontend academic-saas-frontend-backup-$(date +%Y%m%d-%H%M%S) || true
+          if [ -d academic-saas-frontend ]; then
+            sudo cp -r academic-saas-frontend academic-saas-frontend-backup-$(date +%Y%m%d-%H%M%S) || true
+          fi
           
           # Stop existing service
           echo "Stopping existing Next.js service..."
@@ -293,42 +234,76 @@ jobs:
           sudo rm -rf academic-saas-frontend-old || true
           [ -d academic-saas-frontend ] && mv academic-saas-frontend academic-saas-frontend-old
           
-          # Create deployment directory and extract
-          mkdir -p academic-saas-frontend
+          # Clone repository
+          echo "Cloning repository..."
+          git clone --depth 1 --branch main --single-branch https://${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository_owner }}/academic-saas-frontend.git academic-saas-frontend
+          
           cd academic-saas-frontend
-          tar -xzf /tmp/deployment-package.tar.gz --strip-components=1
-          rm /tmp/deployment-package.tar.gz
           
           # Ensure Node.js 18 is installed
           if [ ! -f /usr/local/bin/node ] || [ "$(/usr/local/bin/node --version)" != "v18.20.5" ]; then
             echo "Installing Node.js 18..."
             cd /tmp
+            rm -f node-v18.20.5-linux-x64-glibc-217.tar.gz
             wget -q https://unofficial-builds.nodejs.org/download/release/v18.20.5/node-v18.20.5-linux-x64-glibc-217.tar.gz
             sudo tar -xzf node-v18.20.5-linux-x64-glibc-217.tar.gz -C /usr/local --strip-components=1
-            cd -
+            cd /home/ec2-user/academic-saas-frontend
           fi
           
           echo "Node.js version: $(/usr/local/bin/node --version)"
+          echo "NPM version: $(/usr/local/bin/npm --version)"
+          
+          # Set environment variables
+          export NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_PROD }}
+          export NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_PROD }}
+          export NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+          export NODE_ENV=production
+          export PATH=/usr/local/bin:$PATH
+          
+          # Create .env.production.local file
+          cat > .env.production.local << EOF
+          NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_PROD }}
+          NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_PROD }}
+          NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+          EOF
+          
+          # Install only production dependencies
+          echo "Installing production dependencies..."
+          /usr/local/bin/npm ci --production
+          
+          echo "Building application..."
+          /usr/local/bin/npm run build
+          
+          # Create startup script
+          cat > start.sh << 'EOF'
+          #!/bin/bash
+          export NODE_ENV=production
+          export PATH=/usr/local/bin:$PATH
+          exec /usr/local/bin/npm start
+          EOF
+          chmod +x start.sh
           
           # Start application
           echo "Starting Next.js application..."
-          nohup ./start.sh "${{ secrets.NEXT_PUBLIC_API_URL_PROD }}" "${{ secrets.NEXTAUTH_URL_PROD }}" "${{ secrets.NEXTAUTH_SECRET }}" > /tmp/nextjs.log 2>&1 &
+          nohup ./start.sh > /tmp/nextjs.log 2>&1 &
           echo $! > /tmp/nextjs.pid
           
           # Wait for startup
           echo "Waiting for Next.js to start..."
-          for i in {1..10}; do
+          for i in {1..15}; do
             if curl -s -f http://localhost:3000/ > /dev/null; then
               echo "✅ Next.js started successfully!"
               break
             fi
-            echo "Attempt $i/10: Waiting for startup..."
+            echo "Attempt $i/15: Waiting for startup..."
             sleep 3
-            if [ $i -eq 10 ]; then
+            if [ $i -eq 15 ]; then
               echo "❌ Failed to start Next.js"
-              cat /tmp/nextjs.log
+              echo "=== Last 50 lines of logs ==="
+              tail -n 50 /tmp/nextjs.log || echo "No logs available"
               exit 1
             fi
           done
           
           echo "✅ Frontend deployed successfully in PRODUCTION!"
+          echo "🌐 URL: http://${{ secrets.EC2_HOST_PROD }}"
