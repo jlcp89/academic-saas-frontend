@@ -74,17 +74,20 @@ jobs:
             cd academic-saas-frontend
             
             echo "Installing Node.js and dependencies..."
+            
+            # Remove existing incompatible Node.js installation
+            echo "Removing existing Node.js installation..."
+            sudo yum remove -y nodejs npm || true
+            sudo rm -rf /usr/bin/node /usr/bin/npm /usr/lib/node_modules || true
+            
             # Install Node.js compatible with Amazon Linux 2 GLIBC
-            if ! command -v node &> /dev/null; then
-              echo "Installing Node.js via amazon-linux-extras..."
-              # Use Amazon Linux Extras for compatible Node.js version
-              sudo amazon-linux-extras install -y nodejs16 || {
-                echo "Trying alternative Node.js installation..."
-                # Alternative: Install via package manager with older version
-                curl -fsSL https://rpm.nodesource.com/setup_16.x | sudo bash -
-                sudo yum install -y nodejs
-              }
-            fi
+            echo "Installing Node.js via amazon-linux-extras..."
+            sudo amazon-linux-extras install -y nodejs16 || {
+              echo "Trying alternative Node.js installation..."
+              # Alternative: Install via package manager with older version
+              curl -fsSL https://rpm.nodesource.com/setup_16.x | sudo bash -
+              sudo yum install -y nodejs
+            }
             
             echo "Node.js version: $(node --version)"
             echo "NPM version: $(npm --version)"
@@ -177,17 +180,20 @@ jobs:
             cd academic-saas-frontend
             
             echo "Installing Node.js and dependencies..."
+            
+            # Remove existing incompatible Node.js installation
+            echo "Removing existing Node.js installation..."
+            sudo yum remove -y nodejs npm || true
+            sudo rm -rf /usr/bin/node /usr/bin/npm /usr/lib/node_modules || true
+            
             # Install Node.js compatible with Amazon Linux 2 GLIBC
-            if ! command -v node &> /dev/null; then
-              echo "Installing Node.js via amazon-linux-extras..."
-              # Use Amazon Linux Extras for compatible Node.js version
-              sudo amazon-linux-extras install -y nodejs16 || {
-                echo "Trying alternative Node.js installation..."
-                # Alternative: Install via package manager with older version
-                curl -fsSL https://rpm.nodesource.com/setup_16.x | sudo bash -
-                sudo yum install -y nodejs
-              }
-            fi
+            echo "Installing Node.js via amazon-linux-extras..."
+            sudo amazon-linux-extras install -y nodejs16 || {
+              echo "Trying alternative Node.js installation..."
+              # Alternative: Install via package manager with older version
+              curl -fsSL https://rpm.nodesource.com/setup_16.x | sudo bash -
+              sudo yum install -y nodejs
+            }
             
             echo "Node.js version: $(node --version)"
             echo "NPM version: $(npm --version)"
