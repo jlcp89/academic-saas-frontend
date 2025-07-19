@@ -89,56 +89,52 @@ jobs:
             NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }} \
             npm run build
             
-            echo "Stopping existing nginx service..."
-            sudo systemctl stop nginx || true
+            echo "Stopping existing Next.js service..."
+            sudo pkill -f "next.*start" || echo "No Next.js process found"
+            sudo pkill -f "node.*server.js" || echo "No Node.js process found"
             
-            echo "Configuring nginx for frontend..."
-            sudo rm -rf /var/www/html/*
+            echo "Starting Next.js application..."
+            # Start Next.js in production mode on port 3000
+            nohup npm start > /tmp/nextjs.log 2>&1 &
+            echo $! > /tmp/nextjs.pid
             
-            # Copy Next.js standalone files
-            if [ -d ".next/standalone" ]; then
-              echo "Copying standalone files..."
-              sudo cp -r .next/standalone/* /var/www/html/
-            else
-              echo "Warning: .next/standalone not found, using regular build"
-              sudo mkdir -p /var/www/html
-              sudo cp -r .next /var/www/html/
+            echo "Waiting for Next.js to start..."
+            sleep 15
+            
+            # Verify Next.js is running
+            if [ -f /tmp/nextjs.pid ]; then
+              NEXTJS_PID=$(cat /tmp/nextjs.pid)
+              if ps -p $NEXTJS_PID > /dev/null 2>&1; then
+                echo "✅ Next.js started successfully with PID: $NEXTJS_PID"
+              else
+                echo "❌ Next.js process not running"
+                cat /tmp/nextjs.log || echo "No logs available"
+                exit 1
+              fi
             fi
             
-            # Copy static files
-            if [ -d ".next/static" ]; then
-              echo "Copying static files..."
-              sudo mkdir -p /var/www/html/.next/
-              sudo cp -r .next/static /var/www/html/.next/
+            echo "Updating nginx configuration..."
+            # Copy the updated nginx config from backend repo
+            if [ -f "/home/ec2-user/academic-saas-backend/nginx.conf" ]; then
+              sudo cp /home/ec2-user/academic-saas-backend/nginx.conf /etc/nginx/nginx.conf
+              sudo nginx -t || { echo "Nginx config test failed"; exit 1; }
+              sudo systemctl reload nginx
+              echo "✅ Nginx configuration updated"
             fi
             
-            # Copy public files
-            if [ -d "public" ]; then
-              echo "Copying public files..."
-              sudo cp -r public/* /var/www/html/ || true
-            fi
-            
-            echo "Setting permissions..."
-            sudo chown -R nginx:nginx /var/www/html
-            sudo chmod -R 755 /var/www/html
-            
-            echo "Starting nginx service..."
-            sudo systemctl start nginx
-            sudo systemctl enable nginx
-            
-            echo "Waiting for nginx to start..."
-            sleep 10
-            
-            echo "Verifying deployment..."
-            if curl -f http://localhost/ > /dev/null 2>&1; then
-              echo "✅ Frontend deployed successfully in DEV!"
-              echo "🌐 URL: http://${{ secrets.EC2_HOST_DEV }}"
-            else
-              echo "❌ Error: Application not responding"
-              sudo systemctl status nginx
-              sudo nginx -t
-              exit 1
-            fi
+            echo "Verifying frontend deployment..."
+            for i in {1..5}; do
+              if curl -f http://localhost:3000/ > /dev/null 2>&1; then
+                echo "✅ Frontend deployed successfully in DEV!"
+                echo "🌐 URL: http://${{ secrets.EC2_HOST_DEV }}"
+                echo "🎨 Frontend: http://${{ secrets.EC2_HOST_DEV }}/ (via nginx)"
+                echo "🔧 Backend API: http://${{ secrets.EC2_HOST_DEV }}/api/"
+                break
+              else
+                echo "Attempt $i/5: Waiting for frontend to respond..."
+                sleep 3
+              fi
+            done
 
   deploy-prod:
     name: Deploy to Production Environment  
@@ -187,52 +183,37 @@ jobs:
             NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }} \
             npm run build
             
-            echo "Stopping existing nginx service..."
-            sudo systemctl stop nginx || true
+            echo "Stopping existing Next.js service..."
+            sudo pkill -f "next.*start" || echo "No Next.js process found"
+            sudo pkill -f "node.*server.js" || echo "No Node.js process found"
             
-            echo "Configuring nginx for frontend..."
-            sudo rm -rf /var/www/html/*
+            echo "Starting Next.js application..."
+            # Start Next.js in production mode on port 3000
+            nohup npm start > /tmp/nextjs.log 2>&1 &
+            echo $! > /tmp/nextjs.pid
             
-            # Copy Next.js standalone files
-            if [ -d ".next/standalone" ]; then
-              echo "Copying standalone files..."
-              sudo cp -r .next/standalone/* /var/www/html/
-            else
-              echo "Warning: .next/standalone not found, using regular build"
-              sudo mkdir -p /var/www/html
-              sudo cp -r .next /var/www/html/
+            echo "Waiting for Next.js to start..."
+            sleep 15
+            
+            # Verify Next.js is running
+            if [ -f /tmp/nextjs.pid ]; then
+              NEXTJS_PID=$(cat /tmp/nextjs.pid)
+              if ps -p $NEXTJS_PID > /dev/null 2>&1; then
+                echo "✅ Next.js started successfully with PID: $NEXTJS_PID"
+              else
+                echo "❌ Next.js process not running"
+                cat /tmp/nextjs.log || echo "No logs available"
+                exit 1
+              fi
             fi
-            
-            # Copy static files
-            if [ -d ".next/static" ]; then
-              echo "Copying static files..."
-              sudo mkdir -p /var/www/html/.next/
-              sudo cp -r .next/static /var/www/html/.next/
-            fi
-            
-            # Copy public files
-            if [ -d "public" ]; then
-              echo "Copying public files..."
-              sudo cp -r public/* /var/www/html/ || true
-            fi
-            
-            echo "Setting permissions..."
-            sudo chown -R nginx:nginx /var/www/html
-            sudo chmod -R 755 /var/www/html
-            
-            echo "Starting nginx service..."
-            sudo systemctl start nginx
-            sudo systemctl enable nginx
-            
-            echo "Waiting for nginx to start..."
-            sleep 10
             
             echo "Health check..."
-            if curl -f http://localhost/ > /dev/null 2>&1; then
-              echo "✅ Frontend deployed successfully in PRODUCTION!"
-            else
-              echo "❌ Error: Application not responding"
-              sudo systemctl status nginx
-              sudo nginx -t
-              exit 1
-            fi
+            for i in {1..5}; do
+              if curl -f http://localhost:3000/ > /dev/null 2>&1; then
+                echo "✅ Frontend deployed successfully in PRODUCTION!"
+                break
+              else
+                echo "Attempt $i/5: Waiting for frontend to respond..."
+                sleep 3
+              fi
+            done
