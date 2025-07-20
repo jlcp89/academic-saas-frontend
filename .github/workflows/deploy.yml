@@ -66,9 +66,9 @@ jobs:
 
     - name: Build application
       env:
-        NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
-        NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
-        NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+        NEXT_PUBLIC_API_URL: http://52.20.22.173:8000
+        NEXTAUTH_URL: http://52.20.22.173:3000
+        NEXTAUTH_SECRET: /bG5bl9y23JSqYstIc/c+uoY/3eIwlPeInJU9kiJd7I=
       run: npm run build
 
     - name: Create deployment archive
@@ -136,9 +136,9 @@ jobs:
           Environment="NODE_ENV=production"
           Environment="PORT=3000"
           Environment="HOSTNAME=0.0.0.0"
-          Environment="NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}"
-          Environment="NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}"
-          Environment="NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}"
+          Environment="NEXT_PUBLIC_API_URL=http://52.20.22.173:8000"
+          Environment="NEXTAUTH_URL=http://52.20.22.173:3000"
+          Environment="NEXTAUTH_SECRET=/bG5bl9y23JSqYstIc/c+uoY/3eIwlPeInJU9kiJd7I="
           ExecStart=/usr/local/bin/npm start
           Restart=always
           RestartSec=10
