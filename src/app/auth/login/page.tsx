@@ -40,14 +40,19 @@ export default function LoginPage() {
         username: data.username,
         password: data.password,
         redirect: false,
+        callbackUrl: '/dashboard',
       });
 
       if (result?.error) {
+        console.error('SignIn error:', result.error);
         setError('Invalid credentials. Please try again.');
-      } else {
+      } else if (result?.ok) {
         router.push('/dashboard');
+      } else {
+        setError('An unexpected error occurred. Please try again.');
       }
-    } catch {
+    } catch (error) {
+      console.error('Login error:', error);
       setError('An error occurred. Please try again.');
     } finally {
       setIsLoading(false);

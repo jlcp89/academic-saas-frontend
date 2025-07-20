@@ -20,8 +20,8 @@ export default withAuth(
     const token = req.nextauth?.token;
     const pathname = req.nextUrl.pathname;
 
-    // Allow access to auth pages for unauthenticated users
-    if (pathname.startsWith('/auth/')) {
+    // Allow access to auth pages and NextAuth API routes for unauthenticated users
+    if (pathname.startsWith('/auth/') || pathname.startsWith('/api/auth/')) {
       return NextResponse.next();
     }
 
@@ -70,7 +70,8 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public files (public folder)
+     * - auth pages (handled by NextAuth)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|public).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|public|auth).*)',
   ],
 };

@@ -4,8 +4,10 @@ import { API_BASE_URL, API_ENDPOINTS } from '@/lib/constants';
 import { LoginResponse, User } from '@/types';
 
 const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET || 'fallback-secret-key',
   providers: [
     CredentialsProvider({
+      id: 'credentials',
       name: 'credentials',
       credentials: {
         username: { label: 'Username', type: 'text' },
@@ -13,7 +15,7 @@ const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.username || !credentials?.password) {
-          return null;
+          throw new Error('Username and password are required');
         }
 
         try {
@@ -29,7 +31,9 @@ const authOptions: NextAuthOptions = {
           });
 
           if (!response.ok) {
-            return null;
+            const errorData = await response.text();
+            console.error('Login failed:', response.status, errorData);
+            throw new Error('Invalid credentials');
           }
 
           const tokens = await response.json();
@@ -67,13 +71,14 @@ const authOptions: NextAuthOptions = {
           };
         } catch (error) {
           console.error('Authentication error:', error);
-          return null;
+          throw error;
         }
       },
     }),
   ],
   session: {
     strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -90,10 +95,19 @@ const authOptions: NextAuthOptions = {
       session.user = token.userData as User;
       return session;
     },
+    async redirect({ url, baseUrl }) {
+      // Allows relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // Allows callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
+    },
   },
   pages: {
     signIn: '/auth/login',
+    error: '/auth/login',
   },
+  debug: process.env.NODE_ENV === 'development',
 };
 
 const handler = NextAuth(authOptions);
