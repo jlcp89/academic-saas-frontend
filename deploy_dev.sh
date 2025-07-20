@@ -93,8 +93,8 @@ fi
 # Crear archivo .env.local para producción
 log_info "Configurando variables de entorno..."
 cat > .env.local << 'EOF'
-NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
-NEXTAUTH_URL=http://52.20.22.173
+NEXT_PUBLIC_API_URL=http://52.20.22.173:8000
+NEXTAUTH_URL=http://52.20.22.173:3000
 NEXTAUTH_SECRET=/bG5bl9y23JSqYstIc/c+uoY/3eIwlPeInJU9kiJd7I=
 NODE_ENV=production
 EOF
