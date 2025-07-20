@@ -5,4 +5,4 @@ Environment URLs needed:
 - NEXT_PUBLIC_API_URL: http://52.20.22.173:8000
 - NEXTAUTH_URL: http://52.20.22.173:3000
 
-Test timestamp: 2025-07-20 14:16:00 GMT
+Test timestamp: 2025-07-20 14:16:00 GMTDeploy Sun Jul 20 11:45:37 AM CST 2025 - Fix environment variables
