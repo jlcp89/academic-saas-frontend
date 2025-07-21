@@ -94,7 +94,8 @@ fi
 log_info "Configurando variables de entorno para desarrollo en EC2..."
 cat > .env.local << 'EOF'
 # Dynamic environment detection enabled - these are build-time fallbacks
-NEXT_PUBLIC_API_URL=http://52.20.22.173:8000
+# Dev environment uses nginx proxy on port 80, not direct port 8000
+NEXT_PUBLIC_API_URL=http://52.20.22.173
 NEXTAUTH_URL=http://52.20.22.173:3000
 NEXTAUTH_SECRET=/bG5bl9y23JSqYstIc/c+uoY/3eIwlPeInJU9kiJd7I=
 NODE_ENV=production

@@ -12,10 +12,10 @@ function getEnvironmentConfig() {
   const hostname = window.location.hostname;
   const protocol = window.location.protocol;
   
-  // Development server (EC2)
+  // Development server (EC2) - uses nginx proxy on port 80
   if (hostname === '52.20.22.173') {
     return {
-      API_BASE_URL: 'http://52.20.22.173:8000',
+      API_BASE_URL: 'http://52.20.22.173',
       FRONTEND_URL: 'http://52.20.22.173:3000'
     };
   }

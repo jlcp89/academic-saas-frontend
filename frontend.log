@@ -65,3 +65,6 @@ https://next-auth.js.org/errors#jwt_session_error decryption operation failed {
  GET /dashboard 200 in 3529ms
  GET /api/auth/csrf 200 in 154ms
  POST /api/auth/session 200 in 62ms
+ ✓ Compiled in 316ms
+ GET /api/auth/csrf 200 in 176ms
+ POST /api/auth/session 200 in 63ms
