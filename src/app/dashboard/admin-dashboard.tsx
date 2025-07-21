@@ -3,6 +3,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { 
+  CustomLineChart, 
+  CustomBarChart, 
+  CustomPieChart, 
+  MetricCard 
+} from '@/components/ui/charts';
 import { useAdminDashboard } from '@/lib/api/dashboard';
 import { format } from 'date-fns';
 import { 
@@ -309,13 +315,23 @@ export function AdminDashboard() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-64 flex items-center justify-center text-gray-500">
-            <div className="text-center">
-              <BarChart3 className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-              <p>Chart visualization would go here</p>
-              <p className="text-sm">Integration with charting library needed</p>
-            </div>
-          </div>
+          <CustomBarChart
+            data={[
+              { name: 'Mon', logins: 45, submissions: 23, assignments: 8 },
+              { name: 'Tue', logins: 52, submissions: 31, assignments: 12 },
+              { name: 'Wed', logins: 38, submissions: 28, assignments: 6 },
+              { name: 'Thu', logins: 61, submissions: 35, assignments: 15 },
+              { name: 'Fri', logins: 48, submissions: 29, assignments: 9 },
+              { name: 'Sat', logins: 25, submissions: 12, assignments: 3 },
+              { name: 'Sun', logins: 18, submissions: 8, assignments: 2 },
+            ]}
+            bars={[
+              { key: 'logins', name: 'User Logins', color: '#3b82f6' },
+              { key: 'submissions', name: 'Submissions', color: '#10b981' },
+              { key: 'assignments', name: 'Assignments Created', color: '#f59e0b' }
+            ]}
+            height={300}
+          />
           
           {/* Activity Data Table */}
           <div className="mt-4 overflow-x-auto">

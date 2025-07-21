@@ -18,7 +18,7 @@ import {
   SortAsc,
   SortDesc
 } from 'lucide-react';
-import type { ReportFilters, SectionReport } from '@/lib/api/reports';
+import type { ReportFilters, SectionReport, PaginatedResponse } from '@/lib/api/reports';
 
 interface SectionReportTableProps {
   filters: ReportFilters;
@@ -29,6 +29,9 @@ export function SectionReportTable({ filters }: SectionReportTableProps) {
   const [sortColumn, setSortColumn] = useState<keyof SectionReport | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
+  // Extract sections array from the response object
+  const sectionsArray = sections?.results || [];
+
   const handleSort = (column: keyof SectionReport) => {
     if (sortColumn === column) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -38,7 +41,7 @@ export function SectionReportTable({ filters }: SectionReportTableProps) {
     }
   };
 
-  const sortedSections = sections ? [...sections].sort((a, b) => {
+  const sortedSections = sectionsArray ? [...sectionsArray].sort((a, b) => {
     if (!sortColumn) return 0;
     
     let aValue = a[sortColumn];
@@ -96,12 +99,12 @@ export function SectionReportTable({ filters }: SectionReportTableProps) {
     );
   }
 
-  const totalStudents = sections?.reduce((sum, section) => sum + section.student_count, 0) || 0;
-  const totalAssignments = sections?.reduce((sum, section) => sum + section.assignment_count, 0) || 0;
-  const avgGrade = sections?.length ? 
-    sections.reduce((sum, section) => sum + section.avg_grade, 0) / sections.length : 0;
-  const avgCompletion = sections?.length ? 
-    sections.reduce((sum, section) => sum + section.completion_rate, 0) / sections.length : 0;
+  const totalStudents = sectionsArray?.reduce((sum: number, section: SectionReport) => sum + section.student_count, 0) || 0;
+  const totalAssignments = sectionsArray?.reduce((sum: number, section: SectionReport) => sum + section.assignment_count, 0) || 0;
+  const avgGrade = sectionsArray?.length ? 
+    sectionsArray.reduce((sum: number, section: SectionReport) => sum + section.avg_grade, 0) / sectionsArray.length : 0;
+  const avgCompletion = sectionsArray?.length ? 
+    sectionsArray.reduce((sum: number, section: SectionReport) => sum + section.completion_rate, 0) / sectionsArray.length : 0;
 
   return (
     <div className="space-y-4">
@@ -112,7 +115,7 @@ export function SectionReportTable({ filters }: SectionReportTableProps) {
             <BookOpen className="h-5 w-5 text-blue-600" />
             <span className="text-sm font-medium text-blue-900">Total Sections</span>
           </div>
-          <p className="text-2xl font-bold text-blue-900 mt-2">{sections?.length || 0}</p>
+          <p className="text-2xl font-bold text-blue-900 mt-2">{sectionsArray?.length || 0}</p>
         </div>
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <div className="flex items-center space-x-2">

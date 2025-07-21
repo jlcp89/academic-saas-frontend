@@ -1,7 +1,7 @@
 import { useSession } from 'next-auth/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Enrollment, ApiResponse } from '@/types';
-import { API_BASE_URL } from '../constants';
+import { getClientApiBaseUrl } from '../constants';
 
 export interface CreateEnrollmentForm {
   student: number;
@@ -26,7 +26,7 @@ export interface StudentEnrollmentView {
 
 // API Functions
 export class EnrollmentsApi {
-  private baseURL = `${API_BASE_URL}/api/enrollments`;
+  private baseURL = `${getClientApiBaseUrl()}/api/enrollments`;
 
   constructor(private getToken: () => string | undefined) {}
 

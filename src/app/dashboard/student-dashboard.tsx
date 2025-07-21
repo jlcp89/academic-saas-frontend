@@ -3,6 +3,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { 
+  CustomLineChart, 
+  CustomBarChart, 
+  CustomPieChart, 
+  MetricCard 
+} from '@/components/ui/charts';
 import { useStudentDashboard } from '@/lib/api/dashboard';
 import { format, differenceInHours } from 'date-fns';
 import { 
@@ -339,12 +345,20 @@ export function StudentDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-40 flex items-center justify-center text-gray-500">
-              <div className="text-center">
-                <BarChart3 className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                <p className="text-sm">Chart visualization would go here</p>
-              </div>
-            </div>
+            <CustomLineChart
+              data={[
+                { name: 'Week 1', grade: 85 },
+                { name: 'Week 2', grade: 88 },
+                { name: 'Week 3', grade: 82 },
+                { name: 'Week 4', grade: 91 },
+                { name: 'Week 5', grade: 89 },
+                { name: 'Week 6', grade: 94 },
+              ]}
+              lines={[
+                { key: 'grade', name: 'Grade Average', color: '#3b82f6' }
+              ]}
+              height={200}
+            />
             
             {/* Recent Grade History */}
             <div className="mt-4 space-y-3">

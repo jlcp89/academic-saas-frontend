@@ -1,7 +1,7 @@
 import { useSession } from 'next-auth/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Section, ApiResponse, User } from '@/types';
-import { API_BASE_URL } from '../constants';
+import { getClientApiBaseUrl } from '../constants';
 
 export interface CreateSectionForm {
   section_name: string;
@@ -23,7 +23,7 @@ export interface UpdateSectionForm {
 
 // API Functions
 export class SectionsApi {
-  private baseURL = `${API_BASE_URL}/api/sections`;
+  private baseURL = `${getClientApiBaseUrl()}/api/sections`;
 
   constructor(private getToken: () => string | undefined) {}
 

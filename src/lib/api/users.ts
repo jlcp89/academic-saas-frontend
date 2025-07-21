@@ -1,11 +1,11 @@
 import { useSession } from 'next-auth/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { User, UserRole, ApiResponse, CreateUserForm } from '@/types';
-import { API_BASE_URL } from '../constants';
+import { getClientApiBaseUrl } from '../constants';
 
 // API Functions
 export class UsersApi {
-  private baseURL = `${API_BASE_URL}/api/users`;
+  private baseURL = `${getClientApiBaseUrl()}/api/users`;
 
   constructor(private getToken: () => string | undefined) {}
 

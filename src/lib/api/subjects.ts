@@ -1,7 +1,7 @@
 import { useSession } from 'next-auth/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Subject, ApiResponse } from '@/types';
-import { API_BASE_URL } from '../constants';
+import { getClientApiBaseUrl } from '../constants';
 
 export interface CreateSubjectForm {
   subject_name: string;
@@ -15,7 +15,7 @@ export interface UpdateSubjectForm {
 
 // API Functions
 export class SubjectsApi {
-  private baseURL = `${API_BASE_URL}/api/subjects`;
+  private baseURL = `${getClientApiBaseUrl()}/api/subjects`;
 
   constructor(private getToken: () => string | undefined) {}
 

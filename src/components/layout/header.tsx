@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { Button } from '@/components/ui/button';
@@ -12,14 +12,15 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
+// import { NotificationDropdown } from '@/components/ui/notification-dropdown';
 import { 
-  Bell, 
   Search, 
   User, 
   Settings, 
   LogOut, 
   Menu,
-  ChevronDown
+  ChevronDown,
+  Bell
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { cn } from '@/lib/utils';
@@ -39,7 +40,7 @@ export function Header({
 }: HeaderProps) {
   const { user } = useAuth();
   const router = useRouter();
-  const [notifications] = useState([]); // TODO: Implement notifications
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleSignOut = async () => {
     await signOut({ callbackUrl: '/auth/login' });
@@ -52,6 +53,13 @@ export function Header({
   const handleSettingsClick = () => {
     router.push('/settings');
   };
+
+  const handleSearch = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  }, [searchQuery, router]);
 
   return (
     <header className={cn(
@@ -90,21 +98,20 @@ export function Header({
       {/* Right section */}
       <div className="flex items-center space-x-4">
         {/* Search */}
-        <div className="hidden md:flex relative">
+        <form onSubmit={handleSearch} className="hidden md:flex relative">
           <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Search..."
-            className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Search users, schools, subjects..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 pr-4 py-2 w-64 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
-        </div>
+        </form>
 
         {/* Notifications */}
         <Button variant="ghost" size="sm" className="relative">
           <Bell className="w-4 h-4" />
-          {notifications.length > 0 && (
-            <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-          )}
         </Button>
 
         {/* User profile dropdown */}

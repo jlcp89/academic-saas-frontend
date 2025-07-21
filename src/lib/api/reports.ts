@@ -1,6 +1,6 @@
 import { useSession } from 'next-auth/react';
 import { useQuery } from '@tanstack/react-query';
-import { API_BASE_URL } from '../constants';
+import { getClientApiBaseUrl } from '../constants';
 
 // Report Types
 export interface UserReport {
@@ -18,6 +18,13 @@ export interface UserReport {
     name: string;
     subdomain: string;
   };
+}
+
+export interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
 }
 
 export interface SectionReport {
@@ -100,8 +107,8 @@ export interface SystemReport {
     count: number;
     percentage: number;
   }[];
-  assignment_type_distribution: {
-    type: string;
+  assignment_distribution: {
+    section__subject__subject_name: string;
     count: number;
   }[];
   monthly_activity: {
@@ -138,7 +145,7 @@ export interface ExportOptions {
 
 // API Class
 export class ReportsApi {
-  private baseURL = `${API_BASE_URL}/api/reports`;
+  private baseURL = `${getClientApiBaseUrl()}/api/reports`;
 
   constructor(private getToken: () => string | undefined) {}
 
@@ -174,33 +181,33 @@ export class ReportsApi {
   }
 
   // User Reports
-  async getUserReport(filters: ReportFilters = {}): Promise<UserReport[]> {
+  async getUserReport(filters: ReportFilters = {}): Promise<PaginatedResponse<UserReport>> {
     const query = this.buildFilterQuery(filters);
-    return this.request<UserReport[]>(`/users/${query}`);
+    return this.request<PaginatedResponse<UserReport>>(`/users/${query}`);
   }
 
   // Section Reports
-  async getSectionReport(filters: ReportFilters = {}): Promise<SectionReport[]> {
+  async getSectionReport(filters: ReportFilters = {}): Promise<PaginatedResponse<SectionReport>> {
     const query = this.buildFilterQuery(filters);
-    return this.request<SectionReport[]>(`/sections/${query}`);
+    return this.request<PaginatedResponse<SectionReport>>(`/sections/${query}`);
   }
 
   // Assignment Reports
-  async getAssignmentReport(filters: ReportFilters = {}): Promise<AssignmentReport[]> {
+  async getAssignmentReport(filters: ReportFilters = {}): Promise<PaginatedResponse<AssignmentReport>> {
     const query = this.buildFilterQuery(filters);
-    return this.request<AssignmentReport[]>(`/assignments/${query}`);
+    return this.request<PaginatedResponse<AssignmentReport>>(`/assignments/${query}`);
   }
 
   // Grade Reports
-  async getGradeReport(filters: ReportFilters = {}): Promise<GradeReport[]> {
+  async getGradeReport(filters: ReportFilters = {}): Promise<PaginatedResponse<GradeReport>> {
     const query = this.buildFilterQuery(filters);
-    return this.request<GradeReport[]>(`/grades/${query}`);
+    return this.request<PaginatedResponse<GradeReport>>(`/grades/${query}`);
   }
 
   // Enrollment Reports
-  async getEnrollmentReport(filters: ReportFilters = {}): Promise<EnrollmentReport[]> {
+  async getEnrollmentReport(filters: ReportFilters = {}): Promise<PaginatedResponse<EnrollmentReport>> {
     const query = this.buildFilterQuery(filters);
-    return this.request<EnrollmentReport[]>(`/enrollments/${query}`);
+    return this.request<PaginatedResponse<EnrollmentReport>>(`/enrollments/${query}`);
   }
 
   // System Reports (SuperAdmin only)

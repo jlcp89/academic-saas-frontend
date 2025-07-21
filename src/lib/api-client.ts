@@ -1,12 +1,12 @@
 import { useSession } from 'next-auth/react';
-import { API_BASE_URL } from './constants';
+import { getClientApiBaseUrl } from './constants';
 
 // Custom fetch wrapper with authentication
 export async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`;
+  const url = `${getClientApiBaseUrl()}${endpoint}`;
   
   const config: RequestInit = {
     headers: {

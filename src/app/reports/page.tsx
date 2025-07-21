@@ -102,14 +102,98 @@ export default function ReportsPage() {
   const handleExport = async (format: ExportFormat) => {
     setIsExporting(true);
     try {
-      // Implementation would go here
-      console.log(`Exporting ${selectedReport} report as ${format}`, filters);
-      // Simulate export delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const { exportReport } = await import('@/lib/export-utils');
+      
+      // Get report data based on selected report type
+      const reportData = await getReportData(selectedReport, filters);
+      
+      await exportReport(reportData, format, {
+        includeTimestamp: true,
+        includeMetadata: true,
+        filename: `${selectedReport}_report`,
+      });
+      
     } catch (error) {
       console.error('Export failed:', error);
+      // You might want to show a toast notification here
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const getReportData = async (reportType: string, filters: any) => {
+    // This would typically fetch data from your API
+    // For now, we'll create mock data based on the report type
+    
+    const baseData = {
+      title: `${reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report`,
+      metadata: {
+        generatedAt: new Date(),
+        generatedBy: 'Academic SaaS System',
+        filters: Object.fromEntries(
+          Object.entries(filters).filter(([_, value]) => value !== undefined && value !== '')
+        ),
+      },
+    };
+
+    switch (reportType) {
+      case 'users':
+        return {
+          ...baseData,
+          columns: [
+            { key: 'name', label: 'Full Name' },
+            { key: 'email', label: 'Email' },
+            { key: 'role', label: 'Role' },
+            { key: 'school', label: 'School' },
+            { key: 'lastLogin', label: 'Last Login' },
+            { key: 'status', label: 'Status' },
+          ],
+          data: [
+            { name: 'John Doe', email: 'john@example.com', role: 'Student', school: 'Lincoln High', lastLogin: '2024-01-15', status: 'Active' },
+            { name: 'Jane Smith', email: 'jane@example.com', role: 'Teacher', school: 'Roosevelt Elementary', lastLogin: '2024-01-14', status: 'Active' },
+            { name: 'Bob Johnson', email: 'bob@example.com', role: 'Admin', school: 'Washington Middle', lastLogin: '2024-01-13', status: 'Active' },
+          ],
+        };
+      case 'grades':
+        return {
+          ...baseData,
+          columns: [
+            { key: 'student', label: 'Student' },
+            { key: 'assignment', label: 'Assignment' },
+            { key: 'subject', label: 'Subject' },
+            { key: 'grade', label: 'Grade' },
+            { key: 'submittedAt', label: 'Submitted' },
+            { key: 'gradedAt', label: 'Graded' },
+          ],
+          data: [
+            { student: 'John Doe', assignment: 'Math Quiz 1', subject: 'Mathematics', grade: '85%', submittedAt: '2024-01-10', gradedAt: '2024-01-12' },
+            { student: 'Jane Smith', assignment: 'History Essay', subject: 'History', grade: '92%', submittedAt: '2024-01-11', gradedAt: '2024-01-13' },
+            { student: 'Bob Johnson', assignment: 'Science Lab', subject: 'Science', grade: '78%', submittedAt: '2024-01-09', gradedAt: '2024-01-11' },
+          ],
+        };
+      case 'assignments':
+        return {
+          ...baseData,
+          columns: [
+            { key: 'title', label: 'Assignment Title' },
+            { key: 'subject', label: 'Subject' },
+            { key: 'teacher', label: 'Teacher' },
+            { key: 'dueDate', label: 'Due Date' },
+            { key: 'submissions', label: 'Submissions' },
+            { key: 'status', label: 'Status' },
+          ],
+          data: [
+            { title: 'Math Quiz 1', subject: 'Mathematics', teacher: 'Ms. Anderson', dueDate: '2024-01-15', submissions: '25/30', status: 'Active' },
+            { title: 'History Essay', subject: 'History', teacher: 'Mr. Brown', dueDate: '2024-01-20', submissions: '18/25', status: 'Active' },
+            { title: 'Science Lab Report', subject: 'Science', teacher: 'Dr. Wilson', dueDate: '2024-01-18', submissions: '22/28', status: 'Active' },
+          ],
+        };
+      default:
+        return {
+          ...baseData,
+          columns: [{ key: 'data', label: 'Data' }],
+          data: [{ data: 'No data available' }],
+        };
     }
   };
 

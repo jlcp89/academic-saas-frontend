@@ -19,7 +19,7 @@ import {
   SortAsc,
   SortDesc
 } from 'lucide-react';
-import type { ReportFilters, UserReport } from '@/lib/api/reports';
+import type { ReportFilters, UserReport, PaginatedResponse } from '@/lib/api/reports';
 
 interface UserReportTableProps {
   filters: ReportFilters;
@@ -30,6 +30,11 @@ export function UserReportTable({ filters }: UserReportTableProps) {
   const [sortColumn, setSortColumn] = useState<keyof UserReport | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
+  // Debug logging
+  console.log('UserReportTable - users data:', users);
+  console.log('UserReportTable - users type:', typeof users);
+  console.log('UserReportTable - users isArray:', Array.isArray(users));
+
   const handleSort = (column: keyof UserReport) => {
     if (sortColumn === column) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -39,25 +44,39 @@ export function UserReportTable({ filters }: UserReportTableProps) {
     }
   };
 
-  const sortedUsers = users ? [...users].sort((a, b) => {
-    if (!sortColumn) return 0;
-    
-    let aValue = a[sortColumn];
-    let bValue = b[sortColumn];
-    
-    if (aValue === null || aValue === undefined) aValue = '';
-    if (bValue === null || bValue === undefined) bValue = '';
-    
-    if (typeof aValue === 'string' && typeof bValue === 'string') {
-      return sortDirection === 'asc' 
-        ? aValue.localeCompare(bValue)
-        : bValue.localeCompare(aValue);
+  // Extract users array from the response object
+  const usersArray = users?.results || [];
+  
+  let sortedUsers: UserReport[] = [];
+  
+  try {
+    if (usersArray && Array.isArray(usersArray)) {
+      sortedUsers = [...usersArray].sort((a, b) => {
+        if (!sortColumn) return 0;
+        
+        let aValue = a[sortColumn];
+        let bValue = b[sortColumn];
+        
+        if (aValue === null || aValue === undefined) aValue = '';
+        if (bValue === null || bValue === undefined) bValue = '';
+        
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          return sortDirection === 'asc' 
+            ? aValue.localeCompare(bValue)
+            : bValue.localeCompare(aValue);
+        }
+        
+        return sortDirection === 'asc' 
+          ? Number(aValue) - Number(bValue)
+          : Number(bValue) - Number(aValue);
+      });
+    } else {
+      console.warn('Users data is not an array:', usersArray);
     }
-    
-    return sortDirection === 'asc' 
-      ? Number(aValue) - Number(bValue)
-      : Number(bValue) - Number(aValue);
-  }) : [];
+  } catch (err) {
+    console.error('Error sorting users:', err);
+    console.log('Users data that caused error:', usersArray);
+  }
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -92,6 +111,12 @@ export function UserReportTable({ filters }: UserReportTableProps) {
     return (
       <div className="text-center py-8">
         <p className="text-red-600">Error loading user report: {error.message}</p>
+        <details className="mt-4 text-left max-w-md mx-auto">
+          <summary className="cursor-pointer text-sm text-gray-500">Debug Info</summary>
+          <pre className="text-xs mt-2 bg-gray-100 p-2 rounded overflow-auto">
+            {JSON.stringify({ users, error }, null, 2)}
+          </pre>
+        </details>
       </div>
     );
   }
@@ -105,7 +130,7 @@ export function UserReportTable({ filters }: UserReportTableProps) {
             <User className="h-5 w-5 text-blue-600" />
             <span className="text-sm font-medium text-blue-900">Total Users</span>
           </div>
-          <p className="text-2xl font-bold text-blue-900 mt-2">{users?.length || 0}</p>
+          <p className="text-2xl font-bold text-blue-900 mt-2">{usersArray?.length || 0}</p>
         </div>
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <div className="flex items-center space-x-2">
@@ -113,7 +138,7 @@ export function UserReportTable({ filters }: UserReportTableProps) {
             <span className="text-sm font-medium text-green-900">Active Users</span>
           </div>
           <p className="text-2xl font-bold text-green-900 mt-2">
-            {users?.filter(u => u.is_active).length || 0}
+            {usersArray?.filter((u: UserReport) => u.is_active).length || 0}
           </p>
         </div>
         <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
@@ -122,7 +147,7 @@ export function UserReportTable({ filters }: UserReportTableProps) {
             <span className="text-sm font-medium text-purple-900">Professors</span>
           </div>
           <p className="text-2xl font-bold text-purple-900 mt-2">
-            {users?.filter(u => u.role === 'PROFESSOR').length || 0}
+            {usersArray?.filter((u: UserReport) => u.role === 'PROFESSOR').length || 0}
           </p>
         </div>
         <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
@@ -131,7 +156,7 @@ export function UserReportTable({ filters }: UserReportTableProps) {
             <span className="text-sm font-medium text-orange-900">Students</span>
           </div>
           <p className="text-2xl font-bold text-orange-900 mt-2">
-            {users?.filter(u => u.role === 'STUDENT').length || 0}
+            {usersArray?.filter((u: UserReport) => u.role === 'STUDENT').length || 0}
           </p>
         </div>
       </div>

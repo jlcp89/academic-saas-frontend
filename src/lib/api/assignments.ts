@@ -1,7 +1,7 @@
 import { useSession } from 'next-auth/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Assignment, ApiResponse } from '@/types';
-import { API_BASE_URL } from '../constants';
+import { getClientApiBaseUrl } from '../constants';
 
 export interface CreateAssignmentForm {
   title: string;
@@ -43,7 +43,7 @@ export interface AssignmentWithSubmissions extends Assignment {
 
 // API Functions
 export class AssignmentsApi {
-  private baseURL = `${API_BASE_URL}/api/assignments`;
+  private baseURL = `${getClientApiBaseUrl()}/api/assignments`;
 
   constructor(private getToken: () => string | undefined) {}
 

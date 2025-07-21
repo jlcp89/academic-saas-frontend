@@ -1,7 +1,7 @@
 import { useSession } from 'next-auth/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { School, Subscription, ApiResponse } from '@/types';
-import { API_BASE_URL } from '../constants';
+import { getClientApiBaseUrl } from '../constants';
 
 export interface CreateSchoolForm {
   name: string;
@@ -22,7 +22,7 @@ export interface RenewSubscriptionForm {
 
 // API Functions
 export class SchoolsApi {
-  private baseURL = `${API_BASE_URL}/api/superadmin/schools`;
+  private baseURL = `${getClientApiBaseUrl()}/api/superadmin/schools`;
 
   constructor(private getToken: () => string | undefined) {}
 
@@ -109,7 +109,7 @@ export class SchoolsApi {
 
 // Subscriptions API
 export class SubscriptionsApi {
-  private baseURL = `${API_BASE_URL}/api/superadmin/subscriptions`;
+  private baseURL = `${getClientApiBaseUrl()}/api/superadmin/subscriptions`;
 
   constructor(private getToken: () => string | undefined) {}
 

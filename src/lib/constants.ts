@@ -1,14 +1,17 @@
-// Dynamic Environment Detection
-function getEnvironmentConfig() {
-  // For build time (SSR/SSG)
+// Static Environment Configuration for Server-Side
+function getServerEnvironmentConfig() {
+  return {
+    API_BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
+    FRONTEND_URL: process.env.NEXTAUTH_URL || 'http://localhost:3000'
+  };
+}
+
+// Dynamic Environment Detection for Client-Side
+export function getClientEnvironmentConfig() {
   if (typeof window === 'undefined') {
-    return {
-      API_BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
-      FRONTEND_URL: process.env.NEXTAUTH_URL || 'http://localhost:3000'
-    };
+    return getServerEnvironmentConfig();
   }
   
-  // For client side - detect based on current hostname
   const hostname = window.location.hostname;
   const protocol = window.location.protocol;
   
@@ -35,11 +38,16 @@ function getEnvironmentConfig() {
   };
 }
 
-// Get current environment configuration
-const ENV_CONFIG = getEnvironmentConfig();
+// Get server-side configuration for SSR and server components
+const ENV_CONFIG = getServerEnvironmentConfig();
 
-// API Configuration
+// API Configuration for server-side (NextAuth, etc.)
 export const API_BASE_URL = ENV_CONFIG.API_BASE_URL;
+
+// Client-side API base URL function
+export function getClientApiBaseUrl(): string {
+  return getClientEnvironmentConfig().API_BASE_URL;
+}
 
 // API Endpoints
 export const API_ENDPOINTS = {

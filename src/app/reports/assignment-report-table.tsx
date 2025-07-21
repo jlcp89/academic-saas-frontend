@@ -18,7 +18,7 @@ import {
   SortAsc,
   SortDesc
 } from 'lucide-react';
-import type { ReportFilters, AssignmentReport } from '@/lib/api/reports';
+import type { ReportFilters, AssignmentReport, PaginatedResponse } from '@/lib/api/reports';
 
 interface AssignmentReportTableProps {
   filters: ReportFilters;
@@ -37,6 +37,9 @@ export function AssignmentReportTable({ filters }: AssignmentReportTableProps) {
   const [sortColumn, setSortColumn] = useState<keyof AssignmentReport | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
+  // Extract assignments array from the response object
+  const assignmentsArray = assignments?.results || [];
+
   const handleSort = (column: keyof AssignmentReport) => {
     if (sortColumn === column) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -46,7 +49,7 @@ export function AssignmentReportTable({ filters }: AssignmentReportTableProps) {
     }
   };
 
-  const sortedAssignments = assignments ? [...assignments].sort((a, b) => {
+  const sortedAssignments = assignmentsArray ? [...assignmentsArray].sort((a, b) => {
     if (!sortColumn) return 0;
     
     let aValue = a[sortColumn];
@@ -104,12 +107,12 @@ export function AssignmentReportTable({ filters }: AssignmentReportTableProps) {
     );
   }
 
-  const totalSubmissions = assignments?.reduce((sum, assignment) => sum + assignment.submission_count, 0) || 0;
-  const totalGraded = assignments?.reduce((sum, assignment) => sum + assignment.graded_count, 0) || 0;
-  const avgGrade = assignments?.length ? 
-    assignments.reduce((sum, assignment) => sum + assignment.avg_grade, 0) / assignments.length : 0;
-  const avgCompletion = assignments?.length ? 
-    assignments.reduce((sum, assignment) => sum + assignment.completion_rate, 0) / assignments.length : 0;
+  const totalSubmissions = assignmentsArray?.reduce((sum: number, assignment: AssignmentReport) => sum + assignment.submission_count, 0) || 0;
+  const totalGraded = assignmentsArray?.reduce((sum: number, assignment: AssignmentReport) => sum + assignment.graded_count, 0) || 0;
+  const avgGrade = assignmentsArray?.length ? 
+    assignmentsArray.reduce((sum: number, assignment: AssignmentReport) => sum + assignment.avg_grade, 0) / assignmentsArray.length : 0;
+  const avgCompletion = assignmentsArray?.length ? 
+    assignmentsArray.reduce((sum: number, assignment: AssignmentReport) => sum + assignment.completion_rate, 0) / assignmentsArray.length : 0;
 
   return (
     <div className="space-y-4">
@@ -120,7 +123,7 @@ export function AssignmentReportTable({ filters }: AssignmentReportTableProps) {
             <FileText className="h-5 w-5 text-blue-600" />
             <span className="text-sm font-medium text-blue-900">Total Assignments</span>
           </div>
-          <p className="text-2xl font-bold text-blue-900 mt-2">{assignments?.length || 0}</p>
+          <p className="text-2xl font-bold text-blue-900 mt-2">{assignmentsArray?.length || 0}</p>
         </div>
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <div className="flex items-center space-x-2">

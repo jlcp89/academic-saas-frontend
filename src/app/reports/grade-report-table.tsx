@@ -15,7 +15,7 @@ import {
   SortAsc,
   SortDesc
 } from 'lucide-react';
-import type { ReportFilters, GradeReport } from '@/lib/api/reports';
+import type { ReportFilters, GradeReport, PaginatedResponse } from '@/lib/api/reports';
 
 interface GradeReportTableProps {
   filters: ReportFilters;
@@ -26,6 +26,9 @@ export function GradeReportTable({ filters }: GradeReportTableProps) {
   const [sortColumn, setSortColumn] = useState<keyof GradeReport | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
+  // Extract grades array from the response object
+  const gradesArray = grades?.results || [];
+
   const handleSort = (column: keyof GradeReport) => {
     if (sortColumn === column) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -35,7 +38,7 @@ export function GradeReportTable({ filters }: GradeReportTableProps) {
     }
   };
 
-  const sortedGrades = grades ? [...grades].sort((a, b) => {
+  const sortedGrades = gradesArray ? [...gradesArray].sort((a, b) => {
     if (!sortColumn) return 0;
     
     let aValue = a[sortColumn];
@@ -93,11 +96,11 @@ export function GradeReportTable({ filters }: GradeReportTableProps) {
     );
   }
 
-  const avgGrade = grades?.length ? 
-    grades.reduce((sum, grade) => sum + grade.percentage, 0) / grades.length : 0;
-  const lateCount = grades?.filter(g => g.is_late).length || 0;
-  const aCount = grades?.filter(g => g.grade_letter.startsWith('A')).length || 0;
-  const passCount = grades?.filter(g => g.percentage >= 60).length || 0;
+  const avgGrade = gradesArray?.length ? 
+    gradesArray.reduce((sum: number, grade: GradeReport) => sum + grade.percentage, 0) / gradesArray.length : 0;
+  const lateCount = gradesArray?.filter((g: GradeReport) => g.is_late).length || 0;
+  const aCount = gradesArray?.filter((g: GradeReport) => g.grade_letter.startsWith('A')).length || 0;
+  const passCount = gradesArray?.filter((g: GradeReport) => g.percentage >= 60).length || 0;
 
   return (
     <div className="space-y-4">
@@ -108,7 +111,7 @@ export function GradeReportTable({ filters }: GradeReportTableProps) {
             <Trophy className="h-5 w-5 text-blue-600" />
             <span className="text-sm font-medium text-blue-900">Total Grades</span>
           </div>
-          <p className="text-2xl font-bold text-blue-900 mt-2">{grades?.length || 0}</p>
+          <p className="text-2xl font-bold text-blue-900 mt-2">{gradesArray?.length || 0}</p>
         </div>
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <div className="flex items-center space-x-2">

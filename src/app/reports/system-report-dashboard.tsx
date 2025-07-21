@@ -200,35 +200,35 @@ export function SystemReportDashboard({ filters }: SystemReportDashboardProps) {
           </CardContent>
         </Card>
 
-        {/* Assignment Type Distribution */}
+        {/* Assignment Distribution by Subject */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <FileText className="h-5 w-5" />
-              <span>Assignment Types</span>
+              <span>Assignment Distribution by Subject</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {systemReport.assignment_type_distribution.map((type, index) => (
+              {systemReport.assignment_distribution && systemReport.assignment_distribution.map((subject, index) => (
                 <div key={index} className="border border-gray-200 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-2">
-                      <Badge className={getTypeColor(type.type)}>
-                        {type.type}
+                      <Badge className={getTypeColor(subject.section__subject__subject_name)}>
+                        {subject.section__subject__subject_name}
                       </Badge>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-medium text-gray-900">{type.count} assignments</p>
+                      <p className="text-sm font-medium text-gray-900">{subject.count} assignments</p>
                       <p className="text-sm text-gray-600">
-                        {type.count} total
+                        {subject.count} total
                       </p>
                     </div>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div 
                       className="bg-blue-600 h-2 rounded-full"
-                      style={{ width: `${(type.count / systemReport.total_assignments) * 100}%` }}
+                      style={{ width: `${(subject.count / systemReport.total_assignments) * 100}%` }}
                     />
                   </div>
                 </div>

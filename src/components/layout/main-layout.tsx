@@ -2,11 +2,13 @@
 
 import React, { useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { Toaster } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 import { Sidebar } from './sidebar';
 import { Header } from './header';
 import { Breadcrumb } from './breadcrumb';
 import { ProtectedRoute } from '@/components/auth/protected-route';
+// import { useRealTimeNotifications } from '@/hooks/use-real-time-notifications';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -25,6 +27,9 @@ export function MainLayout({
 }: MainLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  
+  // Initialize real-time notifications
+  // const { connected, isRealTimeEnabled } = useRealTimeNotifications();
 
   // Don&apos;t show layout on auth pages
   if (pathname.startsWith('/auth/')) {
@@ -61,6 +66,28 @@ export function MainLayout({
             {children}
           </main>
         </div>
+        
+        {/* Toast notifications */}
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: '#363636',
+              color: '#fff',
+            },
+            success: {
+              style: {
+                background: '#059669',
+              },
+            },
+            error: {
+              style: {
+                background: '#dc2626',
+              },
+            },
+          }}
+        />
       </div>
     </ProtectedRoute>
   );

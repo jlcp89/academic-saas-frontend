@@ -1,7 +1,7 @@
 import { useSession } from 'next-auth/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Submission, Assignment, ApiResponse } from '@/types';
-import { API_BASE_URL } from '../constants';
+import { getClientApiBaseUrl } from '../constants';
 
 export interface GradeSubmissionForm {
   points_earned: number;
@@ -78,7 +78,7 @@ export interface SectionGradeBook {
 
 // API Functions
 export class GradingApi {
-  private baseURL = `${API_BASE_URL}/api`;
+  private baseURL = `${getClientApiBaseUrl()}/api`;
 
   constructor(private getToken: () => string | undefined) {}
 

@@ -1,6 +1,6 @@
 import { useSession } from 'next-auth/react';
 import { useQuery } from '@tanstack/react-query';
-import { API_BASE_URL } from '../constants';
+import { getClientApiBaseUrl } from '../constants';
 
 export interface SuperAdminDashboardData {
   stats: {
@@ -187,7 +187,7 @@ export interface StudentDashboardData {
 
 // API Functions
 export class DashboardApi {
-  private baseURL = `${API_BASE_URL}/api/dashboard`;
+  private baseURL = `${getClientApiBaseUrl()}/api/dashboard`;
 
   constructor(private getToken: () => string | undefined) {}
 

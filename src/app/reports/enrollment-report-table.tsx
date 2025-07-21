@@ -17,7 +17,7 @@ import {
   SortAsc,
   SortDesc
 } from 'lucide-react';
-import type { ReportFilters, EnrollmentReport } from '@/lib/api/reports';
+import type { ReportFilters, EnrollmentReport, PaginatedResponse } from '@/lib/api/reports';
 
 interface EnrollmentReportTableProps {
   filters: ReportFilters;
@@ -28,6 +28,9 @@ export function EnrollmentReportTable({ filters }: EnrollmentReportTableProps) {
   const [sortColumn, setSortColumn] = useState<keyof EnrollmentReport | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
+  // Extract enrollments array from the response object
+  const enrollmentsArray = enrollments?.results || [];
+
   const handleSort = (column: keyof EnrollmentReport) => {
     if (sortColumn === column) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -37,7 +40,7 @@ export function EnrollmentReportTable({ filters }: EnrollmentReportTableProps) {
     }
   };
 
-  const sortedEnrollments = enrollments ? [...enrollments].sort((a, b) => {
+  const sortedEnrollments = enrollmentsArray ? [...enrollmentsArray].sort((a, b) => {
     if (!sortColumn) return 0;
     
     let aValue = a[sortColumn];
@@ -108,12 +111,12 @@ export function EnrollmentReportTable({ filters }: EnrollmentReportTableProps) {
     );
   }
 
-  const activeEnrollments = enrollments?.filter(e => e.status === 'ENROLLED').length || 0;
-  const completedEnrollments = enrollments?.filter(e => e.status === 'COMPLETED').length || 0;
-  const avgGrade = enrollments?.length ? 
-    enrollments.reduce((sum, enrollment) => sum + enrollment.current_grade, 0) / enrollments.length : 0;
-  const avgCompletion = enrollments?.length ? 
-    enrollments.reduce((sum, enrollment) => sum + enrollment.completion_rate, 0) / enrollments.length : 0;
+  const activeEnrollments = enrollmentsArray?.filter((e: EnrollmentReport) => e.status === 'ENROLLED').length || 0;
+  const completedEnrollments = enrollmentsArray?.filter((e: EnrollmentReport) => e.status === 'COMPLETED').length || 0;
+  const avgGrade = enrollmentsArray?.length ? 
+    enrollmentsArray.reduce((sum: number, enrollment: EnrollmentReport) => sum + enrollment.current_grade, 0) / enrollmentsArray.length : 0;
+  const avgCompletion = enrollmentsArray?.length ? 
+    enrollmentsArray.reduce((sum: number, enrollment: EnrollmentReport) => sum + enrollment.completion_rate, 0) / enrollmentsArray.length : 0;
 
   return (
     <div className="space-y-4">
@@ -124,7 +127,7 @@ export function EnrollmentReportTable({ filters }: EnrollmentReportTableProps) {
             <GraduationCap className="h-5 w-5 text-blue-600" />
             <span className="text-sm font-medium text-blue-900">Total Enrollments</span>
           </div>
-          <p className="text-2xl font-bold text-blue-900 mt-2">{enrollments?.length || 0}</p>
+          <p className="text-2xl font-bold text-blue-900 mt-2">{enrollmentsArray?.length || 0}</p>
         </div>
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <div className="flex items-center space-x-2">

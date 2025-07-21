@@ -1,7 +1,7 @@
 import NextAuth, { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { API_BASE_URL, API_ENDPOINTS } from '@/lib/constants';
-import { LoginResponse, User } from '@/types';
+import { User } from '@/types';
 
 const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET || 'fallback-secret-key',
@@ -46,20 +46,12 @@ const authOptions: NextAuthOptions = {
             },
           });
 
-          let userData = null;
-          if (userResponse.ok) {
-            userData = await userResponse.json();
-          } else {
-            // Fallback: create minimal user data
-            userData = {
-              id: 1,
-              username: credentials.username,
-              email: credentials.username + '@example.com',
-              first_name: credentials.username,
-              last_name: '',
-              role: 'ADMIN',
-            };
+          if (!userResponse.ok) {
+            console.error('Failed to fetch user data:', userResponse.status);
+            throw new Error('Failed to authenticate user');
           }
+          
+          const userData = await userResponse.json();
           
           return {
             id: userData.id.toString(),
