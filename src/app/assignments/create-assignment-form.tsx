@@ -15,6 +15,7 @@ import { FileUpload } from '@/components/ui/file-upload';
 import { useCreateAssignment } from '@/lib/api/assignments';
 import { useSections } from '@/lib/api/sections';
 import { useAuth } from '@/contexts/auth-context';
+import { Section } from '@/types';
 import { format, addDays } from 'date-fns';
 import { 
   BookOpen, 
@@ -148,7 +149,7 @@ export function CreateAssignmentForm({ onSuccess, onCancel }: CreateAssignmentFo
   };
 
   // Filter sections based on user role
-  const availableSections = sections.filter(section => {
+  const availableSections = sections.filter((section: Section) => {
     if (user?.role === 'SUPERADMIN' || user?.role === 'ADMIN') {
       return true;
     }

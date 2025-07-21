@@ -15,7 +15,7 @@ import { FileUpload } from '@/components/ui/file-upload';
 import { useUpdateAssignment } from '@/lib/api/assignments';
 import { useSections } from '@/lib/api/sections';
 import { useAuth } from '@/contexts/auth-context';
-import { Assignment } from '@/types';
+import { Assignment, Section } from '@/types';
 import { format, addDays } from 'date-fns';
 import { 
   BookOpen, 
@@ -150,7 +150,7 @@ export function EditAssignmentForm({ assignment, onSuccess, onCancel }: EditAssi
   };
 
   // Filter sections based on user role
-  const availableSections = sections.filter(section => {
+  const availableSections = sections.filter((section: Section) => {
     if (user?.role === 'SUPERADMIN' || user?.role === 'ADMIN') {
       return true;
     }
