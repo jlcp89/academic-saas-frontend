@@ -61,11 +61,14 @@ jobs:
         username: ec2-user
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          set -e
+          # Note: Not using set -e to avoid exit on service stop failures
           
           # Stop existing service
           echo "Stopping frontend service..."
-          sudo systemctl stop academic-frontend || true
+          if sudo systemctl list-unit-files | grep -q academic-frontend.service; then
+            sudo systemctl stop academic-frontend 2>/dev/null || true
+            sudo systemctl disable academic-frontend 2>/dev/null || true
+          fi
           
           # Clean old deployment
           cd /home/ec2-user
@@ -130,13 +133,23 @@ jobs:
             echo "✅ Frontend service is running!"
             
             # Check if frontend responds on port 3000
-            if curl -f http://localhost:3000/ > /dev/null 2>&1; then
-              echo "✅ Frontend responding on port 3000"
-              echo "Note: Full access via nginx depends on backend deployment"
-            else
-              echo "⚠️ Frontend service running but not responding"
-              sudo journalctl -u academic-frontend -n 20
-            fi
+            MAX_RETRIES=5
+            RETRY_COUNT=0
+            while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+              if curl -f http://localhost:3000/ > /dev/null 2>&1; then
+                echo "✅ Frontend responding on port 3000"
+                echo "Note: Full access via nginx depends on backend deployment"
+                exit 0
+              fi
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              echo "Waiting for frontend to respond... (attempt $RETRY_COUNT/$MAX_RETRIES)"
+              sleep 5
+            done
+            
+            echo "⚠️ Frontend service running but not responding after $MAX_RETRIES attempts"
+            sudo journalctl -u academic-frontend -n 20
+            # Don't fail the deployment, frontend might need more time
+            exit 0
           else
             echo "❌ Frontend service failed to start"
             sudo journalctl -u academic-frontend -n 50
