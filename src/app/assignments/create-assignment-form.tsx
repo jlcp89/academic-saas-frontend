@@ -149,7 +149,7 @@ export function CreateAssignmentForm({ onSuccess, onCancel }: CreateAssignmentFo
   };
 
   // Filter sections based on user role
-  const availableSections = sections.filter((section: Section) => {
+  const availableSections = sections.filter((section) => {
     if (user?.role === 'SUPERADMIN' || user?.role === 'ADMIN') {
       return true;
     }
@@ -159,12 +159,12 @@ export function CreateAssignmentForm({ onSuccess, onCancel }: CreateAssignmentFo
     return false;
   });
 
-  const sectionOptions = availableSections.map((section: Section) => ({
+  const sectionOptions = availableSections.map((section) => ({
     value: section.id.toString(),
     label: `${section.section_name} (${section.subject_info.subject_code})`,
   }));
 
-  const selectedSectionData = availableSections.find((s: Section) => s.id.toString() === selectedSection);
+  const selectedSectionData = availableSections.find((s) => s.id.toString() === selectedSection);
   const selectedTypeData = ASSIGNMENT_TYPES.find(t => t.value === selectedType);
 
   const getTimeUntilDue = () => {
