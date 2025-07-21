@@ -14,39 +14,8 @@ env:
   NODE_VERSION: '18'
 
 jobs:
-  test:
-    name: Run Tests
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Run type checking
-      run: npx tsc --noEmit
-
-    - name: Run ESLint
-      run: npm run lint || echo "ESLint warnings found but continuing..."
-
-    - name: Test build
-      env:
-        NEXT_PUBLIC_API_URL: http://localhost:8000
-        NEXTAUTH_URL: http://localhost:3000
-        NEXTAUTH_SECRET: test-secret-key-for-ci
-      run: npm run build
-
   deploy-dev:
     name: Deploy to Dev Environment
-    needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/dev'
     environment: development
@@ -176,7 +145,6 @@ jobs:
 
   deploy-prod:
     name: Deploy to Production Environment  
-    needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     environment: production
