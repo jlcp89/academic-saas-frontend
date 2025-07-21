@@ -85,7 +85,7 @@ class ExportUtility {
     const workbook = XLSX.utils.book_new();
     
     // Prepare data for worksheet
-    const worksheetData: any[][] = [];
+    const worksheetData: unknown[][] = [];
     
     // Add metadata if requested
     if (options.includeMetadata && metadata) {

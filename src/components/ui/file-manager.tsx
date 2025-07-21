@@ -126,7 +126,7 @@ function FileCard({ file, onDelete, onDownload, onRename, onShare, compact }: Fi
   const [isRenaming, setIsRenaming] = useState(false);
   const [newName, setNewName] = useState(file.name);
 
-  const handleAction = async (action: () => Promise<any>) => {
+  const handleAction = async (action: () => Promise<void>) => {
     setIsLoading(true);
     try {
       await action();
