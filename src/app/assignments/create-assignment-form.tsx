@@ -123,6 +123,7 @@ export function CreateAssignmentForm({ onSuccess, onCancel }: CreateAssignmentFo
         title: data.title,
         description: data.description,
         due_date: data.due_date,
+        total_points: parseFloat(data.max_points),
         max_points: parseFloat(data.max_points),
         assignment_type: data.assignment_type,
         section: parseInt(data.section),
@@ -161,7 +162,7 @@ export function CreateAssignmentForm({ onSuccess, onCancel }: CreateAssignmentFo
 
   const sectionOptions = availableSections.map((section) => ({
     value: section.id.toString(),
-    label: `${section.section_name} (${section.subject_info.subject_code})`,
+    label: `${section.section_name} (${section.subject_info?.subject_code || 'N/A'})`,
   }));
 
   const selectedSectionData = availableSections.find((s) => s.id.toString() === selectedSection);
@@ -320,9 +321,9 @@ export function CreateAssignmentForm({ onSuccess, onCancel }: CreateAssignmentFo
                 <h4 className="font-medium text-green-900 mb-2">Section Information</h4>
                 <div className="space-y-1 text-sm text-green-800">
                   <p><strong>Section:</strong> {selectedSectionData.section_name}</p>
-                  <p><strong>Subject:</strong> {selectedSectionData.subject_info.subject_code} - {selectedSectionData.subject_info.subject_name}</p>
-                  <p><strong>Students:</strong> {selectedSectionData.enrollment_count}</p>
-                  <p><strong>Professor:</strong> {selectedSectionData.professor_info.first_name} {selectedSectionData.professor_info.last_name}</p>
+                  <p><strong>Subject:</strong> {selectedSectionData.subject_info?.subject_code || 'N/A'} - {selectedSectionData.subject_info?.subject_name || 'N/A'}</p>
+                  <p><strong>Students:</strong> {selectedSectionData.enrollment_count || 0}</p>
+                  <p><strong>Professor:</strong> {selectedSectionData.professor_info?.first_name || 'N/A'} {selectedSectionData.professor_info?.last_name || ''}</p>
                 </div>
               </div>
             )}

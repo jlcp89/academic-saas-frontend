@@ -110,9 +110,9 @@ export function ChatRoom({ roomId, roomName, roomType, onClose }: ChatRoomProps)
   // Mark messages as read when component loads
   useEffect(() => {
     if (messages.length > 0) {
-      markRead.mutate();
+      markRead.mutate(roomId);
     }
-  }, [messages.length, markRead]);
+  }, [messages.length, markRead, roomId]);
   
   const handleSendMessage = async () => {
     if (!newMessage.trim() || sendMessage.isPending) return;

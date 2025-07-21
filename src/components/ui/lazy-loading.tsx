@@ -106,7 +106,7 @@ export function LazyImage({
   const [currentSrc, setCurrentSrc] = React.useState<string | null>(null);
   const imgRef = React.useRef<HTMLImageElement>(null);
   
-  const { hasBeenVisible } = useIntersectionObserver(imgRef, {
+  const { hasBeenVisible } = useIntersectionObserver(imgRef as React.RefObject<Element>, {
     rootMargin,
     threshold,
   });
@@ -184,7 +184,7 @@ export function LazySection({
   threshold = 0.1,
 }: LazySectionProps) {
   const sectionRef = React.useRef<HTMLDivElement>(null);
-  const { hasBeenVisible } = useIntersectionObserver(sectionRef, {
+  const { hasBeenVisible } = useIntersectionObserver(sectionRef as React.RefObject<Element>, {
     rootMargin,
     threshold,
   });

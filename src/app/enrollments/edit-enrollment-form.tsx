@@ -140,10 +140,10 @@ export function EditEnrollmentForm({ enrollment, onSuccess, onCancel }: EditEnro
               </div>
               <div>
                 <h3 className="font-medium text-gray-900">
-                  {enrollment.student_info.first_name} {enrollment.student_info.last_name}
+                  {enrollment.student_info?.first_name} {enrollment.student_info?.last_name}
                 </h3>
-                <p className="text-sm text-gray-600">{enrollment.student_info.email}</p>
-                <p className="text-sm text-gray-500">ID: {enrollment.student_info.username}</p>
+                <p className="text-sm text-gray-600">{enrollment.student_info?.email}</p>
+                <p className="text-sm text-gray-500">ID: {enrollment.student_info?.username}</p>
               </div>
             </div>
 
@@ -151,7 +151,7 @@ export function EditEnrollmentForm({ enrollment, onSuccess, onCancel }: EditEnro
               <h4 className="font-medium text-gray-900 mb-2">Enrollment Details</h4>
               <div className="space-y-1 text-sm text-gray-600">
                 <p><strong>Enrolled:</strong> {format(new Date(enrollment.enrollment_date), 'PPP')}</p>
-                <p><strong>Student ID:</strong> {enrollment.student_info.id}</p>
+                <p><strong>Student ID:</strong> {enrollment.student_info?.id}</p>
                 <p><strong>Current Status:</strong> {enrollment.status}</p>
                 {enrollment.grade && (
                   <p><strong>Current Grade:</strong> {enrollment.grade}%</p>
@@ -172,19 +172,19 @@ export function EditEnrollmentForm({ enrollment, onSuccess, onCancel }: EditEnro
           <CardContent className="space-y-4">
             <div>
               <h3 className="font-medium text-gray-900 mb-2">
-                {enrollment.section_info.section_name}
+                {enrollment.section_info?.section_name}
               </h3>
               <p className="text-sm text-gray-600">
-                {enrollment.section_info.subject_info.subject_code} - {enrollment.section_info.subject_info.subject_name}
+                {enrollment.section_info?.subject_info?.subject_code} - {enrollment.section_info?.subject_info?.subject_name}
               </p>
             </div>
 
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <h4 className="font-medium text-green-900 mb-2">Section Details</h4>
               <div className="space-y-1 text-sm text-green-800">
-                <p><strong>Professor:</strong> {enrollment.section_info.professor_info.first_name} {enrollment.section_info.professor_info.last_name}</p>
-                <p><strong>Period:</strong> {format(new Date(enrollment.section_info.start_date), 'MMM d, yyyy')} - {format(new Date(enrollment.section_info.end_date), 'MMM d, yyyy')}</p>
-                <p><strong>Capacity:</strong> {enrollment.section_info.enrollment_count}/{enrollment.section_info.max_students}</p>
+                <p><strong>Professor:</strong> {enrollment.section_info?.professor_info?.first_name} {enrollment.section_info?.professor_info?.last_name}</p>
+                <p><strong>Period:</strong> {enrollment.section_info?.start_date ? format(new Date(enrollment.section_info.start_date), 'MMM d, yyyy') : 'N/A'} - {enrollment.section_info?.end_date ? format(new Date(enrollment.section_info.end_date), 'MMM d, yyyy') : 'N/A'}</p>
+                <p><strong>Capacity:</strong> {enrollment.section_info?.enrollment_count || 0}/{enrollment.section_info?.max_students || 0}</p>
               </div>
             </div>
           </CardContent>

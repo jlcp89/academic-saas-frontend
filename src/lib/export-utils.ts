@@ -3,7 +3,7 @@ import html2canvas from 'html2canvas';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
-export type ExportFormat = 'pdf' | 'excel' | 'csv';
+export type ExportFormat = 'csv' | 'xlsx' | 'pdf';
 
 interface ExportData {
   title: string;
@@ -68,7 +68,7 @@ class ExportUtility {
     
     // Add data rows
     data.forEach(row => {
-      const rowData = columns.map(col => this.sanitizeForCSV(row[col.key]));
+      const rowData = columns.map(col => this.sanitizeForCSV((row as any)[col.key]));
       csvContent += rowData.join(',') + '\n';
     });
     
@@ -112,7 +112,7 @@ class ExportUtility {
     
     // Add data rows
     data.forEach(row => {
-      worksheetData.push(columns.map(col => row[col.key]));
+      worksheetData.push(columns.map(col => (row as any)[col.key]));
     });
     
     // Create worksheet
@@ -128,8 +128,8 @@ class ExportUtility {
     XLSX.utils.book_append_sheet(workbook, worksheet, title.substring(0, 31));
     
     // Generate and download file
-    const filename = this.formatFilename(title, 'excel', options);
-    XLSX.writeFile(workbook, filename.replace('.excel', '.xlsx'));
+    const filename = this.formatFilename(title, 'xlsx', options);
+    XLSX.writeFile(workbook, filename);
   }
 
   async exportToPDF(exportData: ExportData, options: ExportOptions = {}): Promise<void> {
@@ -151,14 +151,14 @@ class ExportUtility {
     
     // Title
     pdf.setFontSize(16);
-    pdf.setFont(undefined, 'bold');
+    pdf.setFont('helvetica', 'bold');
     pdf.text(title, margin, yPosition);
     yPosition += 10;
     
     // Metadata
     if (options.includeMetadata && metadata) {
       pdf.setFontSize(10);
-      pdf.setFont(undefined, 'normal');
+      pdf.setFont('helvetica', 'normal');
       
       if (metadata.generatedAt) {
         pdf.text(`Generated: ${metadata.generatedAt.toLocaleString()}`, margin, yPosition);
@@ -188,7 +188,7 @@ class ExportUtility {
     const columnWidth = (pageWidth - 2 * margin) / columns.length;
     
     pdf.setFontSize(10);
-    pdf.setFont(undefined, 'bold');
+    pdf.setFont('helvetica', 'bold');
     
     columns.forEach((col, index) => {
       const x = margin + index * columnWidth;
@@ -201,7 +201,7 @@ class ExportUtility {
     pdf.line(margin, yPosition - 2, pageWidth - margin, yPosition - 2);
     
     // Table data
-    pdf.setFont(undefined, 'normal');
+    pdf.setFont('helvetica', 'normal');
     
     data.forEach((row, rowIndex) => {
       // Check if we need a new page
@@ -210,19 +210,19 @@ class ExportUtility {
         yPosition = margin;
         
         // Redraw headers on new page
-        pdf.setFont(undefined, 'bold');
+        pdf.setFont('helvetica', 'bold');
         columns.forEach((col, index) => {
           const x = margin + index * columnWidth;
           pdf.text(col.label, x, yPosition);
         });
         yPosition += 7;
         pdf.line(margin, yPosition - 2, pageWidth - margin, yPosition - 2);
-        pdf.setFont(undefined, 'normal');
+        pdf.setFont('helvetica', 'normal');
       }
       
       columns.forEach((col, colIndex) => {
         const x = margin + colIndex * columnWidth;
-        const cellValue = String(row[col.key] || '');
+        const cellValue = String((row as any)[col.key] || '');
         
         // Truncate long text to fit column
         const maxWidth = columnWidth - 2;
@@ -237,7 +237,7 @@ class ExportUtility {
     });
     
     // Add page numbers
-    const pageCount = pdf.internal.getNumberOfPages();
+    const pageCount = (pdf as any).internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       pdf.setPage(i);
       pdf.setFontSize(8);
@@ -306,11 +306,7 @@ class ExportUtility {
             margin,
             pageNum === 1 ? margin + 10 : margin,
             imgWidth,
-            imgHeight,
-            '',
-            'NONE',
-            0,
-            -yOffset
+            currentPageHeight
           );
           
           remainingHeight -= currentPageHeight;
@@ -355,7 +351,7 @@ class ExportUtility {
       
       if (format === 'csv') {
         await this.exportToCSV(exportData, options);
-      } else if (format === 'excel') {
+      } else if (format === 'xlsx') {
         await this.exportToExcel(exportData, options);
       }
     }
@@ -371,7 +367,7 @@ class ExportUtility {
         case 'csv':
           await this.exportToCSV(exportData, options);
           break;
-        case 'excel':
+        case 'xlsx':
           await this.exportToExcel(exportData, options);
           break;
         case 'pdf':

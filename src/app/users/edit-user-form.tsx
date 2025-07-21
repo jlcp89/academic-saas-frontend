@@ -284,11 +284,11 @@ export function EditUserForm({ user, onSuccess, onCancel }: EditUserFormProps) {
                     <strong>User ID:</strong> {user.id}
                   </p>
                   <p className="text-sm text-blue-800">
-                    <strong>Joined:</strong> {new Date(user.date_joined).toLocaleDateString()}
+                    <strong>Joined:</strong> {user.date_joined ? new Date(user.date_joined).toLocaleDateString() : 'N/A'}
                   </p>
-                  {user.school && (
+                  {user.school_info && (
                     <p className="text-sm text-blue-800">
-                      <strong>School:</strong> {user.school.name}
+                      <strong>School:</strong> {user.school_info?.name || 'N/A'}
                     </p>
                   )}
                 </div>

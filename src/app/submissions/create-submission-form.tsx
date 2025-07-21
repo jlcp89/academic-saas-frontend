@@ -94,7 +94,7 @@ export function CreateSubmissionForm({ assignment, onSuccess, onCancel }: Create
     setAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
-  const typeConfig = ASSIGNMENT_TYPE_CONFIG[assignment.assignment_type];
+  const typeConfig = ASSIGNMENT_TYPE_CONFIG[assignment.assignment_type as keyof typeof ASSIGNMENT_TYPE_CONFIG] || ASSIGNMENT_TYPE_CONFIG.HOMEWORK;
   const TypeIcon = typeConfig.icon;
 
   const dueDate = new Date(assignment.due_date);
@@ -197,9 +197,9 @@ export function CreateSubmissionForm({ assignment, onSuccess, onCancel }: Create
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h4 className="font-medium text-blue-900 mb-2">Section Information</h4>
             <div className="space-y-1 text-sm text-blue-800">
-              <p><strong>Section:</strong> {assignment.section_info.section_name}</p>
-              <p><strong>Subject:</strong> {assignment.section_info.subject_info.subject_code} - {assignment.section_info.subject_info.subject_name}</p>
-              <p><strong>Professor:</strong> {assignment.section_info.professor_info.first_name} {assignment.section_info.professor_info.last_name}</p>
+              <p><strong>Section:</strong> {assignment.section_info?.section_name}</p>
+              <p><strong>Subject:</strong> {assignment.section_info?.subject_info?.subject_code} - {assignment.section_info?.subject_info?.subject_name}</p>
+              <p><strong>Professor:</strong> {assignment.section_info?.professor_info?.first_name} {assignment.section_info?.professor_info?.last_name}</p>
             </div>
           </div>
 

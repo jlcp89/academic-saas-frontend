@@ -8,7 +8,10 @@ export interface CreateAssignmentForm {
   description: string;
   due_date: string;
   total_points: number;
+  max_points: number;
+  assignment_type: string;
   section: number;
+  instructions?: string;
   attachments?: File[];
 }
 
@@ -17,6 +20,9 @@ export interface UpdateAssignmentForm {
   description?: string;
   due_date?: string;
   total_points?: number;
+  max_points?: number;
+  assignment_type?: string;
+  instructions?: string;
   attachments?: File[];
 }
 

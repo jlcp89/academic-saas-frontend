@@ -150,6 +150,7 @@ class CacheManager {
         this.clearStorage(storage);
         // Try again after clearing
         try {
+          const storageObj = storage === 'localStorage' ? localStorage : sessionStorage;
           const entry: CacheEntry<T> = {
             data,
             timestamp: Date.now(),
@@ -175,7 +176,7 @@ class CacheManager {
       case 'memory':
         const memoryEntry = this.memoryCache.get(cacheKey);
         if (memoryEntry && !this.isExpired(memoryEntry)) {
-          result = memoryEntry.data;
+          result = memoryEntry.data as T;
         }
         break;
 

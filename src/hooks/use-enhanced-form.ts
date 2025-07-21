@@ -5,8 +5,8 @@ import { z } from 'zod';
 import { useNotificationStore } from '@/lib/stores/notification-store';
 import toast from 'react-hot-toast';
 
-interface EnhancedFormOptions<T extends FieldValues> extends UseFormProps<T> {
-  schema: z.ZodSchema<T>;
+interface EnhancedFormOptions<T extends FieldValues> extends Omit<UseFormProps<T>, 'resolver'> {
+  schema: z.ZodType<T>;
   onSubmit: (data: T) => Promise<void> | void;
   onSuccess?: (data: T) => void;
   onError?: (error: Error) => void;
@@ -57,7 +57,7 @@ export function useEnhancedForm<T extends FieldValues>({
   });
 
   const form = useForm<T>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema as any) as any,
     mode: validateOnChange ? 'onChange' : validateOnBlur ? 'onBlur' : 'onSubmit',
     ...formOptions,
   });
@@ -116,13 +116,14 @@ export function useEnhancedForm<T extends FieldValues>({
       isValid,
       isSubmitting,
       errors: Object.keys(errors).reduce((acc, key) => {
-        acc[key] = errors[key as keyof typeof errors]?.message || '';
+        const errorObj = errors[key as keyof typeof errors];
+        acc[key] = typeof errorObj === 'object' && errorObj && 'message' in errorObj ? (errorObj.message as string) || '' : '';
         return acc;
       }, {} as Record<string, string>),
     }));
   }, [isDirty, isValid, isSubmitting, errors]);
 
-  const handleFormSubmit = useCallback(async (data: T) => {
+  const handleFormSubmit = useCallback(async (data: FieldValues) => {
     setFormState(prev => ({ 
       ...prev, 
       isSubmitting: true,
@@ -130,7 +131,7 @@ export function useEnhancedForm<T extends FieldValues>({
     }));
 
     try {
-      await onSubmit(data);
+      await onSubmit(data as T);
       
       setFormState(prev => ({ 
         ...prev, 
@@ -149,7 +150,7 @@ export function useEnhancedForm<T extends FieldValues>({
       });
 
       if (onSuccess) {
-        onSuccess(data);
+        onSuccess(data as T);
       }
 
       if (resetOnSuccess) {
@@ -324,7 +325,7 @@ export function useFormSubmission<T extends FieldValues>(
     setError(null);
 
     try {
-      await onSubmit(data);
+      await onSubmit(data as T);
       
       if (options?.showToasts !== false) {
         toast.success(options?.successMessage || 'Success');
@@ -337,7 +338,7 @@ export function useFormSubmission<T extends FieldValues>(
       });
 
       if (options?.onSuccess) {
-        options.onSuccess(data);
+        options.onSuccess(data as T);
       }
 
     } catch (err) {

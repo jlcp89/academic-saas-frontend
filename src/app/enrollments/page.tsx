@@ -87,10 +87,10 @@ export default function EnrollmentsPage() {
           </div>
           <div>
             <div className="font-medium text-gray-900">
-              {row.original.student_info.first_name} {row.original.student_info.last_name}
+              {row.original.student_info?.first_name} {row.original.student_info?.last_name}
             </div>
             <div className="text-sm text-gray-500">
-              {row.original.student_info.email}
+              {row.original.student_info?.email}
             </div>
           </div>
         </div>
@@ -102,13 +102,13 @@ export default function EnrollmentsPage() {
       cell: ({ row }) => (
         <div>
           <div className="font-medium text-gray-900">
-            {row.original.section_info.section_name}
+            {row.original.section_info?.section_name}
           </div>
           <div className="text-sm text-gray-500">
-            {row.original.section_info.subject_info.subject_code} - {row.original.section_info.subject_info.subject_name}
+            {row.original.section_info?.subject_info?.subject_code} - {row.original.section_info?.subject_info?.subject_name}
           </div>
           <div className="text-xs text-gray-400">
-            Prof. {row.original.section_info.professor_info.last_name}
+            Prof. {row.original.section_info?.professor_info?.last_name}
           </div>
         </div>
       ),
@@ -158,10 +158,10 @@ export default function EnrollmentsPage() {
         <div className="text-sm text-gray-600">
           <div className="flex items-center space-x-1">
             <Calendar className="w-3 h-3" />
-            <span>{format(new Date(row.original.section_info.start_date), 'MMM d')}</span>
+            <span>{row.original.section_info?.start_date ? format(new Date(row.original.section_info.start_date), 'MMM d') : 'N/A'}</span>
           </div>
           <div className="text-xs text-gray-500">
-            to {format(new Date(row.original.section_info.end_date), 'MMM d, yyyy')}
+            to {row.original.section_info?.end_date ? format(new Date(row.original.section_info.end_date), 'MMM d, yyyy') : 'N/A'}
           </div>
         </div>
       ),
@@ -214,7 +214,7 @@ export default function EnrollmentsPage() {
       label: 'Section',
       options: sections.map(section => ({
         value: section.id.toString(),
-        label: `${section.section_name} (${section.subject_info.subject_code})`,
+        label: `${section.section_name} (${section.subject_info?.subject_code || 'N/A'})`,
       })),
     },
     {
@@ -384,7 +384,7 @@ export default function EnrollmentsPage() {
             onClose={() => setShowDeleteDialog(false)}
             onConfirm={confirmDelete}
             title="Delete Enrollment"
-            description={`Are you sure you want to remove ${enrollmentToDelete?.student_info.first_name} ${enrollmentToDelete?.student_info.last_name} from ${enrollmentToDelete?.section_info.section_name}? This action cannot be undone.`}
+            description={`Are you sure you want to remove ${enrollmentToDelete?.student_info?.first_name} ${enrollmentToDelete?.student_info?.last_name} from ${enrollmentToDelete?.section_info?.section_name}? This action cannot be undone.`}
             confirmText="Delete"
             variant="destructive"
             loading={deleteEnrollmentMutation.isPending}

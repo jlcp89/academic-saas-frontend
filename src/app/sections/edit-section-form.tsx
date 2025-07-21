@@ -170,7 +170,7 @@ export function EditSectionForm({ section, onSuccess, onCancel }: EditSectionFor
     endDate !== section.end_date ||
     maxStudents !== section.max_students.toString();
 
-  const enrollmentWarning = parseInt(maxStudents) < section.enrollment_count;
+  const enrollmentWarning = parseInt(maxStudents) < (section.enrollment_count || 0);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -233,7 +233,7 @@ export function EditSectionForm({ section, onSuccess, onCancel }: EditSectionFor
                   <div className="text-sm text-yellow-800">
                     <p className="font-medium">Warning: Capacity Reduction</p>
                     <p>
-                      The new maximum ({maxStudents}) is less than current enrollments ({section.enrollment_count}). 
+                      The new maximum ({maxStudents}) is less than current enrollments ({section.enrollment_count || 0}). 
                       This may affect enrolled students.
                     </p>
                   </div>
@@ -306,7 +306,7 @@ export function EditSectionForm({ section, onSuccess, onCancel }: EditSectionFor
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900">{section.enrollment_count}</div>
+              <div className="text-2xl font-bold text-gray-900">{section.enrollment_count || 0}</div>
               <div className="text-sm text-gray-600">Enrolled Students</div>
             </div>
             <div className="text-center">
@@ -315,7 +315,7 @@ export function EditSectionForm({ section, onSuccess, onCancel }: EditSectionFor
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-gray-900">
-                {((section.enrollment_count / section.max_students) * 100).toFixed(0)}%
+                {(((section.enrollment_count || 0) / section.max_students) * 100).toFixed(0)}%
               </div>
               <div className="text-sm text-gray-600">Capacity Used</div>
             </div>
@@ -333,8 +333,8 @@ export function EditSectionForm({ section, onSuccess, onCancel }: EditSectionFor
                 <p><strong>Updated:</strong> {format(new Date(section.updated_at), 'PPP')}</p>
               </div>
               <div>
-                <p><strong>Subject:</strong> {section.subject_info.subject_name}</p>
-                <p><strong>Professor:</strong> {section.professor_info.first_name} {section.professor_info.last_name}</p>
+                <p><strong>Subject:</strong> {section.subject_info?.subject_name || 'N/A'}</p>
+                <p><strong>Professor:</strong> {section.professor_info?.first_name} {section.professor_info?.last_name}</p>
               </div>
             </div>
           </div>
@@ -360,7 +360,7 @@ export function EditSectionForm({ section, onSuccess, onCancel }: EditSectionFor
               {selectedSubject !== section.subject.toString() && (
                 <div className="flex items-center space-x-2 text-sm">
                   <span className="font-medium">Subject:</span>
-                  <span className="text-gray-500">{section.subject_info.subject_name}</span>
+                  <span className="text-gray-500">{section.subject_info?.subject_name || 'N/A'}</span>
                   <span className="text-gray-400">→</span>
                   <span className="font-medium">{selectedSubjectData?.subject_name}</span>
                 </div>
@@ -368,7 +368,7 @@ export function EditSectionForm({ section, onSuccess, onCancel }: EditSectionFor
               {selectedProfessor !== section.professor.toString() && (
                 <div className="flex items-center space-x-2 text-sm">
                   <span className="font-medium">Professor:</span>
-                  <span className="text-gray-500">{section.professor_info.first_name} {section.professor_info.last_name}</span>
+                  <span className="text-gray-500">{section.professor_info?.first_name} {section.professor_info?.last_name}</span>
                   <span className="text-gray-400">→</span>
                   <span className="font-medium">{selectedProfessorData?.first_name} {selectedProfessorData?.last_name}</span>
                 </div>

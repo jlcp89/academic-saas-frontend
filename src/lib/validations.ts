@@ -47,7 +47,7 @@ export const signupSchema = z.object({
   firstName: commonValidations.name,
   lastName: commonValidations.name,
   role: z.enum(['STUDENT', 'PROFESSOR', 'ADMIN'], {
-    required_error: 'Please select a role',
+    message: 'Please select a role',
   }),
   schoolId: z.string().min(1, 'Please select a school'),
   agreeToTerms: z.boolean().refine(val => val === true, {
@@ -83,7 +83,7 @@ export const userSchema = z.object({
   firstName: commonValidations.name,
   lastName: commonValidations.name,
   role: z.enum(['SUPERADMIN', 'ADMIN', 'PROFESSOR', 'STUDENT'], {
-    required_error: 'Please select a role',
+    message: 'Please select a role',
   }),
   schoolId: z.string().min(1, 'Please select a school'),
   phone: commonValidations.phone,
@@ -130,7 +130,7 @@ export const schoolSchema = z.object({
   website: commonValidations.url,
   description: z.string().max(1000, 'Description must be less than 1000 characters').optional(),
   type: z.enum(['PUBLIC', 'PRIVATE', 'CHARTER'], {
-    required_error: 'Please select a school type',
+    message: 'Please select a school type',
   }),
   grade_levels: z.array(z.string()).min(1, 'Please select at least one grade level'),
   capacity: commonValidations.positiveNumber.optional(),
@@ -171,7 +171,7 @@ export const sectionSchema = z.object({
   subjectId: z.string().min(1, 'Please select a subject'),
   professorId: z.string().min(1, 'Please select a professor'),
   semester: z.enum(['FALL', 'SPRING', 'SUMMER'], {
-    required_error: 'Please select a semester',
+    message: 'Please select a semester',
   }),
   year: z.number()
     .min(2020, 'Year must be 2020 or later')
@@ -207,10 +207,10 @@ export const assignmentSchema = z.object({
   dueDate: commonValidations.dateTime,
   maxPoints: commonValidations.positiveNumber.max(1000, 'Max points cannot exceed 1000'),
   type: z.enum(['HOMEWORK', 'QUIZ', 'EXAM', 'PROJECT', 'ESSAY'], {
-    required_error: 'Please select an assignment type',
+    message: 'Please select an assignment type',
   }),
   submissionType: z.enum(['TEXT', 'FILE', 'BOTH'], {
-    required_error: 'Please select a submission type',
+    message: 'Please select a submission type',
   }),
   allowedFileTypes: z.array(z.string()).optional(),
   maxFileSize: commonValidations.positiveNumber.optional(),
@@ -271,7 +271,7 @@ export const enrollmentSchema = z.object({
   sectionId: z.string().min(1, 'Please select a section'),
   enrollmentDate: commonValidations.date.optional(),
   grade: z.enum(['A', 'B', 'C', 'D', 'F', 'INCOMPLETE', 'WITHDRAWN'], {
-    required_error: 'Please select a final grade',
+    message: 'Please select a final grade',
   }).optional(),
   isActive: z.boolean().default(true),
 });
@@ -309,7 +309,7 @@ export const contactSchema = z.object({
   subject: z.string().min(1, 'Subject is required').max(100, 'Subject must be less than 100 characters'),
   message: z.string().min(1, 'Message is required').max(2000, 'Message must be less than 2000 characters'),
   category: z.enum(['TECHNICAL', 'BILLING', 'GENERAL', 'FEATURE_REQUEST'], {
-    required_error: 'Please select a category',
+    message: 'Please select a category',
   }),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).default('MEDIUM'),
 });

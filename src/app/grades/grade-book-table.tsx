@@ -123,7 +123,7 @@ export function GradeBookTable({ gradeBook, onGradeSubmission, onRefresh }: Grad
     }
 
     const submission = entry.submission;
-    const typeConfig = ASSIGNMENT_TYPE_CONFIG[assignment.assignment_type];
+    const typeConfig = ASSIGNMENT_TYPE_CONFIG[assignment.assignment_type as keyof typeof ASSIGNMENT_TYPE_CONFIG] || ASSIGNMENT_TYPE_CONFIG.HOMEWORK;
     const statusConfig = SUBMISSION_STATUS_CONFIG[submission.status as keyof typeof SUBMISSION_STATUS_CONFIG];
     const StatusIcon = statusConfig.icon;
 
@@ -214,7 +214,7 @@ export function GradeBookTable({ gradeBook, onGradeSubmission, onRefresh }: Grad
 
               {/* Assignment Headers */}
               {gradeBook.assignments.map((assignment) => {
-                const typeConfig = ASSIGNMENT_TYPE_CONFIG[assignment.assignment_type];
+                const typeConfig = ASSIGNMENT_TYPE_CONFIG[assignment.assignment_type as keyof typeof ASSIGNMENT_TYPE_CONFIG] || ASSIGNMENT_TYPE_CONFIG.HOMEWORK;
                 const TypeIcon = typeConfig.icon;
                 
                 return (

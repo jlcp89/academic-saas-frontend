@@ -53,7 +53,11 @@ function generateBlurDataURL(width: number, height: number): string {
 // Check if WebP is supported
 function checkWebPSupport(): Promise<boolean> {
   return new Promise((resolve) => {
-    const webP = new Image();
+    if (typeof window === 'undefined') {
+      resolve(false);
+      return;
+    }
+    const webP = document.createElement('img') as HTMLImageElement;
     webP.onload = webP.onerror = () => {
       resolve(webP.height === 2);
     };
@@ -108,7 +112,7 @@ export function OptimizedImage({
   const [placeholderDataURL, setPlaceholderDataURL] = useState(blurDataURL);
   
   const imgRef = useRef<HTMLDivElement>(null);
-  const { hasBeenVisible } = useIntersectionObserver(imgRef, {
+  const { hasBeenVisible } = useIntersectionObserver(imgRef as React.RefObject<Element>, {
     rootMargin: '50px',
     threshold: 0.1,
   });

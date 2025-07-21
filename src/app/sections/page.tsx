@@ -110,7 +110,7 @@ export default function SectionsPage() {
           <div>
             <div className="font-medium text-gray-900">{row.original.section_name}</div>
             <div className="text-sm text-gray-500">
-              {row.original.subject_info.subject_code} - {row.original.subject_info.subject_name}
+              {row.original.subject_info?.subject_code} - {row.original.subject_info?.subject_name}
             </div>
           </div>
         </div>
@@ -126,10 +126,10 @@ export default function SectionsPage() {
           </div>
           <div>
             <div className="font-medium text-gray-900">
-              {row.original.professor_info.first_name} {row.original.professor_info.last_name}
+              {row.original.professor_info?.first_name} {row.original.professor_info?.last_name}
             </div>
             <div className="text-sm text-gray-500">
-              {row.original.professor_info.email}
+              {row.original.professor_info?.email}
             </div>
           </div>
         </div>
@@ -141,10 +141,10 @@ export default function SectionsPage() {
       cell: ({ row }) => (
         <div className="text-center">
           <div className="text-sm font-medium text-gray-900">
-            {row.original.enrollment_count} / {row.original.max_students}
+            {row.original.enrollment_count || 0} / {row.original.max_students}
           </div>
           <div className="text-xs text-gray-500">
-            {((row.original.enrollment_count / row.original.max_students) * 100).toFixed(0)}% full
+            {(((row.original.enrollment_count || 0) / row.original.max_students) * 100).toFixed(0)}% full
           </div>
         </div>
       ),
@@ -244,7 +244,7 @@ export default function SectionsPage() {
   const activeCount = sections.filter(s => getSectionStatus(s.start_date, s.end_date) === 'active').length;
   const upcomingCount = sections.filter(s => getSectionStatus(s.start_date, s.end_date) === 'upcoming').length;
   const completedCount = sections.filter(s => getSectionStatus(s.start_date, s.end_date) === 'completed').length;
-  const totalEnrollments = sections.reduce((sum, s) => sum + s.enrollment_count, 0);
+  const totalEnrollments = sections.reduce((sum, s) => sum + (s.enrollment_count || 0), 0);
 
   const stats = [
     {

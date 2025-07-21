@@ -50,7 +50,7 @@ class WebSocketService {
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
-  private eventListeners: Map<string, ((data: unknown) => void)[]> = new Map();
+  private eventListeners: Map<string, ((data: any) => void)[]> = new Map();
   private userId: string | null = null;
   private accessToken: string | null = null;
 
@@ -192,13 +192,13 @@ class WebSocketService {
     eventType: K,
     listener: (data: WebSocketEvents[K]) => void
   ): () => void {
-    const listeners = this.eventListeners.get(eventType) || [];
-    listeners.push(listener);
-    this.eventListeners.set(eventType, listeners);
+    const listeners = this.eventListeners.get(eventType as string) || [];
+    listeners.push(listener as any);
+    this.eventListeners.set(eventType as string, listeners);
 
     // If socket is already connected, set up the listener
     if (this.socket) {
-      this.socket.on(eventType, listener);
+      this.socket.on(eventType as string, listener as any);
     }
 
     // Return unsubscribe function
@@ -209,16 +209,16 @@ class WebSocketService {
     eventType: K,
     listener: (data: WebSocketEvents[K]) => void
   ): void {
-    const listeners = this.eventListeners.get(eventType) || [];
-    const index = listeners.indexOf(listener);
+    const listeners = this.eventListeners.get(eventType as string) || [];
+    const index = listeners.indexOf(listener as any);
     
     if (index > -1) {
       listeners.splice(index, 1);
-      this.eventListeners.set(eventType, listeners);
+      this.eventListeners.set(eventType as string, listeners);
     }
 
     if (this.socket) {
-      this.socket.off(eventType, listener);
+      this.socket.off(eventType as string, listener as any);
     }
   }
 

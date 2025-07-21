@@ -118,7 +118,7 @@ export default function UsersPage() {
       header: 'School',
       cell: ({ row }) => (
         <span className="text-sm">
-          {row.original.school?.name || 'No school assigned'}
+          {row.original.school_info?.name || 'No school assigned'}
         </span>
       ),
     },
@@ -146,7 +146,7 @@ export default function UsersPage() {
       header: 'Joined',
       cell: ({ row }) => (
         <span className="text-sm text-gray-500">
-          {format(new Date(row.original.date_joined), 'MMM d, yyyy')}
+          {row.original.date_joined ? format(new Date(row.original.date_joined), 'MMM d, yyyy') : 'N/A'}
         </span>
       ),
     },

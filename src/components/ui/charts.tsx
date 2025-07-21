@@ -58,7 +58,7 @@ export function ChartWrapper({
       <CardContent>
         <div style={{ height: `${height}px` }}>
           <ResponsiveContainer width="100%" height="100%">
-            {children}
+            {children as React.ReactElement}
           </ResponsiveContainer>
         </div>
       </CardContent>
@@ -301,7 +301,7 @@ export function CustomPieChart({
   showLabels = true,
   innerRadius = 0 
 }: CustomPieChartProps) {
-  const renderLabel = (entry: PieChartData) => {
+  const renderLabel = (entry: any) => {
     return `${entry.name}: ${entry.value}`;
   };
 
@@ -398,33 +398,40 @@ export function MetricCard({
           {data && data.length > 0 && (
             <div className="flex-shrink-0 w-20 h-16">
               <ResponsiveContainer width="100%" height="100%">
-                {chartType === 'line' && (
-                  <LineChart data={data}>
-                    <Line 
-                      type="monotone" 
-                      dataKey="value" 
-                      stroke={color} 
-                      strokeWidth={2} 
-                      dot={false} 
-                    />
-                  </LineChart>
-                )}
-                {chartType === 'area' && (
-                  <AreaChart data={data}>
-                    <Area 
-                      type="monotone" 
-                      dataKey="value" 
-                      stroke={color} 
-                      fill={color}
-                      fillOpacity={0.6}
-                    />
-                  </AreaChart>
-                )}
-                {chartType === 'bar' && (
-                  <BarChart data={data}>
-                    <Bar dataKey="value" fill={color} />
-                  </BarChart>
-                )}
+                {(() => {
+                  if (chartType === 'line') {
+                    return (
+                      <LineChart data={data}>
+                        <Line 
+                          type="monotone" 
+                          dataKey="value" 
+                          stroke={color} 
+                          strokeWidth={2} 
+                          dot={false} 
+                        />
+                      </LineChart>
+                    );
+                  } else if (chartType === 'area') {
+                    return (
+                      <AreaChart data={data}>
+                        <Area 
+                          type="monotone" 
+                          dataKey="value" 
+                          stroke={color} 
+                          fill={color}
+                          fillOpacity={0.6}
+                        />
+                      </AreaChart>
+                    );
+                  } else if (chartType === 'bar') {
+                    return (
+                      <BarChart data={data}>
+                        <Bar dataKey="value" fill={color} />
+                      </BarChart>
+                    );
+                  }
+                  return <div />;
+                })()}
               </ResponsiveContainer>
             </div>
           )}

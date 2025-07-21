@@ -125,13 +125,13 @@ export function CreateEnrollmentForm({ onSuccess, onCancel }: CreateEnrollmentFo
 
   const sectionOptions = availableSections.map(section => ({
     value: section.id.toString(),
-    label: `${section.section_name} (${section.subject_info.subject_code})`,
+    label: `${section.section_name} (${section.subject_info?.subject_code || 'N/A'})`,
   }));
 
   const selectedStudentData = students.find(s => s.id.toString() === selectedStudent);
   const selectedSectionData = availableSections.find(s => s.id.toString() === selectedSection);
 
-  const canEnroll = selectedSectionData && selectedSectionData.enrollment_count < selectedSectionData.max_students;
+  const canEnroll = selectedSectionData && (selectedSectionData.enrollment_count || 0) < selectedSectionData.max_students;
   const isStudentRole = user?.role === 'STUDENT';
 
   return (
@@ -206,8 +206,8 @@ export function CreateEnrollmentForm({ onSuccess, onCancel }: CreateEnrollmentFo
                 <h4 className="font-medium text-green-900 mb-2">Section Details</h4>
                 <div className="space-y-1 text-sm text-green-800">
                   <p><strong>Name:</strong> {selectedSectionData.section_name}</p>
-                  <p><strong>Subject:</strong> {selectedSectionData.subject_info.subject_code} - {selectedSectionData.subject_info.subject_name}</p>
-                  <p><strong>Professor:</strong> {selectedSectionData.professor_info.first_name} {selectedSectionData.professor_info.last_name}</p>
+                  <p><strong>Subject:</strong> {selectedSectionData.subject_info?.subject_code || 'N/A'} - {selectedSectionData.subject_info?.subject_name || 'N/A'}</p>
+                  <p><strong>Professor:</strong> {selectedSectionData.professor_info?.first_name || 'N/A'} {selectedSectionData.professor_info?.last_name || ''}</p>
                   <p><strong>Period:</strong> {format(new Date(selectedSectionData.start_date), 'MMM d, yyyy')} - {format(new Date(selectedSectionData.end_date), 'MMM d, yyyy')}</p>
                 </div>
               </div>
@@ -242,21 +242,21 @@ export function CreateEnrollmentForm({ onSuccess, onCancel }: CreateEnrollmentFo
               
               <div className="text-center">
                 <div className="text-2xl font-bold text-gray-900 mb-2">
-                  {selectedSectionData.enrollment_count} / {selectedSectionData.max_students}
+                  {(selectedSectionData.enrollment_count || 0)} / {selectedSectionData.max_students}
                 </div>
                 <p className="text-sm text-gray-600">Enrollment</p>
               </div>
               
               <div className="text-center">
                 <div className="text-2xl font-bold text-gray-900 mb-2">
-                  {((selectedSectionData.enrollment_count / selectedSectionData.max_students) * 100).toFixed(0)}%
+                  {(((selectedSectionData.enrollment_count || 0) / selectedSectionData.max_students) * 100).toFixed(0)}%
                 </div>
                 <p className="text-sm text-gray-600">Capacity</p>
               </div>
             </div>
 
             {/* Capacity Warning */}
-            {selectedSectionData.enrollment_count >= selectedSectionData.max_students && (
+            {(selectedSectionData.enrollment_count || 0) >= selectedSectionData.max_students && (
               <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
                 <div className="flex items-start space-x-2">
                   <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5" />
@@ -283,7 +283,7 @@ export function CreateEnrollmentForm({ onSuccess, onCancel }: CreateEnrollmentFo
                       Enrollment Available
                     </p>
                     <p className="text-sm text-green-700 mt-1">
-                      This section has {selectedSectionData.max_students - selectedSectionData.enrollment_count} available spots.
+                      This section has {selectedSectionData.max_students - (selectedSectionData.enrollment_count || 0)} available spots.
                     </p>
                   </div>
                 </div>

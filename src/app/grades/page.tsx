@@ -99,7 +99,7 @@ export default function GradesPage() {
 
   const sectionOptions = availableSections.map(section => ({
     value: section.id.toString(),
-    label: `${section.section_name} (${section.subject_info.subject_code})`,
+    label: `${section.section_name} (${section.subject_info?.subject_code || 'N/A'})`,
   }));
 
   if (user?.role === 'STUDENT') {
@@ -246,7 +246,7 @@ export default function GradesPage() {
                   <div className="space-y-2">
                     <div className="flex flex-wrap gap-2">
                       {gradeBookData.assignments.map((assignment) => {
-                        const typeConfig = ASSIGNMENT_TYPE_CONFIG[assignment.assignment_type];
+                        const typeConfig = ASSIGNMENT_TYPE_CONFIG[assignment.assignment_type as keyof typeof ASSIGNMENT_TYPE_CONFIG] || ASSIGNMENT_TYPE_CONFIG.HOMEWORK;
                         const TypeIcon = typeConfig.icon;
                         return (
                           <Badge key={assignment.id} className={typeConfig.color}>

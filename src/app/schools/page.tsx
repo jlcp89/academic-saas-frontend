@@ -294,13 +294,13 @@ export default function SchoolsPage() {
       label: 'Deactivate',
       icon: ShieldX,
       onClick: handleToggleSchoolStatus,
-      show: (school: School) => school.is_active,
+      show: (school: School) => school.is_active === true,
     },
     {
       label: 'Activate',
       icon: ShieldCheck,
       onClick: handleToggleSchoolStatus,
-      show: (school: School) => !school.is_active,
+      show: (school: School) => school.is_active !== true,
     },
   ];
 

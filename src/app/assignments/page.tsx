@@ -141,7 +141,7 @@ export default function AssignmentsPage() {
       header: 'Assignment',
       cell: ({ row }) => {
         const assignment = row.original;
-        const typeConfig = ASSIGNMENT_TYPE_CONFIG[assignment.assignment_type];
+        const typeConfig = ASSIGNMENT_TYPE_CONFIG[assignment.assignment_type || 'HOMEWORK'];
         const TypeIcon = typeConfig.icon;
         
         return (
@@ -169,10 +169,10 @@ export default function AssignmentsPage() {
       cell: ({ row }) => (
         <div>
           <div className="font-medium text-gray-900">
-            {row.original.section_info.section_name}
+            {row.original.section_info?.section_name || 'N/A'}
           </div>
           <div className="text-sm text-gray-500">
-            {row.original.section_info.subject_info.subject_code}
+            {row.original.section_info?.subject_info?.subject_code || 'N/A'}
           </div>
         </div>
       ),
@@ -181,7 +181,7 @@ export default function AssignmentsPage() {
       accessorKey: 'assignment_type',
       header: 'Type',
       cell: ({ row }) => {
-        const type = row.original.assignment_type;
+        const type = row.original.assignment_type || 'HOMEWORK';
         const typeConfig = ASSIGNMENT_TYPE_CONFIG[type];
         const TypeIcon = typeConfig.icon;
         
@@ -289,7 +289,7 @@ export default function AssignmentsPage() {
       label: 'Section',
       options: sections.map(section => ({
         value: section.id.toString(),
-        label: `${section.section_name} (${section.subject_info.subject_code})`,
+        label: `${section.section_name} (${section.subject_info?.subject_code || 'N/A'})`,
       })),
     },
     {

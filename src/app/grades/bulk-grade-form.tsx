@@ -147,7 +147,7 @@ export function BulkGradeForm({ gradeBook, onSuccess, onCancel }: BulkGradeFormP
   };
 
   const selectedAssignmentData = gradeBook.assignments.find(a => a.id.toString() === selectedAssignment);
-  const typeConfig = selectedAssignmentData ? ASSIGNMENT_TYPE_CONFIG[selectedAssignmentData.assignment_type] : null;
+  const typeConfig = selectedAssignmentData && selectedAssignmentData.assignment_type ? ASSIGNMENT_TYPE_CONFIG[selectedAssignmentData.assignment_type as keyof typeof ASSIGNMENT_TYPE_CONFIG] : null;
 
   const validGrades = gradeEntries.filter(entry => 
     entry.points_earned && !isNaN(parseFloat(entry.points_earned))

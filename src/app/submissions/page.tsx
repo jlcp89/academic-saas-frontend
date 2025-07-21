@@ -424,7 +424,13 @@ export default function SubmissionsPage() {
             size="xl"
           >
             <CreateSubmissionForm
-              assignment={selectedSubmission?.assignment_info || {} as Assignment}
+              assignment={{
+                ...selectedSubmission?.assignment_info,
+                section: selectedSubmission?.assignment_info?.section_info?.id || 0,
+                total_points: selectedSubmission?.assignment_info?.max_points || 0,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              } as Assignment}
               onSuccess={() => {
                 setShowCreateForm(false);
                 refetch();
