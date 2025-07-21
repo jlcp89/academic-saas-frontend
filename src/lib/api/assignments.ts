@@ -7,10 +7,8 @@ export interface CreateAssignmentForm {
   title: string;
   description: string;
   due_date: string;
-  max_points: number;
-  assignment_type: 'HOMEWORK' | 'QUIZ' | 'EXAM' | 'PROJECT' | 'DISCUSSION';
+  total_points: number;
   section: number;
-  instructions?: string;
   attachments?: File[];
 }
 
@@ -18,9 +16,7 @@ export interface UpdateAssignmentForm {
   title?: string;
   description?: string;
   due_date?: string;
-  max_points?: number;
-  assignment_type?: 'HOMEWORK' | 'QUIZ' | 'EXAM' | 'PROJECT' | 'DISCUSSION';
-  instructions?: string;
+  total_points?: number;
   attachments?: File[];
 }
 
@@ -123,10 +119,8 @@ export class AssignmentsApi {
     formData.append('title', data.title);
     formData.append('description', data.description);
     formData.append('due_date', data.due_date);
-    formData.append('max_points', data.max_points.toString());
-    formData.append('assignment_type', data.assignment_type);
+    formData.append('total_points', data.total_points.toString());
     formData.append('section', data.section.toString());
-    if (data.instructions) formData.append('instructions', data.instructions);
     
     if (data.attachments) {
       data.attachments.forEach((file, index) => {
@@ -146,9 +140,7 @@ export class AssignmentsApi {
     if (data.title) formData.append('title', data.title);
     if (data.description) formData.append('description', data.description);
     if (data.due_date) formData.append('due_date', data.due_date);
-    if (data.max_points !== undefined) formData.append('max_points', data.max_points.toString());
-    if (data.assignment_type) formData.append('assignment_type', data.assignment_type);
-    if (data.instructions) formData.append('instructions', data.instructions);
+    if (data.total_points !== undefined) formData.append('total_points', data.total_points.toString());
     
     if (data.attachments) {
       data.attachments.forEach((file, index) => {

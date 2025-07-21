@@ -33,6 +33,13 @@ export interface PaginatedResponse<T> {
   previous?: string | null;
 }
 
+export interface ApiResponse<T> {
+  results: T[];
+  count: number;
+  next?: string | null;
+  previous?: string | null;
+}
+
 // User role enum
 export enum UserRole {
   SUPERADMIN = 'SUPERADMIN',
@@ -90,12 +97,25 @@ export interface Subject {
 
 export interface Section {
   id: number;
-  name: string;
+  section_name: string;
   subject: number;
+  subject_info?: {
+    id: number;
+    subject_name: string;
+    subject_code: string;
+  };
   professor: number;
+  professor_info?: {
+    id: number;
+    username: string;
+    first_name?: string;
+    last_name?: string;
+  };
   school: number;
-  schedule?: string;
-  capacity?: number;
+  start_date: string;
+  end_date: string;
+  max_students: number;
+  enrollment_count?: number;
   created_at: string;
   updated_at: string;
 }
@@ -113,10 +133,26 @@ export interface Enrollment {
 export interface Assignment {
   id: number;
   title: string;
-  description?: string;
+  description: string;
   section: number;
+  section_info?: {
+    id: number;
+    section_name: string;
+    subject: {
+      id: number;
+      subject_name: string;
+      subject_code: string;
+    };
+  };
   due_date: string;
-  points: number;
+  total_points: number;
+  created_by?: number;
+  created_by_info?: {
+    id: number;
+    username: string;
+    first_name?: string;
+    last_name?: string;
+  };
   created_at: string;
   updated_at: string;
 }

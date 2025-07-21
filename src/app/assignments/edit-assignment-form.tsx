@@ -47,12 +47,11 @@ const editAssignmentSchema = z.object({
   description: z.string()
     .min(10, 'Description must be at least 10 characters')
     .max(2000, 'Description must be less than 2000 characters'),
-  instructions: z.string().optional(),
   due_date: z.string().min(1, 'Due date is required'),
-  max_points: z.string()
-    .min(1, 'Maximum points is required')
-    .refine(val => parseFloat(val) > 0, 'Maximum points must be greater than 0')
-    .refine(val => parseFloat(val) <= 1000, 'Maximum points must be 1000 or less'),
+  total_points: z.string()
+    .min(1, 'Total points is required')
+    .refine(val => parseFloat(val) > 0, 'Total points must be greater than 0')
+    .refine(val => parseFloat(val) <= 1000, 'Total points must be 1000 or less'),
   assignment_type: z.enum(['HOMEWORK', 'QUIZ', 'EXAM', 'PROJECT', 'DISCUSSION'] as const),
   section: z.string().min(1, 'Section is required'),
 });
@@ -86,7 +85,6 @@ export function EditAssignmentForm({ assignment, onSuccess, onCancel }: EditAssi
   const updateAssignmentMutation = useUpdateAssignment();
   const { data: sectionsData } = useSections({ page_size: 100 });
   const [attachments, setAttachments] = useState<File[]>([]);
-  const [instructions, setInstructions] = useState(assignment.instructions || '');
 
   const sections = sectionsData?.results || [];
 
@@ -101,10 +99,9 @@ export function EditAssignmentForm({ assignment, onSuccess, onCancel }: EditAssi
     defaultValues: {
       title: assignment.title,
       description: assignment.description,
-      instructions: assignment.instructions || '',
       due_date: assignment.due_date.slice(0, 16), // Format for datetime-local
-      max_points: assignment.max_points.toString(),
-      assignment_type: assignment.assignment_type,
+      total_points: assignment.total_points.toString(),
+      assignment_type: 'HOMEWORK', // Default value since assignment_type doesn't exist in backend
       section: assignment.section.toString(),
     },
   });
@@ -112,7 +109,7 @@ export function EditAssignmentForm({ assignment, onSuccess, onCancel }: EditAssi
   const selectedSection = watch('section');
   const selectedType = watch('assignment_type');
   const dueDate = watch('due_date');
-  const maxPoints = watch('max_points');
+  const totalPoints = watch('total_points');
   const title = watch('title');
   const description = watch('description');
 
@@ -124,9 +121,7 @@ export function EditAssignmentForm({ assignment, onSuccess, onCancel }: EditAssi
           title: data.title,
           description: data.description,
           due_date: data.due_date,
-          max_points: parseFloat(data.max_points),
-          assignment_type: data.assignment_type,
-          instructions: instructions || undefined,
+          total_points: parseFloat(data.total_points),
           attachments: attachments.length > 0 ? attachments : undefined,
         },
       });
@@ -162,7 +157,7 @@ export function EditAssignmentForm({ assignment, onSuccess, onCancel }: EditAssi
 
   const sectionOptions = availableSections.map((section) => ({
     value: section.id.toString(),
-    label: `${section.section_name} (${section.subject_info.subject_code})`,
+    label: `${section.section_name} (${section.subject_info?.subject_code || 'N/A'})`,
   }));
 
   const selectedSectionData = availableSections.find((s) => s.id.toString() === selectedSection);
@@ -183,10 +178,8 @@ export function EditAssignmentForm({ assignment, onSuccess, onCancel }: EditAssi
   const hasChanges = 
     title !== assignment.title ||
     description !== assignment.description ||
-    instructions !== (assignment.instructions || '') ||
     dueDate !== assignment.due_date.slice(0, 16) ||
-    maxPoints !== assignment.max_points.toString() ||
-    selectedType !== assignment.assignment_type ||
+    totalPoints !== assignment.total_points.toString() ||
     selectedSection !== assignment.section.toString() ||
     attachments.length > 0;
 
@@ -204,19 +197,19 @@ export function EditAssignmentForm({ assignment, onSuccess, onCancel }: EditAssi
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-gray-900">
-                {assignment.submissions_count || 0}
+                0
               </div>
               <div className="text-sm text-gray-600">Submissions</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-gray-900">
-                {assignment.max_points}
+                {assignment.total_points}
               </div>
-              <div className="text-sm text-gray-600">Max Points</div>
+              <div className="text-sm text-gray-600">Total Points</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-gray-900">
-                {assignment.average_score || 0}%
+                0%
               </div>
               <div className="text-sm text-gray-600">Average Score</div>
             </div>
@@ -236,8 +229,8 @@ export function EditAssignmentForm({ assignment, onSuccess, onCancel }: EditAssi
                 <p><strong>Updated:</strong> {format(new Date(assignment.updated_at), 'PPP')}</p>
               </div>
               <div>
-                <p><strong>Section:</strong> {assignment.section_info.section_name}</p>
-                <p><strong>Subject:</strong> {assignment.section_info.subject_info.subject_name}</p>
+                <p><strong>Section:</strong> {assignment.section_info?.section_name || 'N/A'}</p>
+                <p><strong>Subject:</strong> {assignment.section_info?.subject?.subject_name || 'N/A'}</p>
               </div>
             </div>
           </div>
@@ -357,22 +350,22 @@ export function EditAssignmentForm({ assignment, onSuccess, onCancel }: EditAssi
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="max_points">Maximum Points *</Label>
+              <Label htmlFor="total_points">Total Points *</Label>
               <Input
-                id="max_points"
+                id="total_points"
                 type="number"
                 min="1"
                 max="1000"
                 step="0.5"
-                {...register('max_points')}
+                {...register('total_points')}
                 placeholder="100"
               />
-              {errors.max_points && (
-                <p className="text-sm text-red-600">{errors.max_points.message}</p>
+              {errors.total_points && (
+                <p className="text-sm text-red-600">{errors.total_points.message}</p>
               )}
-              {maxPoints && (
+              {totalPoints && (
                 <div className="text-sm text-gray-600">
-                  Worth {maxPoints} points
+                  Worth {totalPoints} points
                 </div>
               )}
             </div>
@@ -383,9 +376,9 @@ export function EditAssignmentForm({ assignment, onSuccess, onCancel }: EditAssi
                 <h4 className="font-medium text-green-900 mb-2">Section Information</h4>
                 <div className="space-y-1 text-sm text-green-800">
                   <p><strong>Section:</strong> {selectedSectionData.section_name}</p>
-                  <p><strong>Subject:</strong> {selectedSectionData.subject_info.subject_code} - {selectedSectionData.subject_info.subject_name}</p>
-                  <p><strong>Students:</strong> {selectedSectionData.enrollment_count}</p>
-                  <p><strong>Professor:</strong> {selectedSectionData.professor_info.first_name} {selectedSectionData.professor_info.last_name}</p>
+                  <p><strong>Subject:</strong> {selectedSectionData.subject_info?.subject_code || 'N/A'} - {selectedSectionData.subject_info?.subject_name || 'N/A'}</p>
+                  <p><strong>Students:</strong> {selectedSectionData.enrollment_count || 0}</p>
+                  <p><strong>Professor:</strong> {selectedSectionData.professor_info?.first_name || 'N/A'} {selectedSectionData.professor_info?.last_name || 'N/A'}</p>
                 </div>
               </div>
             )}
@@ -393,30 +386,7 @@ export function EditAssignmentForm({ assignment, onSuccess, onCancel }: EditAssi
         </Card>
       </div>
 
-      {/* Instructions */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <GraduationCap className="h-5 w-5" />
-            <span>Instructions</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <Label htmlFor="instructions">Detailed Instructions (Optional)</Label>
-            <RichTextEditor
-              value={instructions}
-              onChange={setInstructions}
-              placeholder="Provide detailed instructions, requirements, and any additional information students need..."
-              minHeight={200}
-              maxHeight={400}
-            />
-            <p className="text-sm text-gray-500">
-              Use the rich text editor to format your instructions with headings, lists, links, and more.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+
 
       {/* File Attachments */}
       <Card>
@@ -462,32 +432,7 @@ export function EditAssignmentForm({ assignment, onSuccess, onCancel }: EditAssi
               </div>
             )}
 
-            {/* Existing attachments */}
-            {assignment.attachments && assignment.attachments.length > 0 && (
-              <div className="space-y-2">
-                <Label>Existing Attachments</Label>
-                {assignment.attachments.map((attachment, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-blue-50 rounded-lg">
-                    <div className="flex items-center space-x-2">
-                      <FileText className="h-4 w-4 text-blue-500" />
-                      <span className="text-sm">{attachment.name}</span>
-                      <span className="text-xs text-blue-600">
-                        (existing file)
-                      </span>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => window.open(attachment.url, '_blank')}
-                      className="text-blue-600 hover:text-blue-800"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
+
           </div>
         </CardContent>
       </Card>
@@ -508,20 +453,12 @@ export function EditAssignmentForm({ assignment, onSuccess, onCancel }: EditAssi
                   <span className="font-medium">{title}</span>
                 </div>
               )}
-              {maxPoints !== assignment.max_points.toString() && (
+              {totalPoints !== assignment.total_points.toString() && (
                 <div className="flex items-center space-x-2 text-sm">
-                  <span className="font-medium">Max Points:</span>
-                  <span className="text-gray-500">{assignment.max_points}</span>
+                  <span className="font-medium">Total Points:</span>
+                  <span className="text-gray-500">{assignment.total_points}</span>
                   <span className="text-gray-400">→</span>
-                  <span className="font-medium">{maxPoints}</span>
-                </div>
-              )}
-              {selectedType !== assignment.assignment_type && (
-                <div className="flex items-center space-x-2 text-sm">
-                  <span className="font-medium">Type:</span>
-                  <span className="text-gray-500">{assignment.assignment_type}</span>
-                  <span className="text-gray-400">→</span>
-                  <span className="font-medium">{selectedType}</span>
+                  <span className="font-medium">{totalPoints}</span>
                 </div>
               )}
               {dueDate !== assignment.due_date.slice(0, 16) && (
