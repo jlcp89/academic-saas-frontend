@@ -159,12 +159,12 @@ export function CreateAssignmentForm({ onSuccess, onCancel }: CreateAssignmentFo
     return false;
   });
 
-  const sectionOptions = availableSections.map(section => ({
+  const sectionOptions = availableSections.map((section: Section) => ({
     value: section.id.toString(),
     label: `${section.section_name} (${section.subject_info.subject_code})`,
   }));
 
-  const selectedSectionData = availableSections.find(s => s.id.toString() === selectedSection);
+  const selectedSectionData = availableSections.find((s: Section) => s.id.toString() === selectedSection);
   const selectedTypeData = ASSIGNMENT_TYPES.find(t => t.value === selectedType);
 
   const getTimeUntilDue = () => {
