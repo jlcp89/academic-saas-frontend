@@ -197,8 +197,10 @@ export function CreateAssignmentForm({ onSuccess, onCancel }: CreateAssignmentFo
                 id="title"
                 {...register('title')}
                 placeholder="Chapter 5 Homework"
-                error={errors.title?.message}
               />
+              {errors.title && (
+                <p className="text-sm text-red-600">{errors.title.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
