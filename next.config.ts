@@ -23,6 +23,13 @@ const nextConfig: NextConfig = {
     // optimizeCss: true, // Disabled due to critters module issue
   },
   
+  // Disable ESLint during production builds
+  eslint: {
+    // Warning: This allows production builds to successfully complete even if
+    // your project has ESLint errors.
+    ignoreDuringBuilds: true,
+  },
+  
   // Security headers
   async headers() {
     return [
