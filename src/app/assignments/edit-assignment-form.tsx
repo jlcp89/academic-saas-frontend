@@ -260,8 +260,10 @@ export function EditAssignmentForm({ assignment, onSuccess, onCancel }: EditAssi
                 id="title"
                 {...register('title')}
                 placeholder="Chapter 5 Homework"
-                error={errors.title?.message}
               />
+              {errors.title && (
+                <p className="text-sm text-red-600">{errors.title.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -324,8 +326,10 @@ export function EditAssignmentForm({ assignment, onSuccess, onCancel }: EditAssi
                 id="due_date"
                 type="datetime-local"
                 {...register('due_date')}
-                error={errors.due_date?.message}
               />
+              {errors.due_date && (
+                <p className="text-sm text-red-600">{errors.due_date.message}</p>
+              )}
               {dueDate && (
                 <div className="flex items-center space-x-2 text-sm text-gray-600">
                   <Timer className="w-4 h-4" />
@@ -362,8 +366,10 @@ export function EditAssignmentForm({ assignment, onSuccess, onCancel }: EditAssi
                 step="0.5"
                 {...register('max_points')}
                 placeholder="100"
-                error={errors.max_points?.message}
               />
+              {errors.max_points && (
+                <p className="text-sm text-red-600">{errors.max_points.message}</p>
+              )}
               {maxPoints && (
                 <div className="text-sm text-gray-600">
                   Worth {maxPoints} points

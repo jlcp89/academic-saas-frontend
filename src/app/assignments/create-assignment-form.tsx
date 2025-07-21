@@ -263,8 +263,10 @@ export function CreateAssignmentForm({ onSuccess, onCancel }: CreateAssignmentFo
                 id="due_date"
                 type="datetime-local"
                 {...register('due_date')}
-                error={errors.due_date?.message}
               />
+              {errors.due_date && (
+                <p className="text-sm text-red-600">{errors.due_date.message}</p>
+              )}
               {dueDate && (
                 <div className="flex items-center space-x-2 text-sm text-gray-600">
                   <Timer className="w-4 h-4" />
@@ -301,8 +303,10 @@ export function CreateAssignmentForm({ onSuccess, onCancel }: CreateAssignmentFo
                 step="0.5"
                 {...register('max_points')}
                 placeholder="100"
-                error={errors.max_points?.message}
               />
+              {errors.max_points && (
+                <p className="text-sm text-red-600">{errors.max_points.message}</p>
+              )}
               {maxPoints && (
                 <div className="text-sm text-gray-600">
                   Worth {maxPoints} points
