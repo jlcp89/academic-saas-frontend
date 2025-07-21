@@ -133,7 +133,7 @@ export function useRealTimeNotifications() {
 }
 
 // Hook for real-time dashboard updates
-export function useRealTimeDashboard(onUpdate?: (data: any) => void) {
+export function useRealTimeDashboard(onUpdate?: (data: unknown) => void) {
   const { connected, subscribe } = useWebSocket();
 
   useEffect(() => {
@@ -155,7 +155,7 @@ export function useRealTimeDashboard(onUpdate?: (data: any) => void) {
 export function useUserPresence() {
   const { user } = useAuth();
   const { connected, setOnlineStatus, subscribe } = useWebSocket();
-  const [onlineUsers, setOnlineUsers] = useState<Record<string, any>>({});
+  const [onlineUsers, setOnlineUsers] = useState<Record<string, { status: string; lastSeen: Date }>>({});
 
   useEffect(() => {
     if (!connected) return;

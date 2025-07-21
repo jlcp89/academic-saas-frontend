@@ -7,7 +7,7 @@ interface CacheEntry<T> {
   timestamp: number;
   ttl: number; // Time to live in milliseconds
   version: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 interface CacheOptions {
@@ -27,7 +27,7 @@ interface CacheStats {
 }
 
 class CacheManager {
-  private memoryCache = new Map<string, CacheEntry<any>>();
+  private memoryCache = new Map<string, CacheEntry<unknown>>();
   private defaultTTL = 5 * 60 * 1000; // 5 minutes
   private maxMemorySize = 100; // Maximum number of entries in memory
   private stats: CacheStats = {
@@ -53,11 +53,11 @@ class CacheManager {
     return version ? `${key}:${version}` : key;
   }
 
-  private isExpired(entry: CacheEntry<any>): boolean {
+  private isExpired(entry: CacheEntry<unknown>): boolean {
     return Date.now() - entry.timestamp > entry.ttl;
   }
 
-  private serializeData(data: any): string {
+  private serializeData(data: unknown): string {
     try {
       return JSON.stringify(data);
     } catch (error) {
@@ -319,7 +319,7 @@ class CacheManager {
           const item = storageObj.getItem(key);
           if (!item) continue;
 
-          const entry: CacheEntry<any> = this.deserializeData(item);
+          const entry: CacheEntry<unknown> = this.deserializeData(item);
           if (this.isExpired(entry)) {
             keysToDelete.push(key);
           }

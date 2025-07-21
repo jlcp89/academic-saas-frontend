@@ -8,7 +8,7 @@ export interface AcademicRiskPrediction {
   risk_score: number;
   risk_level: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   confidence: number;
-  factors: Record<string, any>;
+  factors: Record<string, unknown>;
   predicted_outcome: string;
   attendance_rate: number | null;
   assignment_completion_rate: number | null;
@@ -65,8 +65,8 @@ export interface PredictiveAlert {
   confidence_score: number;
   confidence_percentage: number;
   predicted_outcome: string;
-  recommended_actions: any[];
-  supporting_evidence: Record<string, any>;
+  recommended_actions: string[];
+  supporting_evidence: Record<string, unknown>;
   is_active: boolean;
   acknowledged_by: number | null;
   acknowledged_by_name: string | null;

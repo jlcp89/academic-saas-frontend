@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useForm, UseFormProps, UseFormReturn, FieldValues, Path } from 'react-hook-form';
+import { useForm, UseFormProps, UseFormReturn, FieldValues, Path, PathValue } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNotificationStore } from '@/lib/stores/notification-store';
@@ -234,7 +234,7 @@ export function useEnhancedForm<T extends FieldValues>({
   }, [autoSave]);
 
   // Set field value with validation
-  const setFieldValue = useCallback((fieldName: Path<T>, value: any, shouldValidate = true) => {
+  const setFieldValue = useCallback(<K extends Path<T>>(fieldName: K, value: PathValue<T, K>, shouldValidate = true) => {
     form.setValue(fieldName, value, { 
       shouldDirty: true,
       shouldValidate,

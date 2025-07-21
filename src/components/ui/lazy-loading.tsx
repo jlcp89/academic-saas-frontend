@@ -27,11 +27,10 @@ export function LoadingFallback({
 export function withLazyLoading<P extends object>(
   importFn: () => Promise<{ default: ComponentType<P> }>,
   fallback?: React.ComponentType,
-  errorBoundary?: React.ComponentType<{ error: Error; retry: () => void }>
 ) {
   const LazyComponent = lazy(importFn);
   
-  return React.forwardRef<any, P>((props, ref) => {
+  const ForwardedComponent = React.forwardRef<unknown, P>((props, ref) => {
     const FallbackComponent = fallback || LoadingFallback;
     
     return (
@@ -40,6 +39,10 @@ export function withLazyLoading<P extends object>(
       </Suspense>
     );
   });
+  
+  ForwardedComponent.displayName = 'LazyLoadedComponent';
+  
+  return ForwardedComponent;
 }
 
 // Intersection Observer hook for lazy loading
@@ -103,7 +106,7 @@ export function LazyImage({
   const [currentSrc, setCurrentSrc] = React.useState<string | null>(null);
   const imgRef = React.useRef<HTMLImageElement>(null);
   
-  const { isIntersecting, hasBeenVisible } = useIntersectionObserver(imgRef, {
+  const { hasBeenVisible } = useIntersectionObserver(imgRef, {
     rootMargin,
     threshold,
   });

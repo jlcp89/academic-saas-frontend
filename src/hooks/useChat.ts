@@ -84,7 +84,7 @@ export function useMarkMessagesRead(roomId: number | null) {
 
 export function useWebSocketNotifications() {
   const [isConnected, setIsConnected] = useState(false);
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<{ id: string; type: string; message: string; timestamp: Date }[]>([]);
   
   useEffect(() => {
     // Environment-aware WebSocket URL configuration

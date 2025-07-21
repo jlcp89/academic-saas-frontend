@@ -7,13 +7,13 @@ export type ExportFormat = 'pdf' | 'excel' | 'csv';
 
 interface ExportData {
   title: string;
-  data: any[];
+  data: unknown[];
   columns: { key: string; label: string; width?: number }[];
   metadata?: {
     generatedAt?: Date;
     generatedBy?: string;
-    filters?: Record<string, any>;
-    summary?: Record<string, any>;
+    filters?: Record<string, unknown>;
+    summary?: Record<string, unknown>;
   };
 }
 
@@ -34,7 +34,7 @@ class ExportUtility {
     return `${baseFilename}${timestamp}.${format}`;
   }
 
-  private sanitizeForCSV(value: any): string {
+  private sanitizeForCSV(value: unknown): string {
     if (value === null || value === undefined) return '';
     const str = String(value);
     if (str.includes(',') || str.includes('"') || str.includes('\n')) {
