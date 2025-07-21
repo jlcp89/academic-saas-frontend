@@ -1,63 +1,101 @@
-// User roles matching Django backend
+// Chat related types
+export interface ChatRoom {
+  id: number;
+  name: string;
+  room_type: 'DIRECT' | 'GROUP' | 'CLASS' | 'ANNOUNCEMENT';
+  participant_count: number;
+  unread_count: number;
+  last_message_preview?: {
+    content: string;
+    sender_name: string;
+    created_at: string;
+  };
+  last_message_at?: string;
+  created_at: string;
+}
+
+export interface Message {
+  id: number;
+  content: string;
+  sender: number;
+  sender_name: string;
+  sender_role: string;
+  created_at: string;
+  is_edited: boolean;
+  edited_at?: string;
+  is_system_message: boolean;
+}
+
+export interface PaginatedResponse<T> {
+  results: T[];
+  count: number;
+  next?: string | null;
+  previous?: string | null;
+}
+
+// User role enum
 export enum UserRole {
   SUPERADMIN = 'SUPERADMIN',
   ADMIN = 'ADMIN',
   PROFESSOR = 'PROFESSOR',
-  STUDENT = 'STUDENT',
+  STUDENT = 'STUDENT'
 }
 
-// User interface
+// User related types (from backend)
 export interface User {
   id: number;
   username: string;
   email: string;
-  first_name: string;
-  last_name: string;
   role: UserRole;
-  school?: School;
-  is_active: boolean;
-  date_joined: string;
+  school?: number;
+  first_name?: string;
+  last_name?: string;
 }
 
-// School/Organization interface
+// Auth types
+export interface AuthSession {
+  user: User;
+  accessToken: string;
+  refreshToken?: string;
+}
+
+// API Response types
+export interface ApiError {
+  detail?: string;
+  message?: string;
+  errors?: Record<string, string[]>;
+}
+
+// Academic related types
 export interface School {
   id: number;
   name: string;
-  subdomain: string;
-  is_active: boolean;
+  address?: string;
+  phone?: string;
+  email?: string;
+  subscription_status: 'ACTIVE' | 'INACTIVE' | 'EXPIRED';
   created_at: string;
-  subscription?: Subscription;
+  updated_at: string;
 }
 
-// Subscription interface
-export interface Subscription {
-  id: number;
-  school: number;
-  plan: 'BASIC' | 'PREMIUM';
-  status: 'ACTIVE' | 'EXPIRED' | 'CANCELED';
-  end_date: string;
-}
-
-// Academic interfaces matching backend structure
 export interface Subject {
   id: number;
-  subject_name: string;
-  subject_code: string;
+  name: string;
+  code: string;
+  description?: string;
+  school: number;
   created_at: string;
   updated_at: string;
 }
 
 export interface Section {
   id: number;
-  section_name: string;
+  name: string;
   subject: number;
-  subject_info: Subject;
   professor: number;
-  professor_info: User;
-  start_date: string;
-  end_date: string;
-  max_students: number;
-  enrollment_count: number;
+  school: number;
+  schedule?: string;
+  capacity?: number;
   created_at: string;
   updated_at: string;
 }
@@ -65,34 +103,20 @@ export interface Section {
 export interface Enrollment {
   id: number;
   student: number;
-  student_info: User;
   section: number;
-  section_info: Section;
-  status: 'ENROLLED' | 'DROPPED' | 'COMPLETED';
   enrollment_date: string;
-  grade?: number;
+  status: 'ACTIVE' | 'INACTIVE' | 'DROPPED';
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Assignment {
   id: number;
-  section: number;
-  section_info: Section;
   title: string;
-  description: string;
-  instructions?: string;
+  description?: string;
+  section: number;
   due_date: string;
-  max_points: number;
-  assignment_type: 'HOMEWORK' | 'QUIZ' | 'EXAM' | 'PROJECT' | 'DISCUSSION';
-  created_by: number;
-  created_by_info: User;
-  submissions_count?: number;
-  average_score?: number;
-  attachments?: {
-    id: number;
-    name: string;
-    url: string;
-    size: number;
-  }[];
+  points: number;
   created_at: string;
   updated_at: string;
 }
@@ -100,54 +124,12 @@ export interface Assignment {
 export interface Submission {
   id: number;
   assignment: number;
-  assignment_info: Assignment;
   student: number;
-  student_info: User;
-  status: 'DRAFT' | 'SUBMITTED' | 'GRADED' | 'RETURNED';
-  content: string;
-  attachments?: {
-    id: number;
-    name: string;
-    url: string;
-    size: number;
-    uploaded_at: string;
-  }[];
-  submitted_at?: string;
-  points_earned?: number;
+  content?: string;
+  file_url?: string;
+  submitted_at: string;
+  grade?: number;
   feedback?: string;
-  graded_by?: number;
-  graded_by_info?: User;
-  graded_at?: string;
-  is_late?: boolean;
   created_at: string;
   updated_at: string;
-}
-
-// API Response types
-export interface ApiResponse<T> {
-  results: T[];
-  count: number;
-  next?: string;
-  previous?: string;
-}
-
-export interface LoginResponse {
-  access: string;
-  refresh: string;
-  user: User;
-}
-
-// Form types
-export interface LoginForm {
-  username: string;
-  password: string;
-}
-
-export interface CreateUserForm {
-  username: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  password: string;
-  role: UserRole;
 }

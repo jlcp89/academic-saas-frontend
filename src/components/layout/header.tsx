@@ -125,7 +125,7 @@ export function Header({
               </div>
               <div className="hidden md:block text-left">
                 <div className="text-sm font-medium text-gray-900">
-                  {user?.first_name} {user?.last_name} || {user?.username}
+                  {user?.first_name && user?.last_name ? `${user.first_name} ${user.last_name}` : user?.username}
                 </div>
                 <div className="text-xs text-gray-500">
                   {user?.role?.replace('_', ' ').toLowerCase()}
@@ -139,7 +139,7 @@ export function Header({
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none">
-                  {user?.first_name} {user?.last_name} || {user?.username}
+                  {user?.first_name && user?.last_name ? `${user.first_name} ${user.last_name}` : user?.username}
                 </p>
                 <p className="text-xs leading-none text-gray-500">
                   {user?.email}
@@ -196,7 +196,7 @@ export function RoleHeader() {
       case 'SUPERADMIN':
         return 'Manage all schools and system settings';
       case 'ADMIN':
-        return `Manage ${user?.school?.name || 'school'} operations`;
+        return `Manage school operations`;
       case 'PROFESSOR':
         return 'Manage your classes and students';
       case 'STUDENT':

@@ -4,63 +4,48 @@
 
    ▲ Next.js 15.4.1 (Turbopack)
    - Local:        http://localhost:3000
-   - Network:      http://192.168.1.50:3000
+   - Network:      http://172.24.136.90:3000
    - Environments: .env.local
 
  ✓ Starting...
  ○ Compiling middleware ...
- ✓ Compiled middleware in 669ms
- ✓ Ready in 2.7s
- ○ Compiling / ...
- ✓ Compiled / in 8.1s
- GET /auth/login 200 in 4014ms
- ○ Compiling /favicon.ico ...
- GET /favicon.ico?favicon.45db1c09.ico 200 in 1638ms
- ✓ Compiled /favicon.ico in 1743ms
+ ✓ Compiled middleware in 690ms
+ ✓ Ready in 2.8s
+ ○ Compiling /api/auth/[...nextauth] ...
+ ✓ Compiled /api/auth/[...nextauth] in 3.4s
 [next-auth][warn][DEBUG_ENABLED] 
 https://next-auth.js.org/warnings#debug_enabled
- GET /api/auth/providers 200 in 2086ms
- GET /api/auth/session 200 in 2996ms
- GET /api/auth/csrf 200 in 92ms
- GET /api/auth/session 200 in 110ms
- POST /api/auth/callback/credentials 200 in 1800ms
- GET /api/auth/session 200 in 128ms
+ GET /api/auth/csrf 200 in 5081ms
+ POST /api/auth/signout 200 in 102ms
+ ○ Compiling /auth/login ...
+ ✓ Compiled /auth/login in 6.8s
+ GET /auth/login 200 in 7601ms
+ GET /api/auth/signin?callbackUrl=%2F.well-known%2Fappspecific%2Fcom.chrome.devtools.json 302 in 606ms
+ GET /auth/login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2F.well-known%2Fappspecific%2Fcom.chrome.devtools.json 200 in 550ms
+ GET /api/auth/session 200 in 274ms
+ GET /api/auth/providers 200 in 147ms
+ GET /api/auth/csrf 200 in 142ms
+ POST /api/auth/callback/credentials 200 in 3896ms
+ GET /api/auth/session 200 in 179ms
  ○ Compiling /dashboard ...
- ✓ Compiled /dashboard in 6.7s
- GET /dashboard 200 in 6804ms
- GET /api/auth/csrf 200 in 227ms
- POST /api/auth/session 200 in 97ms
- GET /api/auth/session 200 in 96ms
- ○ Compiling /reports ...
- ✓ Compiled /reports in 4.2s
- GET /reports 200 in 4373ms
- GET /reports 200 in 467ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 426ms
- GET /api/auth/session 200 in 362ms
- GET /api/auth/session 200 in 201ms
- ✓ Compiled in 484ms
- ⚠ Fast Refresh had to perform a full reload due to a runtime error.
- GET /reports 200 in 1742ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 741ms
- GET /api/auth/session 200 in 518ms
- GET /api/auth/session 200 in 168ms
- GET /reports 200 in 213ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 462ms
- GET /api/auth/session 200 in 293ms
- GET /api/auth/session 200 in 224ms
- GET /api/auth/csrf 200 in 226ms
- POST /api/auth/signout 200 in 111ms
- GET /api/auth/session 200 in 165ms
- GET /auth/login 200 in 490ms
- GET /api/auth/signin?callbackUrl=%2F.well-known%2Fappspecific%2Fcom.chrome.devtools.json 302 in 463ms
- GET /auth/login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2F.well-known%2Fappspecific%2Fcom.chrome.devtools.json 200 in 661ms
- GET /api/auth/session 200 in 337ms
- GET /api/auth/session 200 in 86ms
- GET /api/auth/providers 200 in 99ms
- GET /api/auth/csrf 200 in 129ms
- POST /api/auth/callback/credentials 200 in 1657ms
- GET /api/auth/session 200 in 203ms
- GET /dashboard 200 in 169ms
- GET /api/auth/csrf 200 in 109ms
- POST /api/auth/session 200 in 153ms
- GET /api/auth/session 200 in 93ms
+ ✓ Compiled /dashboard in 6.3s
+ GET /dashboard 200 in 6411ms
+ GET /api/auth/csrf 200 in 386ms
+ POST /api/auth/session 200 in 225ms
+ ○ Compiling /users ...
+ ✓ Compiled /users in 1668ms
+ GET /users 200 in 1806ms
+ ○ Compiling /ai-risk ...
+ ✓ Compiled /ai-risk in 699ms
+ GET /ai-risk 200 in 825ms
+ ○ Compiling /subjects ...
+ ✓ Compiled /subjects in 1145ms
+ GET /subjects 200 in 1325ms
+ GET /dashboard 200 in 94ms
+ ○ Compiling /search ...
+ ✓ Compiled /search in 738ms
+ GET /search?q=test 200 in 848ms
+ ○ Compiling /_not-found/page ...
+ ✓ Compiled /_not-found/page in 729ms
+ GET /api/search?q=test 404 in 1027ms
+ GET /api/search?q=test 404 in 234ms

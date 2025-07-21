@@ -65,8 +65,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (status === 'authenticated' && session?.user) {
+      console.log('🔍 Auth context - Setting user:', session.user.username, session.user.role);
       setUser(session.user);
     } else {
+      console.log('🔍 Auth context - Clearing user');
       setUser(null);
     }
 

@@ -22,7 +22,8 @@ import {
   Settings, 
   LogOut,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Brain
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { UserRole } from '@/types';
@@ -117,6 +118,14 @@ const MENU_ITEMS: MenuItem[] = [
     roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.PROFESSOR],
     description: 'Analytics and reporting'
   },
+  {
+    id: 'ai-risk',
+    label: 'IA - Riesgo Académico',
+    icon: Brain,
+    href: '/ai-risk',
+    roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.PROFESSOR, UserRole.STUDENT],
+    description: 'Sistema de predicción de riesgo académico'
+  },
 ];
 
 interface SidebarProps {
@@ -129,9 +138,16 @@ export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
   const { user, hasAnyRole } = useAuth();
 
+  // Debug logging with unique ID
+  const renderId = Math.random().toString(36).substr(2, 9);
+  console.log(`🔍 Sidebar render [${renderId}] - User:`, user?.username, 'Role:', user?.role);
+
   const filteredMenuItems = MENU_ITEMS.filter(item => 
     hasAnyRole(item.roles)
   );
+
+  // Debug logging for filtered items
+  console.log(`🔍 Filtered menu items [${renderId}]:`, filteredMenuItems.map(item => item.label));
 
   const handleSignOut = async () => {
     await signOut({ callbackUrl: '/auth/login' });
@@ -182,7 +198,7 @@ export function Sidebar({ className }: SidebarProps) {
           {!isCollapsed && (
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">
-                {user?.first_name} {user?.last_name} || {user?.username}
+                {user?.first_name && user?.last_name ? `${user.first_name} ${user.last_name}` : user?.username}
               </p>
               <p className="text-xs text-gray-400 truncate">
                 {user?.role?.replace('_', ' ').toLowerCase()}

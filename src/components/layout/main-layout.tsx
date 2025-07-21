@@ -28,6 +28,10 @@ export function MainLayout({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   
+  // Debug logging
+  const renderId = Math.random().toString(36).substr(2, 9);
+  console.log(`🔍 MainLayout render [${renderId}] - Path:`, pathname, 'Title:', title);
+  
   // Initialize real-time notifications
   // const { connected, isRealTimeEnabled } = useRealTimeNotifications();
 
