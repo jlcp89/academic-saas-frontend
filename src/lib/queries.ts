@@ -24,21 +24,32 @@ export function useCurrentUser() {
   return useQuery({
     queryKey: queryKeys.currentUser,
     queryFn: async () => {
-      const response = await apiClient.request<{ data: User }>('/api/users/me/');
-      const userData = response.data;
-      
-      // Update the session with fresh data
-      if (update) {
-        await update({
-          ...session,
-          user: userData
-        });
+      try {
+        const userData = await apiClient.request<User>('/api/users/me/');
+        
+        // Ensure we return valid user data
+        if (!userData) {
+          throw new Error('No user data received from API');
+        }
+        
+        // Update the session with fresh data
+        if (update) {
+          await update({
+            ...session,
+            user: userData
+          });
+        }
+        
+        return userData;
+      } catch (error) {
+        console.error('Failed to fetch current user:', error);
+        // Return null instead of undefined to prevent React Query errors
+        return null;
       }
-      
-      return userData;
     },
     enabled: !!session,
     staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 1, // Only retry once to avoid excessive API calls
   });
 }
 

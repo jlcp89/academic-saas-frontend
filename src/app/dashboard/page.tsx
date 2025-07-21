@@ -13,7 +13,7 @@ import { AlertTriangle, Loader2 } from 'lucide-react';
 
 export default function Dashboard() {
   const { user, isLoading } = useAuth();
-  const { data: currentUser } = useCurrentUser();
+  const { data: currentUser, isLoading: isCurrentUserLoading, error: currentUserError } = useCurrentUser();
   const router = useRouter();
 
   // Use fresh data from currentUser if available, fallback to auth context
@@ -25,7 +25,7 @@ export default function Dashboard() {
     }
   }, [isLoading, user, router]);
 
-  if (isLoading) {
+  if (isLoading || isCurrentUserLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">

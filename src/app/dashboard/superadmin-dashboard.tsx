@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useSuperAdminDashboard } from '@/lib/api/dashboard';
 import { format } from 'date-fns';
+import { useRouter } from 'next/navigation';
 import { 
   Building2,
   Users,
@@ -27,6 +28,7 @@ import {
 
 export function SuperAdminDashboard() {
   const { data: dashboardData, isLoading, error, refetch } = useSuperAdminDashboard();
+  const router = useRouter();
 
   if (isLoading) {
     return (
@@ -241,7 +243,7 @@ export function SuperAdminDashboard() {
                 <Building2 className="h-5 w-5" />
                 <span>Recent Schools</span>
               </div>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => router.push('/schools')}>
                 <Eye className="h-4 w-4 mr-2" />
                 View All
               </Button>
@@ -365,19 +367,34 @@ export function SuperAdminDashboard() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Button className="h-20 flex flex-col items-center justify-center">
+            <Button 
+              className="h-20 flex flex-col items-center justify-center"
+              onClick={() => router.push('/schools')}
+            >
               <Building2 className="h-6 w-6 mb-2" />
               <span>Create School</span>
             </Button>
-            <Button variant="outline" className="h-20 flex flex-col items-center justify-center">
+            <Button 
+              variant="outline" 
+              className="h-20 flex flex-col items-center justify-center"
+              onClick={() => router.push('/users')}
+            >
               <Users className="h-6 w-6 mb-2" />
               <span>Manage Users</span>
             </Button>
-            <Button variant="outline" className="h-20 flex flex-col items-center justify-center">
+            <Button 
+              variant="outline" 
+              className="h-20 flex flex-col items-center justify-center"
+              onClick={() => router.push('/dashboard')}
+            >
               <Settings className="h-6 w-6 mb-2" />
               <span>System Settings</span>
             </Button>
-            <Button variant="outline" className="h-20 flex flex-col items-center justify-center">
+            <Button 
+              variant="outline" 
+              className="h-20 flex flex-col items-center justify-center"
+              onClick={() => router.push('/reports')}
+            >
               <BarChart3 className="h-6 w-6 mb-2" />
               <span>View Reports</span>
             </Button>

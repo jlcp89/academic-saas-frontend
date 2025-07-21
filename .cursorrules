@@ -1,0 +1,466 @@
+# Cursor Rules for Academic SaaS Frontend
+
+## Core Technologies
+- **Next.js 15.4.1** with App Router and Turbopack
+- **React 19.1.0** with Server Components
+- **TypeScript 5** with strict configuration
+- **Tailwind CSS 4** with mobile-first approach
+- **Shadcn UI** with Radix UI primitives
+- **TanStack Query** for server state management
+- **Zustand** for client global state
+- **React Hook Form** with Zod for validation
+- **NextAuth.js** for authentication with JWT strategy
+
+## Multi-Tenant SaaS Frontend
+
+### Core Features
+- **Multi-tenant Dashboard**: Role-based dashboards (SUPERADMIN, ADMIN, PROFESSOR, STUDENT)
+- **School Management**: Superadmin can manage multiple schools
+- **Academic Management**: Subjects, sections, assignments, submissions, grades
+- **User Management**: Role-based user administration
+- **Reporting**: Academic reports and analytics
+- **Authentication**: JWT-based authentication with NextAuth.js
+
+### Authentication Flow
+1. **Login Process**: User submits credentials via React Hook Form
+2. **JWT Tokens**: NextAuth.js calls Django `/api/auth/login/` for JWT tokens
+3. **User Data**: Gets user data from `/api/users/me/` using access token
+4. **Session Management**: Stores session with NextAuth.js (secure HTTP-only cookies)
+
+## Project Structure
+```
+academic-saas-frontend/
+├── src/
+│   ├── app/                    # Next.js App Router pages
+│   │   ├── auth/login/         # Authentication pages
+│   │   ├── dashboard/          # Role-based dashboards
+│   │   ├── api/auth/           # NextAuth.js API routes
+│   │   ├── users/              # User management
+│   │   ├── schools/            # School management (Superadmin)
+│   │   ├── subjects/           # Subject management
+│   │   ├── sections/           # Section management
+│   │   ├── assignments/        # Assignment management
+│   │   ├── submissions/        # Submission management
+│   │   ├── enrollments/        # Enrollment management
+│   │   ├── grades/             # Grade management
+│   │   ├── reports/            # Reporting system
+│   │   ├── layout.tsx          # Root layout with providers
+│   │   └── page.tsx            # Landing page
+│   ├── components/             # Reusable UI components
+│   │   ├── ui/                 # Shadcn/ui components
+│   │   ├── layout/             # Layout components
+│   │   └── auth/               # Authentication components
+│   ├── lib/                    # Utilities and configuration
+│   │   ├── api/                # API client and functions
+│   │   │   ├── api-client.ts   # Authenticated API client
+│   │   │   ├── auth.ts         # Authentication API
+│   │   │   ├── users.ts        # Users API
+│   │   │   ├── schools.ts      # Schools API
+│   │   │   ├── academic.ts     # Academic entities API
+│   │   │   └── dashboard.ts    # Dashboard API
+│   │   ├── constants.ts        # API endpoints and constants
+│   │   ├── providers.tsx       # React Query + NextAuth providers
+│   │   ├── queries.ts          # React Query hooks
+│   │   ├── store.ts            # Zustand global state
+│   │   └── utils.ts            # General utilities
+│   ├── contexts/               # React Contexts
+│   │   └── auth-context.tsx    # Authentication context
+│   └── types/                  # TypeScript type definitions
+│       ├── index.ts            # Main types matching Django models
+│       └── next-auth.d.ts      # NextAuth type extensions
+├── public/                     # Static assets
+├── package.json                # Dependencies and scripts
+├── next.config.ts              # Next.js configuration
+├── tailwind.config.js          # Tailwind CSS configuration
+└── components.json             # Shadcn/ui configuration
+```
+
+## Code Conventions
+
+### TypeScript
+- Use **interfaces** instead of types for objects
+- Avoid enums; prefer const assertions or maps
+- Use types strictos and avoid `any`
+- Define types in `src/types/` for reusability
+- Match Django model types exactly
+
+### React Components
+- **Prefer Server Components** by default
+- Use `"use client"` only when necessary
+- Componentes funcionales con TypeScript interfaces
+- Props tipadas con interfaces descriptivas
+- Use `React.FC` only when necessary
+
+### Naming Conventions
+- **Files**: kebab-case (`user-profile.tsx`)
+- **Components**: PascalCase (`UserProfile`)
+- **Variables**: camelCase (`userData`, `isLoading`)
+- **Constants**: UPPER_SNAKE_CASE (`API_ENDPOINTS`)
+- **Functions**: camelCase (`fetchUserData`)
+
+### File Structure Template
+```typescript
+// 1. External imports
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+
+// 2. Internal imports
+import { UserProfile } from '@/components/user-profile'
+import { useUser } from '@/lib/hooks/use-user'
+
+// 3. Types/Interfaces
+interface UserProfileProps {
+  userId: string
+  onUpdate?: (user: User) => void
+}
+
+// 4. Main component (exported)
+export function UserProfilePage({ userId, onUpdate }: UserProfileProps) {
+  // Component logic
+}
+
+// 5. Subcomponents (if any)
+function UserAvatar({ user }: { user: User }) {
+  // Subcomponent
+}
+
+// 6. Local utilities (if any)
+function formatUserName(user: User): string {
+  return `${user.firstName} ${user.lastName}`
+}
+```
+
+## Development Patterns
+
+### Server Components (Preferred)
+```typescript
+// ✅ Correct - Server Component
+export default async function UserList() {
+  const users = await fetchUsers()
+  return <UserTable users={users} />
+}
+```
+
+### Client Components (Only when necessary)
+```typescript
+// ✅ Correct - Minimal Client Component
+"use client"
+import { useState } from 'react'
+
+export function UserForm() {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  // Client-only logic
+}
+```
+
+### State Management
+- **Server State**: TanStack Query for server data (users, schools, subjects, etc.)
+- **Client State**: Zustand for client global state (sidebar, theme, etc.)
+- **Authentication State**: NextAuth.js session management
+- **Form State**: React Hook Form with Zod validation
+
+### API Integration
+```typescript
+// ✅ Correct - API client with authentication
+import { useApiClient } from '@/lib/api/api-client'
+
+export function useUsers() {
+  const apiClient = useApiClient()
+  
+  return useQuery({
+    queryKey: ['users'],
+    queryFn: () => apiClient.get('/api/users/'),
+  })
+}
+```
+
+### API and Data Fetching
+```typescript
+// ✅ Correct - Server Component with fetch
+export default async function Dashboard() {
+  const data = await fetch('/api/dashboard', {
+    cache: 'no-store' // or 'force-cache' as needed
+  })
+  const dashboard = await data.json()
+  
+  return <DashboardView data={dashboard} />
+}
+```
+
+## UI and Styling
+
+### Tailwind CSS
+- **Mobile-first**: Start with mobile classes
+- **Responsive**: `sm:`, `md:`, `lg:`, `xl:` for breakpoints
+- **Semantic**: Use descriptive classes
+- **Consistent**: Follow design system
+
+### Shadcn UI
+- Use components from `@/components/ui/`
+- Customize with `class-variance-authority`
+- Maintain design consistency
+
+### UI Component Example
+```typescript
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+
+export function UserCard({ user }: { user: User }) {
+  return (
+    <Card className="w-full max-w-md">
+      <CardHeader>
+        <CardTitle className="text-lg font-semibold">
+          {user.name}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground">{user.email}</p>
+        <p className="text-xs text-muted-foreground">Role: {user.role}</p>
+      </CardContent>
+    </Card>
+  )
+}
+```
+
+## Authentication Implementation
+
+### NextAuth Configuration
+```typescript
+// ✅ Correct - NextAuth configuration
+import NextAuth from 'next-auth'
+import CredentialsProvider from 'next-auth/providers/credentials'
+
+export const authOptions = {
+  providers: [
+    CredentialsProvider({
+      name: 'Credentials',
+      credentials: {
+        username: { label: "Username", type: "text" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials) {
+        // Call Django API for authentication
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(credentials),
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          return data.user
+        }
+        return null
+      }
+    })
+  ],
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.accessToken = user.access
+        token.refreshToken = user.refresh
+      }
+      return token
+    },
+    async session({ session, token }) {
+      session.accessToken = token.accessToken
+      return session
+    }
+  }
+}
+```
+
+### Protected Routes
+```typescript
+// ✅ Correct - Protected route component
+"use client"
+import { useSession } from 'next-auth/react'
+import { redirect } from 'next/navigation'
+
+export function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { data: session, status } = useSession()
+  
+  if (status === 'loading') {
+    return <div>Loading...</div>
+  }
+  
+  if (!session) {
+    redirect('/auth/login')
+  }
+  
+  return <>{children}</>
+}
+```
+
+## Form Handling
+
+### React Hook Form with Zod
+```typescript
+// ✅ Correct - Form with validation
+"use client"
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+
+const userSchema = z.object({
+  username: z.string().min(3, 'Username must be at least 3 characters'),
+  email: z.string().email('Invalid email address'),
+  role: z.enum(['ADMIN', 'PROFESSOR', 'STUDENT']),
+})
+
+type UserFormData = z.infer<typeof userSchema>
+
+export function UserForm() {
+  const form = useForm<UserFormData>({
+    resolver: zodResolver(userSchema),
+    defaultValues: {
+      username: '',
+      email: '',
+      role: 'STUDENT',
+    },
+  })
+  
+  const onSubmit = async (data: UserFormData) => {
+    // Submit to API
+  }
+  
+  return (
+    <form onSubmit={form.handleSubmit(onSubmit)}>
+      {/* Form fields */}
+    </form>
+  )
+}
+```
+
+## Performance
+
+### Optimizations
+- **Server Components** for server-side rendering
+- **Suspense** for loading states
+- **Dynamic imports** for heavy components
+- **Image optimization** with Next.js Image
+- **Automatic bundle splitting**
+
+### Web Vitals
+- Optimize **LCP** (Largest Contentful Paint)
+- Minimize **CLS** (Cumulative Layout Shift)
+- Improve **FID** (First Input Delay)
+
+## Environment Configuration
+
+### Environment Variables
+```bash
+# NextAuth Configuration
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-secret-key-change-in-production
+
+# API Configuration  
+NEXT_PUBLIC_API_URL=http://localhost:8000
+
+# Development Environment
+NEXT_PUBLIC_API_URL=http://52.20.22.173:8000
+NEXTAUTH_URL=http://52.20.22.173:3000
+```
+
+### CORS Configuration
+The application uses dynamic CORS configuration to support multiple environments:
+
+**Development Environment:**
+```bash
+# Backend .env file
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://52.20.22.173,http://52.20.22.173:3000
+CORS_ALLOW_CREDENTIALS=True
+CORS_ALLOW_ALL_ORIGINS=False
+```
+
+**Frontend API URL Configuration:**
+```bash
+# Development
+NEXT_PUBLIC_API_URL=http://52.20.22.173:8000
+
+# Local development  
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+## Testing and Quality
+- Write self-documenting code
+- Use strict TypeScript
+- Follow ESLint and Prettier
+- Small and reusable components
+
+## Development Commands
+
+### Frontend Development
+```bash
+# Navigate to frontend directory
+cd academic-saas-frontend
+
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Run production server
+npm start
+
+# Lint code
+npm run lint
+```
+
+### Full Stack Development
+```bash
+# Start both servers with Nginx (from project root)
+./run_local.sh
+
+# Access points (via Nginx reverse proxy):
+# - Application: http://localhost
+# - Backend API: http://localhost/api/
+# - Django Admin: http://localhost/admin/
+
+# Direct access (development only):
+# - Frontend: http://localhost:3000
+# - Backend: http://localhost:8000
+# - API Docs: http://localhost:8000/api/docs/
+```
+
+## Useful Commands
+```bash
+npm run dev          # Development with Turbopack
+npm run build        # Production build
+npm run lint         # Linting
+npm run start        # Production server
+```
+
+## Default Credentials
+- Admin user: `admin` / `admin123`
+- Admin panel: http://localhost:8000/admin/
+
+## Common Issues and Solutions
+
+### Authentication Issues
+**Problem**: 401 Unauthorized errors during login
+
+**Solutions**:
+1. **Verify API URL**: Ensure `NEXT_PUBLIC_API_URL` points to correct backend port (8000)
+2. **Check CORS Settings**: Verify `CORS_ALLOWED_ORIGINS` includes frontend domain
+3. **Enable Credentials**: Set `CORS_ALLOW_CREDENTIALS=True` for authentication
+4. **Environment Variables**: Ensure proper configuration in deployment scripts
+
+### Debugging Steps
+1. Check browser Network tab for CORS errors
+2. Verify backend is running on correct port
+3. Confirm CORS headers in response
+4. Test API endpoints directly with curl/Postman
+
+## Resources
+- [Next.js App Router](https://nextjs.org/docs/app)
+- [React Server Components](https://react.dev/learn/server-components)
+- [Shadcn UI](https://ui.shadcn.com/)
+- [TanStack Query](https://tanstack.com/query/latest)
+- [Tailwind CSS](https://tailwindcss.com/docs)
+- [NextAuth.js](https://next-auth.js.org/)
+- [React Hook Form](https://react-hook-form.com/) 

@@ -4,68 +4,94 @@
 
    ▲ Next.js 15.4.1 (Turbopack)
    - Local:        http://localhost:3000
-   - Network:      http://192.168.1.50:3000
+   - Network:      http://10.11.18.90:3000
    - Environments: .env.local
 
  ✓ Starting...
- ✓ Compiled middleware in 490ms
- ✓ Ready in 2.1s
+ ○ Compiling middleware ...
+ ✓ Compiled middleware in 923ms
+ ✓ Ready in 3.1s
  ○ Compiling / ...
- ✓ Compiled / in 7.2s
- GET /auth/login 200 in 2985ms
- GET / 200 in 8264ms
- ○ Compiling /api/auth/[...nextauth] ...
- ✓ Compiled /api/auth/[...nextauth] in 952ms
-[next-auth][warn][DEBUG_ENABLED] 
-https://next-auth.js.org/warnings#debug_enabled
- GET /api/auth/session 200 in 2109ms
- GET /auth/login 200 in 217ms
- GET /api/auth/session 200 in 161ms
- GET /api/auth/providers 200 in 99ms
- GET /api/auth/csrf 200 in 44ms
- POST /api/auth/callback/credentials 200 in 1784ms
- GET /api/auth/session 200 in 97ms
- ○ Compiling /dashboard ...
- ✓ Compiled /dashboard in 2.3s
- GET /dashboard 200 in 2359ms
- ✓ Compiled /_not-found/page in 474ms
- GET /static/rest_framework/css/prettify.css 404 in 835ms
- GET /static/rest_framework/js/ajax-form.js 404 in 827ms
- GET /static/rest_framework/js/jquery-3.5.1.min.js 404 in 831ms
- GET /static/rest_framework/css/bootstrap.min.css 404 in 934ms
- GET /static/rest_framework/css/bootstrap-tweaks.css 404 in 849ms
- GET /static/rest_framework/css/default.css 404 in 841ms
- GET /static/rest_framework/js/bootstrap.min.js 404 in 245ms
- GET /static/rest_framework/js/prettify-min.js 404 in 245ms
- GET /static/rest_framework/js/csrf.js 404 in 251ms
- GET /static/rest_framework/js/default.js 404 in 246ms
- GET /api/auth/session 200 in 151ms
- GET /api/auth/session 200 in 136ms
-   Reload env: .env.local
- ✓ Compiled in 125ms
- GET /dashboard 200 in 650ms
-[next-auth][warn][DEBUG_ENABLED] 
-https://next-auth.js.org/warnings#debug_enabled
- GET /api/auth/csrf 200 in 474ms
- POST /api/auth/session 200 in 112ms
- GET /api/auth/session 200 in 236ms
- GET /api/auth/csrf 200 in 79ms
- POST /api/auth/session 200 in 85ms
- GET /dashboard 200 in 571ms
- GET /api/auth/session 200 in 333ms
+ ✓ Compiled / in 7.7s
+ GET / 200 in 8550ms
  ○ Compiling /favicon.ico ...
- ✓ Compiled /favicon.ico in 876ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 1200ms
- GET /api/auth/csrf 200 in 136ms
- POST /api/auth/session 200 in 49ms
- GET /api/auth/session 200 in 222ms
- GET /api/auth/csrf 200 in 96ms
- POST /api/auth/session 200 in 95ms
- GET /api/auth/session 200 in 243ms
- GET /api/auth/csrf 200 in 233ms
- POST /api/auth/session 200 in 165ms
- GET /dashboard 200 in 171ms
- GET /api/auth/session 200 in 295ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 496ms
- GET /api/auth/csrf 200 in 129ms
- POST /api/auth/session 200 in 90ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 1738ms
+ ✓ Compiled /favicon.ico in 1733ms
+[next-auth][warn][DEBUG_ENABLED] 
+https://next-auth.js.org/warnings#debug_enabled
+ GET /api/auth/session 200 in 3109ms
+ ○ Compiling /auth/login ...
+ ✓ Compiled /auth/login in 1933ms
+ GET /auth/login 200 in 2361ms
+ GET /api/auth/session 200 in 306ms
+ GET /api/auth/providers 200 in 116ms
+ GET /api/auth/csrf 200 in 87ms
+ POST /api/auth/callback/credentials 200 in 3175ms
+ GET /api/auth/session 200 in 121ms
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 3.2s
+ GET /dashboard 200 in 3328ms
+ GET /api/auth/csrf 200 in 154ms
+ POST /api/auth/session 200 in 72ms
+ ○ Compiling /reports ...
+ ✓ Compiled /reports in 1353ms
+ GET /reports 200 in 1467ms
+ GET /dashboard 200 in 81ms
+ GET /dashboard 200 in 86ms
+ GET /dashboard 200 in 82ms
+ GET /dashboard 200 in 79ms
+ GET /dashboard 200 in 78ms
+ GET /dashboard 200 in 73ms
+ GET /dashboard 200 in 78ms
+ GET /dashboard 200 in 87ms
+ GET /dashboard 200 in 79ms
+ GET /dashboard 200 in 68ms
+ GET /dashboard 200 in 117ms
+ GET /dashboard 200 in 68ms
+ GET /dashboard 200 in 69ms
+ ○ Compiling /users ...
+ ✓ Compiled /users in 1368ms
+ GET /users 200 in 1507ms
+ GET /users 200 in 251ms
+ GET /users 200 in 195ms
+ GET /users 200 in 108ms
+ GET /dashboard 200 in 77ms
+ ○ Compiling /schools ...
+ ✓ Compiled /schools in 1007ms
+ GET /schools 200 in 1119ms
+ ○ Compiling /_not-found/page ...
+ ✓ Compiled /_not-found/page in 635ms
+ GET /profile 404 in 815ms
+ GET /profile 404 in 184ms
+ GET /api/auth/session 200 in 303ms
+ GET /schools 200 in 598ms
+ GET /api/auth/session 200 in 267ms
+ GET /dashboard 200 in 96ms
+ GET /api/auth/csrf 200 in 145ms
+ POST /api/auth/session 200 in 70ms
+ GET /users 200 in 78ms
+ GET /dashboard 200 in 142ms
+ GET /dashboard 200 in 75ms
+ GET /dashboard 200 in 255ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 493ms
+ GET /api/auth/session 200 in 375ms
+ GET /api/auth/csrf 200 in 178ms
+ POST /api/auth/session 200 in 71ms
+ GET /dashboard 200 in 204ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 504ms
+ GET /api/auth/session 200 in 362ms
+ GET /api/auth/csrf 200 in 91ms
+ POST /api/auth/session 200 in 200ms
+ GET /dashboard 200 in 185ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 517ms
+ GET /api/auth/session 200 in 390ms
+ GET /api/auth/csrf 200 in 172ms
+ POST /api/auth/session 200 in 100ms
+ GET /schools 200 in 109ms
+ GET /api/auth/session 200 in 227ms
+ GET /schools 200 in 204ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 397ms
+ GET /api/auth/session 200 in 402ms
+ GET /dashboard 200 in 103ms
+ GET /api/auth/csrf 200 in 156ms
+ POST /api/auth/session 200 in 84ms
