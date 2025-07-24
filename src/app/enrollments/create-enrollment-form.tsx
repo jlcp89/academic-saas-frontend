@@ -125,7 +125,7 @@ export function CreateEnrollmentForm({ onSuccess, onCancel }: CreateEnrollmentFo
 
   const sectionOptions = availableSections.map(section => ({
     value: section.id.toString(),
-    label: `${section.section_name} (${section.subject_info?.subject_code || 'N/A'})`,
+    label: `${section.name}`,
   }));
 
   const selectedStudentData = students.find(s => s.id.toString() === selectedStudent);
@@ -205,9 +205,9 @@ export function CreateEnrollmentForm({ onSuccess, onCancel }: CreateEnrollmentFo
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <h4 className="font-medium text-green-900 mb-2">Section Details</h4>
                 <div className="space-y-1 text-sm text-green-800">
-                  <p><strong>Name:</strong> {selectedSectionData.section_name}</p>
-                  <p><strong>Subject:</strong> {selectedSectionData.subject_info?.subject_code || 'N/A'} - {selectedSectionData.subject_info?.subject_name || 'N/A'}</p>
-                  <p><strong>Professor:</strong> {selectedSectionData.professor_info?.first_name || 'N/A'} {selectedSectionData.professor_info?.last_name || ''}</p>
+                  <p><strong>Name:</strong> {selectedSectionData.name}</p>
+                  <p><strong>Subject ID:</strong> {selectedSectionData.subject_id}</p>
+                  <p><strong>Professor ID:</strong> {selectedSectionData.professor_id || 'N/A'}</p>
                   <p><strong>Period:</strong> {format(new Date(selectedSectionData.start_date), 'MMM d, yyyy')} - {format(new Date(selectedSectionData.end_date), 'MMM d, yyyy')}</p>
                 </div>
               </div>

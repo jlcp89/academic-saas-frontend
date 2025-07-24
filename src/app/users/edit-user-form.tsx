@@ -198,8 +198,7 @@ export function EditUserForm({ user, onSuccess, onCancel }: EditUserFormProps) {
                       id="first_name"
                       {...registerProfile('first_name')}
                       placeholder="John"
-                      error={profileErrors.first_name?.message}
-                    />
+                          />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="last_name">Last Name *</Label>
@@ -207,8 +206,7 @@ export function EditUserForm({ user, onSuccess, onCancel }: EditUserFormProps) {
                       id="last_name"
                       {...registerProfile('last_name')}
                       placeholder="Doe"
-                      error={profileErrors.last_name?.message}
-                    />
+                          />
                   </div>
                 </div>
 
@@ -218,8 +216,7 @@ export function EditUserForm({ user, onSuccess, onCancel }: EditUserFormProps) {
                     id="username"
                     {...registerProfile('username')}
                     placeholder="johndoe"
-                    error={profileErrors.username?.message}
-                  />
+                      />
                 </div>
 
                 <div className="space-y-2">
@@ -229,8 +226,7 @@ export function EditUserForm({ user, onSuccess, onCancel }: EditUserFormProps) {
                     type="email"
                     {...registerProfile('email')}
                     placeholder="john@example.com"
-                    error={profileErrors.email?.message}
-                  />
+                      />
                 </div>
               </CardContent>
             </Card>
@@ -341,8 +337,7 @@ export function EditUserForm({ user, onSuccess, onCancel }: EditUserFormProps) {
                     type={showPasswords.old ? 'text' : 'password'}
                     {...registerPassword('old_password')}
                     placeholder="Enter current password"
-                    error={passwordErrors.old_password?.message}
-                  />
+                      />
                   <Button
                     type="button"
                     variant="ghost"
@@ -363,8 +358,7 @@ export function EditUserForm({ user, onSuccess, onCancel }: EditUserFormProps) {
                     type={showPasswords.new ? 'text' : 'password'}
                     {...registerPassword('new_password')}
                     placeholder="Enter new password"
-                    error={passwordErrors.new_password?.message}
-                  />
+                      />
                   <Button
                     type="button"
                     variant="ghost"
@@ -385,8 +379,7 @@ export function EditUserForm({ user, onSuccess, onCancel }: EditUserFormProps) {
                     type={showPasswords.confirm ? 'text' : 'password'}
                     {...registerPassword('confirm_password')}
                     placeholder="Confirm new password"
-                    error={passwordErrors.confirm_password?.message}
-                  />
+                      />
                   <Button
                     type="button"
                     variant="ghost"

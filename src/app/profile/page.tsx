@@ -32,9 +32,6 @@ export default function ProfilePage() {
     firstName: user?.first_name || '',
     lastName: user?.last_name || '',
     email: user?.email || '',
-    phone: user?.phone || '',
-    address: user?.address || '',
-    bio: user?.bio || '',
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -85,9 +82,6 @@ export default function ProfilePage() {
       firstName: user?.first_name || '',
       lastName: user?.last_name || '',
       email: user?.email || '',
-      phone: user?.phone || '',
-      address: user?.address || '',
-      bio: user?.bio || '',
     });
     setIsEditing(false);
   };
@@ -163,17 +157,10 @@ export default function ProfilePage() {
                   <span className="text-gray-600">{user.email}</span>
                 </div>
                 
-                {user.phone && (
-                  <div className="flex items-center space-x-3 text-sm">
-                    <Phone className="w-4 h-4 text-gray-500" />
-                    <span className="text-gray-600">{user.phone}</span>
-                  </div>
-                )}
-                
                 <div className="flex items-center space-x-3 text-sm">
                   <Calendar className="w-4 h-4 text-gray-500" />
                   <span className="text-gray-600">
-                    Joined {new Date(user.date_joined || Date.now()).toLocaleDateString()}
+                    Role: {user.role}
                   </span>
                 </div>
                 
@@ -264,60 +251,8 @@ export default function ProfilePage() {
                     </div>
                   )}
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  {isEditing ? (
-                    <Input
-                      id="phone"
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      placeholder="Enter your phone number"
-                    />
-                  ) : (
-                    <div className="px-3 py-2 bg-gray-50 rounded-md">
-                      {user.phone || 'Not provided'}
-                    </div>
-                  )}
-                </div>
               </div>
 
-              {/* Address */}
-              <div className="space-y-2">
-                <Label htmlFor="address">Address</Label>
-                {isEditing ? (
-                  <Input
-                    id="address"
-                    value={formData.address}
-                    onChange={(e) => handleInputChange('address', e.target.value)}
-                    placeholder="Enter your address"
-                  />
-                ) : (
-                  <div className="px-3 py-2 bg-gray-50 rounded-md">
-                    {user.address || 'Not provided'}
-                  </div>
-                )}
-              </div>
-
-              {/* Bio */}
-              <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
-                {isEditing ? (
-                  <textarea
-                    id="bio"
-                    value={formData.bio}
-                    onChange={(e) => handleInputChange('bio', e.target.value)}
-                    placeholder="Tell us about yourself"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                    rows={4}
-                  />
-                ) : (
-                  <div className="px-3 py-2 bg-gray-50 rounded-md min-h-[100px]">
-                    {user.bio || 'No bio provided'}
-                  </div>
-                )}
-              </div>
             </CardContent>
           </Card>
         </div>

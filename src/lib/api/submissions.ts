@@ -40,6 +40,12 @@ export interface SubmissionWithDetails extends Omit<Submission, 'assignment_info
       };
     };
   };
+  student_info: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    username: string;
+  };
 }
 
 // API Functions

@@ -43,8 +43,8 @@ export function EditSubjectForm({ subject, onSuccess, onCancel }: EditSubjectFor
   } = useForm<EditSubjectFormData>({
     resolver: zodResolver(editSubjectSchema),
     defaultValues: {
-      subject_name: subject.subject_name,
-      subject_code: subject.subject_code,
+      subject_name: subject.name,
+      subject_code: subject.code,
     },
   });
 
@@ -67,8 +67,8 @@ export function EditSubjectForm({ subject, onSuccess, onCancel }: EditSubjectFor
   };
 
   const hasChanges = 
-    subjectName !== subject.subject_name || 
-    subjectCode !== subject.subject_code;
+    subjectName !== subject.name || 
+    subjectCode !== subject.code;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -88,7 +88,6 @@ export function EditSubjectForm({ subject, onSuccess, onCancel }: EditSubjectFor
                 id="subject_name"
                 {...register('subject_name')}
                 placeholder="Introduction to Computer Science"
-                error={errors.subject_name?.message}
               />
               <p className="text-xs text-gray-500">
                 The full name of the subject as it appears in the curriculum
@@ -104,8 +103,7 @@ export function EditSubjectForm({ subject, onSuccess, onCancel }: EditSubjectFor
                   {...register('subject_code')}
                   placeholder="CS101"
                   className="pl-10"
-                  error={errors.subject_code?.message}
-                />
+                  />
               </div>
               <p className="text-xs text-gray-500">
                 Unique identifier for the subject (e.g., CS101, MATH201)
@@ -113,7 +111,7 @@ export function EditSubjectForm({ subject, onSuccess, onCancel }: EditSubjectFor
             </div>
 
             {/* Warning about code changes */}
-            {subjectCode !== subject.subject_code && (
+            {subjectCode !== subject.code && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <div className="flex items-start space-x-2">
                   <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
@@ -147,7 +145,7 @@ export function EditSubjectForm({ subject, onSuccess, onCancel }: EditSubjectFor
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Current Name</p>
-                  <p className="text-sm text-gray-900">{subject.subject_name}</p>
+                  <p className="text-sm text-gray-900">{subject.name}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-600">New Name</p>
@@ -158,7 +156,7 @@ export function EditSubjectForm({ subject, onSuccess, onCancel }: EditSubjectFor
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Current Code</p>
-                  <p className="text-sm text-gray-900 font-mono">{subject.subject_code}</p>
+                  <p className="text-sm text-gray-900 font-mono">{subject.code}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-600">New Code</p>
@@ -211,18 +209,18 @@ export function EditSubjectForm({ subject, onSuccess, onCancel }: EditSubjectFor
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {subjectName !== subject.subject_name && (
+              {subjectName !== subject.name && (
                 <div className="flex items-center space-x-2 text-sm">
                   <span className="font-medium">Name:</span>
-                  <span className="text-gray-500">{subject.subject_name}</span>
+                  <span className="text-gray-500">{subject.name}</span>
                   <span className="text-gray-400">→</span>
                   <span className="font-medium">{subjectName}</span>
                 </div>
               )}
-              {subjectCode !== subject.subject_code && (
+              {subjectCode !== subject.code && (
                 <div className="flex items-center space-x-2 text-sm">
                   <span className="font-medium">Code:</span>
-                  <span className="text-gray-500 font-mono">{subject.subject_code}</span>
+                  <span className="text-gray-500 font-mono">{subject.code}</span>
                   <span className="text-gray-400">→</span>
                   <span className="font-medium font-mono">{subjectCode}</span>
                 </div>

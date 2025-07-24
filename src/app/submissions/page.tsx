@@ -58,7 +58,7 @@ const ASSIGNMENT_TYPE_CONFIG = {
 };
 
 const getSubmissionDueStatus = (submission: Submission) => {
-  const dueDate = new Date(submission.assignment_info.due_date);
+  const dueDate = new Date(submission.assignment_info?.due_date || new Date());
   const submittedDate = submission.submitted_at ? new Date(submission.submitted_at) : null;
   
   if (submission.status === 'DRAFT') return 'draft';
@@ -118,7 +118,7 @@ export default function SubmissionsPage() {
       header: 'Assignment',
       cell: ({ row }) => {
         const submission = row.original;
-        const typeConfig = ASSIGNMENT_TYPE_CONFIG[submission.assignment_info.assignment_type];
+        const typeConfig = ASSIGNMENT_TYPE_CONFIG[submission.assignment_info?.assignment_type || 'HOMEWORK'];
         const TypeIcon = typeConfig.icon;
         
         return (
@@ -130,10 +130,10 @@ export default function SubmissionsPage() {
             </div>
             <div className="min-w-0 flex-1">
               <div className="font-medium text-gray-900 truncate">
-                {submission.assignment_info.title}
+                {submission.assignment_info?.title || 'N/A'}
               </div>
               <div className="text-sm text-gray-500 truncate">
-                {submission.assignment_info.section_info.subject_info.subject_code} - {submission.assignment_info.section_info.section_name}
+                Section information not available
               </div>
             </div>
           </div>
@@ -150,10 +150,10 @@ export default function SubmissionsPage() {
           </div>
           <div>
             <div className="font-medium text-gray-900">
-              {row.original.student_info.first_name} {row.original.student_info.last_name}
+              {row.original.student_info?.first_name || 'N/A'} {row.original.student_info?.last_name || ''}
             </div>
             <div className="text-sm text-gray-500">
-              {row.original.student_info.email}
+              {row.original.student_info?.email || 'N/A'}
             </div>
           </div>
         </div>
@@ -216,10 +216,10 @@ export default function SubmissionsPage() {
             {submission.points_earned !== null && submission.points_earned !== undefined ? (
               <div>
                 <div className="text-sm font-medium text-gray-900">
-                  {submission.points_earned} / {submission.assignment_info.max_points}
+                  {submission.points_earned} / {submission.assignment_info?.max_points || 0}
                 </div>
                 <div className="text-xs text-gray-500">
-                  {((submission.points_earned / submission.assignment_info.max_points) * 100).toFixed(1)}%
+                  {((submission.points_earned / (submission.assignment_info?.max_points || 1)) * 100).toFixed(1)}%
                 </div>
               </div>
             ) : (
@@ -236,10 +236,10 @@ export default function SubmissionsPage() {
         <div className="text-sm text-gray-600">
           <div className="flex items-center space-x-1">
             <Calendar className="w-3 h-3" />
-            <span>{format(new Date(row.original.assignment_info.due_date), 'MMM d')}</span>
+            <span>{format(new Date(row.original.assignment_info?.due_date || new Date()), 'MMM d')}</span>
           </div>
           <div className="text-xs text-gray-500">
-            {format(new Date(row.original.assignment_info.due_date), 'h:mm a')}
+            {format(new Date(row.original.assignment_info?.due_date || new Date()), 'h:mm a')}
           </div>
         </div>
       ),
@@ -426,7 +426,7 @@ export default function SubmissionsPage() {
             <CreateSubmissionForm
               assignment={{
                 ...selectedSubmission?.assignment_info,
-                section: selectedSubmission?.assignment_info?.section_info?.id || 0,
+                section: 0,
                 total_points: selectedSubmission?.assignment_info?.max_points || 0,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
@@ -468,7 +468,7 @@ export default function SubmissionsPage() {
             onClose={() => setShowDeleteDialog(false)}
             onConfirm={confirmDelete}
             title="Delete Submission"
-            description={`Are you sure you want to delete this submission for "${submissionToDelete?.assignment_info.title}"? This action cannot be undone.`}
+            description={`Are you sure you want to delete this submission for "${submissionToDelete?.assignment_info?.title || 'N/A'}"? This action cannot be undone.`}
             confirmText="Delete"
             variant="destructive"
             loading={deleteSubmissionMutation.isPending}

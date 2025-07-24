@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AdvancedSearch } from '@/components/ui/search-bar';
 import { Modal, ConfirmDialog } from '@/components/ui/dialog';
 import { ProtectedRoute } from '@/components/auth/protected-route';
-import { useAssignments, useDeleteAssignment, useDuplicateAssignment } from '@/lib/api/assignments';
+import { useAssignments, useDeleteAssignment, useDuplicateAssignment, AssignmentWithSubmissions } from '@/lib/api/assignments';
 import { useSections } from '@/lib/api/sections';
 import { useAuth } from '@/contexts/auth-context';
 import { Assignment, UserRole } from '@/types';
@@ -172,7 +172,7 @@ export default function AssignmentsPage() {
             {row.original.section_info?.section_name || 'N/A'}
           </div>
           <div className="text-sm text-gray-500">
-            {row.original.section_info?.subject_info?.subject_code || 'N/A'}
+            {row.original.section_info?.subject?.subject_name || 'N/A'}
           </div>
         </div>
       ),
@@ -223,7 +223,7 @@ export default function AssignmentsPage() {
       cell: ({ row }) => (
         <div className="text-center">
           <div className="text-sm font-medium text-gray-900">
-            {row.original.max_points}
+            {row.original.total_points}
           </div>
           <div className="text-xs text-gray-500">points</div>
         </div>
@@ -289,7 +289,7 @@ export default function AssignmentsPage() {
       label: 'Section',
       options: sections.map(section => ({
         value: section.id.toString(),
-        label: `${section.section_name} (${section.subject_info?.subject_code || 'N/A'})`,
+        label: section.name,
       })),
     },
     {
@@ -308,7 +308,7 @@ export default function AssignmentsPage() {
   const dueSoonCount = assignments.filter(a => getAssignmentStatus(a.due_date) === 'due-soon').length;
   const totalSubmissions = assignments.reduce((sum, a) => sum + (a.submissions_count || 0), 0);
   const averagePoints = assignments.length > 0 
-    ? assignments.reduce((sum, a) => sum + a.max_points, 0) / assignments.length 
+    ? assignments.reduce((sum, a) => sum + a.total_points, 0) / assignments.length 
     : 0;
 
   const stats = [

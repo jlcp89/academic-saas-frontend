@@ -48,7 +48,7 @@ export default function ChatPage() {
         </Badge>
         {session?.user && (
           <span className="text-sm text-gray-600">
-            Logged in as: {session.user.email || session.user.name}
+            Logged in as: {session.user.email || `${session.user.first_name || ''} ${session.user.last_name || ''}`.trim() || session.user.username}
           </span>
         )}
         {status === 'unauthenticated' && (

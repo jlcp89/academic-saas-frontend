@@ -101,7 +101,6 @@ export function CreateSubjectForm({ onSuccess, onCancel }: CreateSubjectFormProp
                   handleNameChange(e);
                 }}
                 placeholder="Introduction to Computer Science"
-                error={errors.subject_name?.message}
               />
               <p className="text-xs text-gray-500">
                 The full name of the subject as it appears in the curriculum
@@ -117,8 +116,7 @@ export function CreateSubjectForm({ onSuccess, onCancel }: CreateSubjectFormProp
                   {...register('subject_code')}
                   placeholder="CS101"
                   className="pl-10"
-                  error={errors.subject_code?.message}
-                />
+                  />
               </div>
               <p className="text-xs text-gray-500">
                 Unique identifier for the subject (e.g., CS101, MATH201)

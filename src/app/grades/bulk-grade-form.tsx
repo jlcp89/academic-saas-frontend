@@ -76,7 +76,7 @@ export function BulkGradeForm({ gradeBook, onSuccess, onCancel }: BulkGradeFormP
         studentName: `${entry.student_info.first_name} ${entry.student_info.last_name}`,
         assignmentTitle: assignment.title,
         currentGrade: entry.submission!.points_earned,
-        maxPoints: assignment.max_points,
+        maxPoints: assignment.total_points,
         points_earned: entry.submission!.points_earned?.toString() || '',
         feedback: entry.submission!.feedback || '',
       }));
@@ -180,7 +180,7 @@ export function BulkGradeForm({ gradeBook, onSuccess, onCancel }: BulkGradeFormP
               <EnhancedSelect
                 options={gradeBook.assignments.map(assignment => ({
                   value: assignment.id.toString(),
-                  label: `${assignment.title} (${assignment.max_points} pts)`,
+                  label: `${assignment.title} (${assignment.total_points} pts)`,
                 }))}
                 value={selectedAssignment}
                 onValueChange={handleAssignmentChange}
@@ -201,7 +201,7 @@ export function BulkGradeForm({ gradeBook, onSuccess, onCancel }: BulkGradeFormP
                 </div>
                 <div className="grid grid-cols-2 gap-4 text-sm text-blue-800">
                   <div>
-                    <strong>Max Points:</strong> {selectedAssignmentData.max_points}
+                    <strong>Max Points:</strong> {selectedAssignmentData.total_points}
                   </div>
                   <div>
                     <strong>Due Date:</strong> {format(new Date(selectedAssignmentData.due_date), 'MMM d, yyyy')}
@@ -227,7 +227,7 @@ export function BulkGradeForm({ gradeBook, onSuccess, onCancel }: BulkGradeFormP
                   <Input
                     type="number"
                     min="0"
-                    max={selectedAssignmentData?.max_points}
+                    max={selectedAssignmentData?.total_points}
                     step="0.5"
                     value={bulkPoints}
                     onChange={(e) => setBulkPoints(e.target.value)}

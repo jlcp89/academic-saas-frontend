@@ -150,14 +150,14 @@ export function EditAssignmentForm({ assignment, onSuccess, onCancel }: EditAssi
       return true;
     }
     if (user?.role === 'PROFESSOR') {
-      return section.professor === user.id;
+      return section.professor_id === user.id;
     }
     return false;
   });
 
   const sectionOptions = availableSections.map((section) => ({
     value: section.id.toString(),
-    label: `${section.section_name} (${section.subject_info?.subject_code || 'N/A'})`,
+    label: section.name,
   }));
 
   const selectedSectionData = availableSections.find((s) => s.id.toString() === selectedSection);
@@ -375,10 +375,10 @@ export function EditAssignmentForm({ assignment, onSuccess, onCancel }: EditAssi
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <h4 className="font-medium text-green-900 mb-2">Section Information</h4>
                 <div className="space-y-1 text-sm text-green-800">
-                  <p><strong>Section:</strong> {selectedSectionData.section_name}</p>
-                  <p><strong>Subject:</strong> {selectedSectionData.subject_info?.subject_code || 'N/A'} - {selectedSectionData.subject_info?.subject_name || 'N/A'}</p>
+                  <p><strong>Section:</strong> {selectedSectionData.name}</p>
+                  <p><strong>Subject:</strong> N/A</p>
                   <p><strong>Students:</strong> {selectedSectionData.enrollment_count || 0}</p>
-                  <p><strong>Professor:</strong> {selectedSectionData.professor_info?.first_name || 'N/A'} {selectedSectionData.professor_info?.last_name || 'N/A'}</p>
+                  <p><strong>Professor:</strong> N/A</p>
                 </div>
               </div>
             )}

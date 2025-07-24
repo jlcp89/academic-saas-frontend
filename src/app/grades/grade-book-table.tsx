@@ -131,8 +131,8 @@ export function GradeBookTable({ gradeBook, onGradeSubmission, onRefresh }: Grad
       <td key={assignment.id} className="px-3 py-2 text-center border-r border-gray-200">
         <div className="space-y-1">
           {submission.points_earned !== undefined ? (
-            <div className={`text-sm font-medium ${getGradeColor((submission.points_earned / assignment.max_points) * 100)}`}>
-              {submission.points_earned}/{assignment.max_points}
+            <div className={`text-sm font-medium ${getGradeColor((submission.points_earned / assignment.total_points) * 100)}`}>
+              {submission.points_earned}/{assignment.total_points}
             </div>
           ) : (
             <Badge className={statusConfig.color}>
@@ -230,7 +230,7 @@ export function GradeBookTable({ gradeBook, onGradeSubmission, onRefresh }: Grad
                         </span>
                       </div>
                       <div className="text-xs text-gray-400">
-                        {assignment.max_points} pts
+                        {assignment.total_points} pts
                       </div>
                       <div className="text-xs text-gray-400">
                         Due: {format(new Date(assignment.due_date), 'MMM d')}
@@ -311,7 +311,7 @@ export function GradeBookTable({ gradeBook, onGradeSubmission, onRefresh }: Grad
           <div>
             <span className="text-gray-600">Total Points Available:</span>
             <span className="ml-2 font-medium">
-              {gradeBook.assignments.reduce((sum, a) => sum + a.max_points, 0)}
+              {gradeBook.assignments.reduce((sum, a) => sum + a.total_points, 0)}
             </span>
           </div>
           <div>

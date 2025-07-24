@@ -94,7 +94,7 @@ export function CreateSectionForm({ onSuccess, onCancel }: CreateSectionFormProp
     const professor = professors.find(p => p.id.toString() === professorId);
     
     if (subject && professor) {
-      return `${subject.subject_code} - ${professor.last_name}`;
+      return `${subject.code} - ${professor.last_name}`;
     }
     return '';
   };
@@ -108,7 +108,7 @@ export function CreateSectionForm({ onSuccess, onCancel }: CreateSectionFormProp
 
   const subjectOptions = subjects.map(subject => ({
     value: subject.id.toString(),
-    label: `${subject.subject_code} - ${subject.subject_name}`,
+    label: `${subject.code} - ${subject.name}`,
   }));
 
   const professorOptions = professors.map(professor => ({
@@ -137,8 +137,10 @@ export function CreateSectionForm({ onSuccess, onCancel }: CreateSectionFormProp
                 id="section_name"
                 {...register('section_name')}
                 placeholder="CS101 - Smith"
-                error={errors.section_name?.message}
               />
+              {errors.section_name && (
+                <p className="text-xs text-red-600">{errors.section_name.message}</p>
+              )}
               <p className="text-xs text-gray-500">
                 A descriptive name for this section
               </p>
@@ -181,8 +183,10 @@ export function CreateSectionForm({ onSuccess, onCancel }: CreateSectionFormProp
                 max="1000"
                 {...register('max_students')}
                 placeholder="30"
-                error={errors.max_students?.message}
               />
+              {errors.max_students && (
+                <p className="text-xs text-red-600">{errors.max_students.message}</p>
+              )}
               <p className="text-xs text-gray-500">
                 Maximum number of students that can enroll
               </p>
@@ -205,8 +209,10 @@ export function CreateSectionForm({ onSuccess, onCancel }: CreateSectionFormProp
                 id="start_date"
                 type="date"
                 {...register('start_date')}
-                error={errors.start_date?.message}
               />
+              {errors.start_date && (
+                <p className="text-xs text-red-600">{errors.start_date.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -215,8 +221,10 @@ export function CreateSectionForm({ onSuccess, onCancel }: CreateSectionFormProp
                 id="end_date"
                 type="date"
                 {...register('end_date')}
-                error={errors.end_date?.message}
               />
+              {errors.end_date && (
+                <p className="text-xs text-red-600">{errors.end_date.message}</p>
+              )}
             </div>
 
             {/* Duration calculation */}
@@ -245,7 +253,7 @@ export function CreateSectionForm({ onSuccess, onCancel }: CreateSectionFormProp
             </div>
             <div className="text-center">
               <p className="text-sm text-gray-600">Subject</p>
-              <p className="font-medium">{selectedSubjectData?.subject_code || 'Not selected'}</p>
+              <p className="font-medium">{selectedSubjectData?.code || 'Not selected'}</p>
             </div>
             <div className="text-center">
               <p className="text-sm text-gray-600">Professor</p>
@@ -272,10 +280,10 @@ export function CreateSectionForm({ onSuccess, onCancel }: CreateSectionFormProp
                     <h4 className="font-medium text-gray-900">Subject Details</h4>
                   </div>
                   <p className="text-sm text-gray-600">
-                    <strong>Code:</strong> {selectedSubjectData.subject_code}
+                    <strong>Code:</strong> {selectedSubjectData.code}
                   </p>
                   <p className="text-sm text-gray-600">
-                    <strong>Name:</strong> {selectedSubjectData.subject_name}
+                    <strong>Name:</strong> {selectedSubjectData.name}
                   </p>
                 </div>
               )}

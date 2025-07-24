@@ -182,8 +182,10 @@ export function EditSchoolForm({ school, onSuccess, onCancel }: EditSchoolFormPr
                     id="name"
                     {...registerSchool('name')}
                     placeholder="University of Excellence"
-                    error={schoolErrors.name?.message}
                   />
+                  {schoolErrors.name && (
+                    <p className="text-xs text-red-600">{schoolErrors.name.message}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -196,13 +198,15 @@ export function EditSchoolForm({ school, onSuccess, onCancel }: EditSchoolFormPr
                         {...registerSchool('subdomain')}
                         placeholder="university-excellence"
                         className="pl-10"
-                        error={schoolErrors.subdomain?.message}
                       />
                     </div>
                     <span className="text-sm text-gray-500 whitespace-nowrap">
                       .example.com
                     </span>
                   </div>
+                  {schoolErrors.subdomain && (
+                    <p className="text-xs text-red-600">{schoolErrors.subdomain.message}</p>
+                  )}
                   <p className="text-xs text-gray-500">
                     Changing this will affect the school&apos;s URL
                   </p>
@@ -363,8 +367,10 @@ export function EditSchoolForm({ school, onSuccess, onCancel }: EditSchoolFormPr
                       id="end_date"
                       type="date"
                       {...registerSubscription('end_date')}
-                      error={subscriptionErrors.end_date?.message}
                     />
+                    {subscriptionErrors.end_date && (
+                      <p className="text-xs text-red-600">{subscriptionErrors.end_date.message}</p>
+                    )}
                     <p className="text-xs text-gray-500">
                       Set the new expiration date for the subscription
                     </p>

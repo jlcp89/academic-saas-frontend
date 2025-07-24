@@ -108,9 +108,9 @@ export default function SectionsPage() {
             <GraduationCap className="w-5 h-5 text-white" />
           </div>
           <div>
-            <div className="font-medium text-gray-900">{row.original.section_name}</div>
+            <div className="font-medium text-gray-900">{row.original.name}</div>
             <div className="text-sm text-gray-500">
-              {row.original.subject_info?.subject_code} - {row.original.subject_info?.subject_name}
+              {subjects.find(s => s.id === row.original.subject_id)?.code} - {subjects.find(s => s.id === row.original.subject_id)?.name}
             </div>
           </div>
         </div>
@@ -126,10 +126,10 @@ export default function SectionsPage() {
           </div>
           <div>
             <div className="font-medium text-gray-900">
-              {row.original.professor_info?.first_name} {row.original.professor_info?.last_name}
+              {row.original.professor_id ? (professors.find(p => p.id === row.original.professor_id)?.first_name + ' ' + professors.find(p => p.id === row.original.professor_id)?.last_name) : 'N/A'}
             </div>
             <div className="text-sm text-gray-500">
-              {row.original.professor_info?.email}
+              {row.original.professor_id ? professors.find(p => p.id === row.original.professor_id)?.email : 'No email'}
             </div>
           </div>
         </div>
@@ -227,7 +227,7 @@ export default function SectionsPage() {
       label: 'Subject',
       options: subjects.map(subject => ({
         value: subject.id.toString(),
-        label: `${subject.subject_code} - ${subject.subject_name}`,
+        label: `${subject.code} - ${subject.name}`,
       })),
     },
     {
@@ -394,7 +394,7 @@ export default function SectionsPage() {
             onClose={() => setShowDeleteDialog(false)}
             onConfirm={confirmDelete}
             title="Delete Section"
-            description={`Are you sure you want to delete section ${sectionToDelete?.section_name}? This action cannot be undone and will affect all enrolled students and assignments.`}
+            description={`Are you sure you want to delete section ${sectionToDelete?.name}? This action cannot be undone and will affect all enrolled students and assignments.`}
             confirmText="Delete"
             variant="destructive"
             loading={deleteSectionMutation.isPending}

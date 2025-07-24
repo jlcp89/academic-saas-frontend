@@ -14,20 +14,24 @@ import { useAuth } from '@/contexts/auth-context';
 import { UserRole } from '@/types';
 import { Eye, EyeOff, User, Mail, Lock, Shield } from 'lucide-react';
 
-const createUserSchema = z.object({
+// Local form schema with only the fields we need
+const createUserFormSchema = z.object({
   username: z.string().min(3, 'Username must be at least 3 characters').max(50, 'Username must be less than 50 characters'),
   email: z.string().email('Please enter a valid email address'),
-  first_name: z.string().min(1, 'First name is required').max(50, 'First name must be less than 50 characters'),
-  last_name: z.string().min(1, 'Last name is required').max(50, 'Last name must be less than 50 characters'),
+  firstName: z.string().min(1, 'First name is required').max(50, 'First name must be less than 50 characters'),
+  lastName: z.string().min(1, 'Last name is required').max(50, 'Last name must be less than 50 characters'),
   password: z.string().min(8, 'Password must be at least 8 characters').max(100, 'Password must be less than 100 characters'),
   confirmPassword: z.string(),
   role: z.nativeEnum(UserRole),
+  schoolId: z.string().min(1, 'School is required'),
+  phone: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don&apos;t match",
+  message: "Passwords don't match",
   path: ["confirmPassword"],
 });
 
-type CreateUserFormData = z.infer<typeof createUserSchema>;
+type CreateUserFormData = z.infer<typeof createUserFormSchema>;
+
 
 interface CreateUserFormProps {
   onSuccess: () => void;
@@ -47,9 +51,11 @@ export function CreateUserForm({ onSuccess, onCancel }: CreateUserFormProps) {
     watch,
     setValue,
   } = useForm<CreateUserFormData>({
-    resolver: zodResolver(createUserSchema),
+    resolver: zodResolver(createUserFormSchema),
     defaultValues: {
       role: UserRole.STUDENT,
+      schoolId: currentUser?.school?.toString() || '1', // Default to current user's school or 1
+      phone: '',
     },
   });
 
@@ -57,7 +63,14 @@ export function CreateUserForm({ onSuccess, onCancel }: CreateUserFormProps) {
 
   const onSubmit = async (data: CreateUserFormData) => {
     try {
-      const { confirmPassword, ...createData } = data;
+      const { confirmPassword, ...formData } = data;
+      // Transform form data to match API expectations
+      const createData = {
+        ...formData,
+        confirmPassword, // API expects confirmPassword
+        isActive: true, // Default value
+        sendWelcomeEmail: true, // Default value
+      };
       await createUserMutation.mutateAsync(createData);
       onSuccess();
     } catch (error) {
@@ -106,22 +119,20 @@ export function CreateUserForm({ onSuccess, onCancel }: CreateUserFormProps) {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="first_name">First Name *</Label>
+                <Label htmlFor="firstName">First Name *</Label>
                 <Input
-                  id="first_name"
-                  {...register('first_name')}
+                  id="firstName"
+                  {...register('firstName')}
                   placeholder="John"
-                  error={errors.first_name?.message}
-                />
+                  />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="last_name">Last Name *</Label>
+                <Label htmlFor="lastName">Last Name *</Label>
                 <Input
-                  id="last_name"
-                  {...register('last_name')}
+                  id="lastName"
+                  {...register('lastName')}
                   placeholder="Doe"
-                  error={errors.last_name?.message}
-                />
+                  />
               </div>
             </div>
 
@@ -131,7 +142,6 @@ export function CreateUserForm({ onSuccess, onCancel }: CreateUserFormProps) {
                 id="username"
                 {...register('username')}
                 placeholder="johndoe"
-                error={errors.username?.message}
               />
             </div>
 
@@ -142,7 +152,6 @@ export function CreateUserForm({ onSuccess, onCancel }: CreateUserFormProps) {
                 type="email"
                 {...register('email')}
                 placeholder="john@example.com"
-                error={errors.email?.message}
               />
             </div>
           </CardContent>
@@ -176,8 +185,7 @@ export function CreateUserForm({ onSuccess, onCancel }: CreateUserFormProps) {
                   type={showPassword ? 'text' : 'password'}
                   {...register('password')}
                   placeholder="Enter password"
-                  error={errors.password?.message}
-                />
+                  />
                 <Button
                   type="button"
                   variant="ghost"
@@ -198,8 +206,7 @@ export function CreateUserForm({ onSuccess, onCancel }: CreateUserFormProps) {
                   type={showConfirmPassword ? 'text' : 'password'}
                   {...register('confirmPassword')}
                   placeholder="Confirm password"
-                  error={errors.confirmPassword?.message}
-                />
+                  />
                 <Button
                   type="button"
                   variant="ghost"

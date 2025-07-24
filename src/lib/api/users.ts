@@ -1,6 +1,7 @@
 import { useSession } from 'next-auth/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { User, UserRole, ApiResponse, CreateUserForm } from '@/types';
+import { User, UserRole, ApiResponse } from '@/types';
+import { CreateUserFormData } from '@/lib/validations';
 import { getClientApiBaseUrl } from '../constants';
 
 // API Functions
@@ -58,10 +59,20 @@ export class UsersApi {
   }
 
   // Create user
-  async createUser(data: CreateUserForm): Promise<User> {
+  async createUser(data: CreateUserFormData): Promise<User> {
+    // Transform frontend form data to backend API format
+    const { firstName, lastName, schoolId, sendWelcomeEmail, ...rest } = data;
+    const apiData = {
+      ...rest,
+      first_name: firstName,
+      last_name: lastName,
+      school_id: parseInt(schoolId),
+      send_welcome_email: sendWelcomeEmail,
+    };
+    
     return this.request<User>('/', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify(apiData),
     });
   }
 
@@ -173,7 +184,7 @@ export function useCreateUser() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (data: CreateUserForm) => api.createUser(data),
+    mutationFn: (data: CreateUserFormData) => api.createUser(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
     },

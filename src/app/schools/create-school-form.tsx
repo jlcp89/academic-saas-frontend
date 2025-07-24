@@ -108,8 +108,10 @@ export function CreateSchoolForm({ onSuccess, onCancel }: CreateSchoolFormProps)
                   handleNameChange(e);
                 }}
                 placeholder="University of Excellence"
-                error={errors.name?.message}
               />
+              {errors.name && (
+                <p className="text-xs text-red-600">{errors.name.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -122,13 +124,15 @@ export function CreateSchoolForm({ onSuccess, onCancel }: CreateSchoolFormProps)
                     {...register('subdomain')}
                     placeholder="university-excellence"
                     className="pl-10"
-                    error={errors.subdomain?.message}
                   />
                 </div>
                 <span className="text-sm text-gray-500 whitespace-nowrap">
                   .example.com
                 </span>
               </div>
+              {errors.subdomain && (
+                <p className="text-xs text-red-600">{errors.subdomain.message}</p>
+              )}
               <p className="text-xs text-gray-500">
                 This will be used for the school&apos;s unique URL
               </p>
@@ -172,8 +176,10 @@ export function CreateSchoolForm({ onSuccess, onCancel }: CreateSchoolFormProps)
                 id="subscription_end_date"
                 type="date"
                 {...register('subscription_end_date')}
-                error={errors.subscription_end_date?.message}
               />
+              {errors.subscription_end_date && (
+                <p className="text-xs text-red-600">{errors.subscription_end_date.message}</p>
+              )}
               <p className="text-xs text-gray-500">
                 When the subscription will expire
               </p>

@@ -92,9 +92,6 @@ export default function Dashboard() {
             </div>
             <div className="text-right">
               <p className="text-sm text-gray-500">Role: {displayUser.role}</p>
-              {displayUser.school_info && (
-                <p className="text-sm text-gray-500">{displayUser.school_info.name}</p>
-              )}
             </div>
           </div>
         </div>

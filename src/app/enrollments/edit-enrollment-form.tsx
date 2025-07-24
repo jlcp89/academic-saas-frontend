@@ -224,12 +224,14 @@ export function EditEnrollmentForm({ enrollment, onSuccess, onCancel }: EditEnro
                   {...register('grade')}
                   placeholder="85.5"
                   disabled={!canGrade}
-                  error={errors.grade?.message}
                 />
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                   <Trophy className="w-4 h-4 text-gray-400" />
                 </div>
               </div>
+              {errors.grade && (
+                <p className="text-xs text-red-600">{errors.grade.message}</p>
+              )}
               {!canGrade && (
                 <p className="text-xs text-gray-500">
                   Only professors and administrators can modify grades

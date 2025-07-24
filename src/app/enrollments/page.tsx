@@ -214,7 +214,7 @@ export default function EnrollmentsPage() {
       label: 'Section',
       options: sections.map(section => ({
         value: section.id.toString(),
-        label: `${section.section_name} (${section.subject_info?.subject_code || 'N/A'})`,
+        label: `${section.name}`,
       })),
     },
     {

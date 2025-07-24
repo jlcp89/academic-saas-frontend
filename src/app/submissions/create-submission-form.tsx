@@ -163,7 +163,7 @@ export function CreateSubmissionForm({ assignment, onSuccess, onCancel }: Create
                 <span className="text-sm font-medium text-gray-600">Points</span>
               </div>
               <div className="text-2xl font-bold text-gray-900">
-                {assignment.max_points}
+                {assignment.total_points}
               </div>
             </div>
 
@@ -198,50 +198,22 @@ export function CreateSubmissionForm({ assignment, onSuccess, onCancel }: Create
             <h4 className="font-medium text-blue-900 mb-2">Section Information</h4>
             <div className="space-y-1 text-sm text-blue-800">
               <p><strong>Section:</strong> {assignment.section_info?.section_name}</p>
-              <p><strong>Subject:</strong> {assignment.section_info?.subject_info?.subject_code} - {assignment.section_info?.subject_info?.subject_name}</p>
-              <p><strong>Professor:</strong> {assignment.section_info?.professor_info?.first_name} {assignment.section_info?.professor_info?.last_name}</p>
+              <p><strong>Subject:</strong> {assignment.section_info?.subject?.subject_name}</p>
+              <p><strong>Professor:</strong> N/A</p>
             </div>
           </div>
 
           {/* Assignment Instructions */}
-          {assignment.instructions && (
+          {assignment.description && (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
               <h4 className="font-medium text-gray-900 mb-2">Instructions</h4>
               <div 
                 className="prose prose-sm max-w-none text-gray-700"
-                dangerouslySetInnerHTML={{ __html: assignment.instructions }}
+                dangerouslySetInnerHTML={{ __html: assignment.description }}
               />
             </div>
           )}
 
-          {/* Assignment Attachments */}
-          {assignment.attachments && assignment.attachments.length > 0 && (
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <h4 className="font-medium text-gray-900 mb-2">Assignment Files</h4>
-              <div className="space-y-2">
-                {assignment.attachments.map((attachment, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-white rounded border">
-                    <div className="flex items-center space-x-2">
-                      <FileText className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm">{attachment.name}</span>
-                      <span className="text-xs text-gray-500">
-                        ({(attachment.size / 1024 / 1024).toFixed(2)} MB)
-                      </span>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => window.open(attachment.url, '_blank')}
-                      className="text-blue-600 hover:text-blue-800"
-                    >
-                      Download
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </CardContent>
       </Card>
 

@@ -324,8 +324,10 @@ export function GradeSubmissionForm({ submissionId, onSuccess, onCancel }: Grade
                 {...register('points_earned')}
                 onChange={(e) => handlePointsChange(e.target.value)}
                 placeholder={`0 - ${submission.assignment_info.max_points}`}
-                error={errors.points_earned?.message}
               />
+              {errors.points_earned && (
+                <p className="text-xs text-red-600">{errors.points_earned.message}</p>
+              )}
               <p className="text-xs text-gray-500">
                 Maximum: {submission.assignment_info.max_points} points
               </p>

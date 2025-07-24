@@ -119,12 +119,12 @@ export function EditSubmissionForm({ submission, onSuccess, onCancel }: EditSubm
     setAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
-  const typeConfig = ASSIGNMENT_TYPE_CONFIG[submission.assignment_info.assignment_type];
+  const typeConfig = ASSIGNMENT_TYPE_CONFIG[submission.assignment_info?.assignment_type || 'HOMEWORK'];
   const TypeIcon = typeConfig.icon;
   const statusConfig = SUBMISSION_STATUS_CONFIG[submission.status];
   const StatusIcon = statusConfig.icon;
 
-  const dueDate = new Date(submission.assignment_info.due_date);
+  const dueDate = new Date(submission.assignment_info?.due_date || new Date());
   const now = new Date();
   const hoursUntilDue = differenceInHours(dueDate, now);
   const isOverdue = isAfter(now, dueDate);
@@ -182,7 +182,7 @@ export function EditSubmissionForm({ submission, onSuccess, onCancel }: EditSubm
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-gray-900">
-                {submission.assignment_info.max_points}
+                {submission.assignment_info?.max_points || 0}
               </div>
               <div className="text-sm text-gray-600">Max Points</div>
             </div>
@@ -235,13 +235,13 @@ export function EditSubmissionForm({ submission, onSuccess, onCancel }: EditSubm
                 <TypeIcon className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="font-medium text-gray-900">{submission.assignment_info.title}</h3>
-                <p className="text-sm text-gray-600">{submission.assignment_info.description}</p>
+                <h3 className="font-medium text-gray-900">{submission.assignment_info?.title || 'N/A'}</h3>
+                <p className="text-sm text-gray-600">{submission.assignment_info?.description || 'No description available'}</p>
               </div>
             </div>
             <Badge className={typeConfig.color}>
               <TypeIcon className="w-3 h-3 mr-1" />
-              {submission.assignment_info.assignment_type}
+              {submission.assignment_info?.assignment_type || 'HOMEWORK'}
             </Badge>
           </div>
 
@@ -252,7 +252,7 @@ export function EditSubmissionForm({ submission, onSuccess, onCancel }: EditSubm
                 <span className="text-sm font-medium text-gray-600">Points</span>
               </div>
               <div className="text-2xl font-bold text-gray-900">
-                {submission.assignment_info.max_points}
+                {submission.assignment_info?.max_points || 0}
               </div>
             </div>
 
@@ -284,12 +284,12 @@ export function EditSubmissionForm({ submission, onSuccess, onCancel }: EditSubm
           </div>
 
           {/* Assignment Instructions */}
-          {submission.assignment_info.instructions && (
+          {submission.assignment_info?.instructions && (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
               <h4 className="font-medium text-gray-900 mb-2">Instructions</h4>
               <div 
                 className="prose prose-sm max-w-none text-gray-700"
-                dangerouslySetInnerHTML={{ __html: submission.assignment_info.instructions }}
+                dangerouslySetInnerHTML={{ __html: submission.assignment_info?.instructions }}
               />
             </div>
           )}
@@ -312,10 +312,10 @@ export function EditSubmissionForm({ submission, onSuccess, onCancel }: EditSubm
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-2xl font-bold text-green-900">
-                      {submission.points_earned} / {submission.assignment_info.max_points}
+                      {submission.points_earned} / {submission.assignment_info?.max_points || 0}
                     </div>
                     <div className="text-sm text-green-700">
-                      {((submission.points_earned / submission.assignment_info.max_points) * 100).toFixed(1)}%
+                      {((submission.points_earned || 0) / (submission.assignment_info?.max_points || 1) * 100).toFixed(1)}%
                     </div>
                   </div>
                   <Award className="h-8 w-8 text-green-600" />

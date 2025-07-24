@@ -24,7 +24,7 @@ export function useRealTimeNotifications() {
     // return () => {
     //   disconnect();
     // };
-  }, [user?.id, user?.accessToken, connect, disconnect]);
+  }, [user?.id, connect, disconnect]);
 
   // Handle new notifications
   useEffect(() => {

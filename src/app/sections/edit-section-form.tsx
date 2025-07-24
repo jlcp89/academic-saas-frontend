@@ -110,9 +110,9 @@ export function EditSectionForm({ section, onSuccess, onCancel }: EditSectionFor
   } = useForm<EditSectionFormData>({
     resolver: zodResolver(editSectionSchema),
     defaultValues: {
-      section_name: section.section_name,
-      subject: section.subject.toString(),
-      professor: section.professor.toString(),
+      section_name: section.name,
+      subject: section.subject_id.toString(),
+      professor: section.professor_id?.toString() || '',
       start_date: section.start_date,
       end_date: section.end_date,
       max_students: section.max_students.toString(),
@@ -147,7 +147,7 @@ export function EditSectionForm({ section, onSuccess, onCancel }: EditSectionFor
 
   const subjectOptions = subjects.map(subject => ({
     value: subject.id.toString(),
-    label: `${subject.subject_code} - ${subject.subject_name}`,
+    label: `${subject.code} - ${subject.name}`,
   }));
 
   const professorOptions = professors.map(professor => ({
@@ -163,9 +163,9 @@ export function EditSectionForm({ section, onSuccess, onCancel }: EditSectionFor
   const StatusIcon = getStatusIcon(currentStatus);
 
   const hasChanges = 
-    sectionName !== section.section_name ||
-    selectedSubject !== section.subject.toString() ||
-    selectedProfessor !== section.professor.toString() ||
+    sectionName !== section.name ||
+    selectedSubject !== section.subject_id.toString() ||
+    selectedProfessor !== (section.professor_id?.toString() || '') ||
     startDate !== section.start_date ||
     endDate !== section.end_date ||
     maxStudents !== section.max_students.toString();
@@ -190,7 +190,6 @@ export function EditSectionForm({ section, onSuccess, onCancel }: EditSectionFor
                 id="section_name"
                 {...register('section_name')}
                 placeholder="CS101 - Smith"
-                error={errors.section_name?.message}
               />
             </div>
 
@@ -225,7 +224,6 @@ export function EditSectionForm({ section, onSuccess, onCancel }: EditSectionFor
                 max="1000"
                 {...register('max_students')}
                 placeholder="30"
-                error={errors.max_students?.message}
               />
               {enrollmentWarning && (
                 <div className="flex items-start space-x-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -258,7 +256,6 @@ export function EditSectionForm({ section, onSuccess, onCancel }: EditSectionFor
                 id="start_date"
                 type="date"
                 {...register('start_date')}
-                error={errors.start_date?.message}
               />
             </div>
 
@@ -268,7 +265,6 @@ export function EditSectionForm({ section, onSuccess, onCancel }: EditSectionFor
                 id="end_date"
                 type="date"
                 {...register('end_date')}
-                error={errors.end_date?.message}
               />
             </div>
 
@@ -333,8 +329,8 @@ export function EditSectionForm({ section, onSuccess, onCancel }: EditSectionFor
                 <p><strong>Updated:</strong> {format(new Date(section.updated_at), 'PPP')}</p>
               </div>
               <div>
-                <p><strong>Subject:</strong> {section.subject_info?.subject_name || 'N/A'}</p>
-                <p><strong>Professor:</strong> {section.professor_info?.first_name} {section.professor_info?.last_name}</p>
+                <p><strong>Subject:</strong> {subjects.find(s => s.id === section.subject_id)?.name || 'N/A'}</p>
+                <p><strong>Professor:</strong> {section.professor_id ? (professors.find(p => p.id === section.professor_id)?.first_name + ' ' + professors.find(p => p.id === section.professor_id)?.last_name) : 'N/A'}</p>
               </div>
             </div>
           </div>
@@ -349,26 +345,26 @@ export function EditSectionForm({ section, onSuccess, onCancel }: EditSectionFor
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {sectionName !== section.section_name && (
+              {sectionName !== section.name && (
                 <div className="flex items-center space-x-2 text-sm">
                   <span className="font-medium">Name:</span>
-                  <span className="text-gray-500">{section.section_name}</span>
+                  <span className="text-gray-500">{section.name}</span>
                   <span className="text-gray-400">→</span>
                   <span className="font-medium">{sectionName}</span>
                 </div>
               )}
-              {selectedSubject !== section.subject.toString() && (
+              {selectedSubject !== section.subject_id.toString() && (
                 <div className="flex items-center space-x-2 text-sm">
                   <span className="font-medium">Subject:</span>
-                  <span className="text-gray-500">{section.subject_info?.subject_name || 'N/A'}</span>
+                  <span className="text-gray-500">{subjects.find(s => s.id === section.subject_id)?.name || 'N/A'}</span>
                   <span className="text-gray-400">→</span>
-                  <span className="font-medium">{selectedSubjectData?.subject_name}</span>
+                  <span className="font-medium">{selectedSubjectData?.name}</span>
                 </div>
               )}
-              {selectedProfessor !== section.professor.toString() && (
+              {selectedProfessor !== (section.professor_id?.toString() || '') && (
                 <div className="flex items-center space-x-2 text-sm">
                   <span className="font-medium">Professor:</span>
-                  <span className="text-gray-500">{section.professor_info?.first_name} {section.professor_info?.last_name}</span>
+                  <span className="text-gray-500">{section.professor_id ? (professors.find(p => p.id === section.professor_id)?.first_name + ' ' + professors.find(p => p.id === section.professor_id)?.last_name) : 'N/A'}</span>
                   <span className="text-gray-400">→</span>
                   <span className="font-medium">{selectedProfessorData?.first_name} {selectedProfessorData?.last_name}</span>
                 </div>

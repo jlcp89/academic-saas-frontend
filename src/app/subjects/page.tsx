@@ -63,18 +63,18 @@ export default function SubjectsPage() {
             <Hash className="w-5 h-5 text-white" />
           </div>
           <span className="font-mono font-medium text-gray-900">
-            {row.original.subject_code}
+            {row.original.code}
           </span>
         </div>
       ),
     },
     {
-      accessorKey: 'subject_name',
+      accessorKey: 'name',
       header: 'Subject Name',
       cell: ({ row }) => (
         <div>
-          <div className="font-medium text-gray-900">{row.original.subject_name}</div>
-          <div className="text-sm text-gray-500">{row.original.subject_code}</div>
+          <div className="font-medium text-gray-900">{row.original.name}</div>
+          <div className="text-sm text-gray-500">{row.original.code}</div>
         </div>
       ),
     },
@@ -319,7 +319,7 @@ export default function SubjectsPage() {
             onClose={() => setShowDeleteDialog(false)}
             onConfirm={confirmDelete}
             title="Delete Subject"
-            description={`Are you sure you want to delete ${subjectToDelete?.subject_name} (${subjectToDelete?.subject_code})? This action cannot be undone and will affect all associated sections and enrollments.`}
+            description={`Are you sure you want to delete ${subjectToDelete?.name} (${subjectToDelete?.code})? This action cannot be undone and will affect all associated sections and enrollments.`}
             confirmText="Delete"
             variant="destructive"
             loading={deleteSubjectMutation.isPending}
