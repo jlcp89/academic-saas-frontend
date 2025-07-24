@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MessageCircle, ArrowLeft, Menu, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { ChatLayout } from '@/components/layout/main-layout';
 
 export default function ChatPage() {
   const { data: session, status } = useSession();
@@ -40,119 +41,121 @@ export default function ChatPage() {
   };
   
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
-      {/* Authentication Status Banner */}
-      <div className="flex-shrink-0 bg-white border-b px-4 py-3">
-        <div className="container mx-auto flex items-center gap-4">
-          <Badge variant={status === 'authenticated' ? 'default' : 'destructive'}>
-            Auth Status: {status}
-          </Badge>
-          {session?.user && (
-            <span className="text-sm text-gray-600">
-              Logged in as: {session.user.email || `${session.user.first_name || ''} ${session.user.last_name || ''}`.trim() || session.user.username}
-            </span>
-          )}
-          {status === 'unauthenticated' && (
-            <div className="flex items-center gap-2 text-sm text-red-600">
-              <AlertCircle className="h-4 w-4" />
-              You must be logged in to view chats
-            </div>
-          )}
-        </div>
-      </div>
-      
-      <div className="flex-1 flex overflow-hidden">
-        <div className="container mx-auto px-4 py-4 flex gap-4 h-full">
-          {/* Mobile sidebar overlay */}
-          {sidebarOpen && (
-            <div 
-              className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-              onClick={() => setSidebarOpen(false)}
-            />
-          )}
-          
-          {/* Chat List Sidebar */}
-          <div className={`
-            ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-            fixed lg:static inset-y-0 left-0 z-50 lg:z-auto
-            w-80 lg:w-96 flex-shrink-0
-            transition-transform duration-300 ease-in-out
-            bg-white lg:bg-transparent
-            border-r lg:border-r-0
-            h-full
-          `}>
-            <div className="h-full">
-              <ChatList 
-                onSelectRoom={handleSelectRoom}
-                selectedRoomId={selectedRoom?.id}
-              />
-            </div>
+    <ChatLayout>
+      <div className="h-full flex flex-col bg-gray-50">
+        {/* Authentication Status Banner */}
+        <div className="flex-shrink-0 bg-white border-b px-4 py-3">
+          <div className="container mx-auto flex items-center gap-4">
+            <Badge variant={status === 'authenticated' ? 'default' : 'destructive'}>
+              Auth Status: {status}
+            </Badge>
+            {session?.user && (
+              <span className="text-sm text-gray-600">
+                Logged in as: {session.user.email || `${session.user.first_name || ''} ${session.user.last_name || ''}`.trim() || session.user.username}
+              </span>
+            )}
+            {status === 'unauthenticated' && (
+              <div className="flex items-center gap-2 text-sm text-red-600">
+                <AlertCircle className="h-4 w-4" />
+                You must be logged in to view chats
+              </div>
+            )}
           </div>
+        </div>
         
-          {/* Chat Room or Welcome Message */}
-          <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
-            {/* Mobile header */}
-            <div className="flex items-center justify-between mb-4 lg:hidden bg-white p-3 rounded-lg shadow-sm">
-              {selectedRoom ? (
-                <div className="flex items-center gap-2">
+        <div className="flex-1 flex overflow-hidden">
+          <div className="container mx-auto px-4 py-4 flex gap-4 h-full">
+            {/* Mobile sidebar overlay */}
+            {sidebarOpen && (
+              <div 
+                className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+                onClick={() => setSidebarOpen(false)}
+              />
+            )}
+            
+            {/* Chat List Sidebar */}
+            <div className={`
+              ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+              fixed lg:static inset-y-0 left-0 z-50 lg:z-auto
+              w-80 lg:w-96 flex-shrink-0
+              transition-transform duration-300 ease-in-out
+              bg-white lg:bg-transparent
+              border-r lg:border-r-0
+              h-full
+            `}>
+              <div className="h-full">
+                <ChatList 
+                  onSelectRoom={handleSelectRoom}
+                  selectedRoomId={selectedRoom?.id}
+                />
+              </div>
+            </div>
+          
+            {/* Chat Room or Welcome Message */}
+            <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
+              {/* Mobile header */}
+              <div className="flex items-center justify-between mb-4 lg:hidden bg-white p-3 rounded-lg shadow-sm">
+                {selectedRoom ? (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleCloseRoom}
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                    <h1 className="text-lg font-semibold">{selectedRoom.name}</h1>
+                  </div>
+                ) : (
+                  <h1 className="text-lg font-semibold">Chat</h1>
+                )}
+                
+                {!selectedRoom && (
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={handleCloseRoom}
+                    onClick={toggleSidebar}
                   >
-                    <ArrowLeft className="h-4 w-4" />
+                    <Menu className="h-4 w-4" />
                   </Button>
-                  <h1 className="text-lg font-semibold">{selectedRoom.name}</h1>
-                </div>
-              ) : (
-                <h1 className="text-lg font-semibold">Chat</h1>
-              )}
+                )}
+              </div>
               
-              {!selectedRoom && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={toggleSidebar}
-                >
-                  <Menu className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-            
-            {/* Chat content */}
-            <div className="flex-1 min-h-0 overflow-hidden">
-              {selectedRoom ? (
-                <ChatRoom
-                  roomId={selectedRoom.id}
-                  roomName={selectedRoom.name}
-                  roomType={selectedRoom.type as any}
-                  onClose={handleCloseRoom}
-                />
-              ) : (
-                <Card className="h-full flex items-center justify-center">
-                  <CardContent className="text-center">
-                    <MessageCircle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                    <h2 className="text-xl font-semibold text-gray-600 mb-2">
-                      Welcome to Chat
-                    </h2>
-                    <p className="text-gray-500 mb-4">
-                      Select a chat room from the sidebar to start messaging
-                    </p>
-                    <Button
-                      variant="outline"
-                      onClick={toggleSidebar}
-                      className="lg:hidden"
-                    >
-                      <Menu className="h-4 w-4 mr-2" />
-                      Browse Chats
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
+              {/* Chat content */}
+              <div className="flex-1 min-h-0 overflow-hidden">
+                {selectedRoom ? (
+                  <ChatRoom
+                    roomId={selectedRoom.id}
+                    roomName={selectedRoom.name}
+                    roomType={selectedRoom.type as any}
+                    onClose={handleCloseRoom}
+                  />
+                ) : (
+                  <Card className="h-full flex items-center justify-center">
+                    <CardContent className="text-center">
+                      <MessageCircle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                      <h2 className="text-xl font-semibold text-gray-600 mb-2">
+                        Welcome to Chat
+                      </h2>
+                      <p className="text-gray-500 mb-4">
+                        Select a chat room from the sidebar to start messaging
+                      </p>
+                      <Button
+                        variant="outline"
+                        onClick={toggleSidebar}
+                        className="lg:hidden"
+                      >
+                        <Menu className="h-4 w-4 mr-2" />
+                        Browse Chats
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </ChatLayout>
   );
 }
