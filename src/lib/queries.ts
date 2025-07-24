@@ -19,7 +19,7 @@ export const queryKeys = {
 // Current User Query
 export function useCurrentUser() {
   const apiClient = useApiClient();
-  const { data: session, update } = useSession();
+  const { data: session, update, status } = useSession();
   
   return useQuery({
     queryKey: queryKeys.currentUser,
@@ -47,7 +47,7 @@ export function useCurrentUser() {
         return null;
       }
     },
-    enabled: !!session,
+    enabled: status === 'authenticated' && !!session?.accessToken,
     staleTime: 1000 * 60 * 5, // 5 minutes
     retry: 1, // Only retry once to avoid excessive API calls
   });

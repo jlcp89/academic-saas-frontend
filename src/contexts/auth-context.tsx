@@ -26,6 +26,7 @@ const PERMISSIONS = {
     enrollments: ['create', 'read', 'update', 'delete'],
     assignments: ['create', 'read', 'update', 'delete'],
     submissions: ['create', 'read', 'update', 'delete', 'grade'],
+    chat: ['create', 'read', 'send', 'edit', 'delete', 'moderate'],
   },
   ADMIN: {
     users: ['create', 'read', 'update', 'delete'],
@@ -34,6 +35,7 @@ const PERMISSIONS = {
     enrollments: ['create', 'read', 'update', 'delete'],
     assignments: ['create', 'read', 'update', 'delete'],
     submissions: ['read', 'update', 'delete', 'grade'],
+    chat: ['create', 'read', 'send', 'edit', 'delete', 'moderate'],
   },
   PROFESSOR: {
     users: ['read'], // Can view students and other professors
@@ -42,6 +44,7 @@ const PERMISSIONS = {
     enrollments: ['read'],
     assignments: ['create', 'read', 'update', 'delete'], // For their sections
     submissions: ['read', 'update', 'grade'], // For their assignments
+    chat: ['create', 'read', 'send', 'edit'],
   },
   STUDENT: {
     users: ['read'], // Can view professors and other students
@@ -50,6 +53,7 @@ const PERMISSIONS = {
     enrollments: ['create', 'read'], // Can enroll and view their enrollments
     assignments: ['read'],
     submissions: ['create', 'read', 'update'], // Can submit and view their submissions
+    chat: ['read', 'send'],
   },
 };
 

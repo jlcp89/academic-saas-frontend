@@ -23,7 +23,8 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Brain
+  Brain,
+  MessageCircle
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { UserRole } from '@/types';
@@ -85,6 +86,14 @@ const MENU_ITEMS: MenuItem[] = [
     href: '/enrollments',
     roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.PROFESSOR, UserRole.STUDENT],
     description: 'Student enrollment management'
+  },
+  {
+    id: 'chat',
+    label: 'Chat',
+    icon: MessageCircle,
+    href: '/chat',
+    roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.PROFESSOR, UserRole.STUDENT],
+    description: 'Real-time communication'
   },
   {
     id: 'assignments',

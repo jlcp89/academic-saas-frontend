@@ -11,15 +11,19 @@ export function useRealTimeNotifications() {
 
   // Connect to WebSocket when user is authenticated
   useEffect(() => {
-    if (user?.id && user?.accessToken) {
-      connect(user.id.toString(), user.accessToken).catch(error => {
-        console.error('Failed to connect to WebSocket:', error);
-      });
-    }
+    // TEMPORARILY DISABLED: Prevents conflict with chat WebSocket connections
+    // This should be re-enabled when we consolidate WebSocket systems
+    console.log('[REAL-TIME] WebSocket connection disabled to prevent chat conflicts');
+    
+    // if (user?.id && user?.accessToken) {
+    //   connect(user.id.toString(), user.accessToken).catch(error => {
+    //     console.error('Failed to connect to WebSocket:', error);
+    //   });
+    // }
 
-    return () => {
-      disconnect();
-    };
+    // return () => {
+    //   disconnect();
+    // };
   }, [user?.id, user?.accessToken, connect, disconnect]);
 
   // Handle new notifications

@@ -19,8 +19,16 @@ export function ChatList({ onSelectRoom, selectedRoomId }: ChatListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateRoom, setShowCreateRoom] = useState(false);
   
-  const { chatRooms, isLoading } = useChatRooms();
+  const { chatRooms, isLoading, error } = useChatRooms();
   const createRoom = useCreateChatRoom();
+  
+  // Debug logging
+  console.log('ChatList Debug:', {
+    chatRooms,
+    isLoading,
+    error,
+    roomCount: chatRooms.length
+  });
   
   // Filter rooms based on search query
   const filteredRooms = chatRooms.filter(room =>
@@ -78,6 +86,20 @@ export function ChatList({ onSelectRoom, selectedRoomId }: ChatListProps) {
     }
   };
   
+  // Test API connection
+  const testApiConnection = async () => {
+    try {
+      const apiClient = (window as any).apiClient || await import('@/lib/api-client').then(m => m.apiClient);
+      console.log('Testing API connection...');
+      const response = await apiClient.get('/chat-rooms/');
+      console.log('API Test Success:', response);
+      alert('API connection successful! Check console for details.');
+    } catch (error) {
+      console.error('API Test Failed:', error);
+      alert('API connection failed! Check console for details.');
+    }
+  };
+  
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="flex-shrink-0">
@@ -106,10 +128,37 @@ export function ChatList({ onSelectRoom, selectedRoomId }: ChatListProps) {
       </CardHeader>
       
       <CardContent className="flex-1 p-0">
+        {/* Debug Button */}
+        <div className="px-4 pb-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={testApiConnection}
+            className="w-full text-xs"
+          >
+            Test API Connection
+          </Button>
+        </div>
+        
         <ScrollArea className="h-full">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="text-gray-500">Loading rooms...</div>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-8 px-4">
+              <div className="text-red-500 font-medium mb-2">Failed to load chat rooms</div>
+              <div className="text-sm text-gray-600 text-center">
+                {error instanceof Error ? error.message : 'Unknown error occurred'}
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-4"
+                onClick={() => window.location.reload()}
+              >
+                Retry
+              </Button>
             </div>
           ) : filteredRooms.length === 0 ? (
             <div className="flex items-center justify-center py-8">

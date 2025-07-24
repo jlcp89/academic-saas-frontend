@@ -4,48 +4,32 @@
 
    ▲ Next.js 15.4.1 (Turbopack)
    - Local:        http://localhost:3000
-   - Network:      http://172.24.136.90:3000
+   - Network:      http://192.168.1.50:3000
    - Environments: .env.local
 
  ✓ Starting...
  ○ Compiling middleware ...
- ✓ Compiled middleware in 690ms
- ✓ Ready in 2.8s
+ ✓ Compiled middleware in 520ms
+ ✓ Ready in 2.5s
+ ○ Compiling /auth/login ...
+ ✓ Compiled /auth/login in 8.6s
+ GET /auth/login 200 in 9334ms
  ○ Compiling /api/auth/[...nextauth] ...
- ✓ Compiled /api/auth/[...nextauth] in 3.4s
+ ✓ Compiled /api/auth/[...nextauth] in 981ms
 [next-auth][warn][DEBUG_ENABLED] 
 https://next-auth.js.org/warnings#debug_enabled
- GET /api/auth/csrf 200 in 5081ms
- POST /api/auth/signout 200 in 102ms
- ○ Compiling /auth/login ...
- ✓ Compiled /auth/login in 6.8s
- GET /auth/login 200 in 7601ms
- GET /api/auth/signin?callbackUrl=%2F.well-known%2Fappspecific%2Fcom.chrome.devtools.json 302 in 606ms
- GET /auth/login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2F.well-known%2Fappspecific%2Fcom.chrome.devtools.json 200 in 550ms
- GET /api/auth/session 200 in 274ms
- GET /api/auth/providers 200 in 147ms
- GET /api/auth/csrf 200 in 142ms
- POST /api/auth/callback/credentials 200 in 3896ms
- GET /api/auth/session 200 in 179ms
+ GET /api/auth/session 200 in 2327ms
+ GET /api/auth/session 200 in 138ms
+ GET /api/auth/providers 200 in 142ms
+ GET /api/auth/csrf 200 in 55ms
+ POST /api/auth/callback/credentials 200 in 1917ms
+ GET /api/auth/session 200 in 163ms
  ○ Compiling /dashboard ...
- ✓ Compiled /dashboard in 6.3s
- GET /dashboard 200 in 6411ms
- GET /api/auth/csrf 200 in 386ms
- POST /api/auth/session 200 in 225ms
- ○ Compiling /users ...
- ✓ Compiled /users in 1668ms
- GET /users 200 in 1806ms
- ○ Compiling /ai-risk ...
- ✓ Compiled /ai-risk in 699ms
- GET /ai-risk 200 in 825ms
- ○ Compiling /subjects ...
- ✓ Compiled /subjects in 1145ms
- GET /subjects 200 in 1325ms
- GET /dashboard 200 in 94ms
- ○ Compiling /search ...
- ✓ Compiled /search in 738ms
- GET /search?q=test 200 in 848ms
- ○ Compiling /_not-found/page ...
- ✓ Compiled /_not-found/page in 729ms
- GET /api/search?q=test 404 in 1027ms
- GET /api/search?q=test 404 in 234ms
+ ✓ Compiled /dashboard in 6.1s
+ GET /dashboard 200 in 6155ms
+ GET /api/auth/csrf 200 in 145ms
+ POST /api/auth/session 200 in 56ms
+ GET /api/auth/session 200 in 67ms
+ ○ Compiling /chat ...
+ ✓ Compiled /chat in 1056ms
+ GET /chat 200 in 1212ms

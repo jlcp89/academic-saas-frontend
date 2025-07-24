@@ -9,6 +9,7 @@ const ROUTE_PERMISSIONS: Record<string, string[]> = {
   '/subjects': ['ADMIN', 'SUPERADMIN'],
   '/sections': ['ADMIN', 'PROFESSOR', 'SUPERADMIN'],
   '/enrollments': ['ADMIN', 'PROFESSOR', 'STUDENT', 'SUPERADMIN'],
+  '/chat': [], // All authenticated users
   '/assignments': ['ADMIN', 'PROFESSOR', 'STUDENT', 'SUPERADMIN'],
   '/submissions': ['ADMIN', 'PROFESSOR', 'STUDENT', 'SUPERADMIN'],
   '/grades': ['ADMIN', 'PROFESSOR', 'SUPERADMIN'],

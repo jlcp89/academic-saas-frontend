@@ -1,4 +1,5 @@
-import { io, Socket } from 'socket.io-client';
+// NOTE: This file is for Socket.IO, but the chat system uses native WebSocket
+// The actual WebSocket implementation is in src/hooks/useChat.ts
 
 export interface WebSocketMessage {
   type: string;

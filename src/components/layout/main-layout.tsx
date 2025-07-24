@@ -208,3 +208,15 @@ export function ReportsLayout({ children }: { children: React.ReactNode }) {
     </MainLayout>
   );
 }
+
+export function ChatLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <MainLayout 
+      title="Chat"
+      subtitle="Real-time communication and messaging"
+      className="p-0" // Remove default padding for full-height chat
+    >
+      {children}
+    </MainLayout>
+  );
+}

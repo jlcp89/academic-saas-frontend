@@ -12,7 +12,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 5 * 60 * 1000, // 5 minutes
+            staleTime: 30 * 1000, // 30 segundos - más razonable para datos dinámicos
             retry: (failureCount, error: Error & { status?: number }) => {
               // Don&apos;t retry on 401/403 errors
               if (error?.status === 401 || error?.status === 403) {

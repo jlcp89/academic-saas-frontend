@@ -52,11 +52,24 @@ class ApiClient {
       ...options,
     };
 
+    // Debug logging
+    console.log('API Request:', {
+      url,
+      method: options.method || 'GET',
+      hasToken: !!this.token,
+      tokenPreview: this.token ? `${this.token.substring(0, 20)}...` : null
+    });
+
     try {
       const response = await fetch(url, config);
 
       if (!response.ok) {
         const errorData = await response.text();
+        console.error('API Error Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorData
+        });
         throw new Error(`HTTP ${response.status}: ${errorData}`);
       }
 
@@ -79,21 +92,21 @@ class ApiClient {
     return this.request<T>(endpoint);
   }
 
-  async post<T>(endpoint: string, data?: unknown): Promise<T> {
+  async post<T>(endpoint: string, data?: any): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
     });
   }
 
-  async put<T>(endpoint: string, data: unknown): Promise<T> {
+  async put<T>(endpoint: string, data: any): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   }
 
-  async patch<T>(endpoint: string, data: unknown): Promise<T> {
+  async patch<T>(endpoint: string, data: any): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'PATCH',
       body: JSON.stringify(data),
@@ -112,7 +125,15 @@ const apiClient = new ApiClient();
 
 // Hook to get authenticated API client
 export function useApiClient() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  
+  // Debug logging
+  console.log('Session Debug:', {
+    status,
+    hasSession: !!session,
+    hasAccessToken: !!session?.accessToken,
+    user: session?.user
+  });
   
   // Update token when session changes
   if (session?.accessToken && typeof session.accessToken === 'string') {
