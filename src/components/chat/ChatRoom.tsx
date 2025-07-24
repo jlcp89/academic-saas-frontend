@@ -60,8 +60,8 @@ function MessageBubble({ message, isOwnMessage }: MessageBubbleProps) {
   }
   
   return (
-    <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-3 group`}>
-      <div className={`flex max-w-[75%] min-w-0 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'} items-end gap-2`}>
+    <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-3 group w-full`}>
+      <div className={`flex max-w-[80%] sm:max-w-[70%] min-w-0 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'} items-end gap-2`}>
         {!isOwnMessage && (
           <Avatar className="w-8 h-8 flex-shrink-0 ring-2 ring-white shadow-sm">
             <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm font-semibold">
@@ -70,7 +70,7 @@ function MessageBubble({ message, isOwnMessage }: MessageBubbleProps) {
           </Avatar>
         )}
         
-        <div className="flex flex-col">
+        <div className="flex flex-col min-w-0 flex-1">
           {!isOwnMessage && (
             <div className="text-xs font-medium mb-1 text-gray-600 px-3 break-words">
               {message.sender_name}
@@ -81,13 +81,13 @@ function MessageBubble({ message, isOwnMessage }: MessageBubbleProps) {
           )}
           
           <div className={`
-            rounded-2xl px-4 py-3 min-w-0 break-words overflow-hidden shadow-sm transition-all duration-200
+            rounded-2xl px-4 py-3 min-w-0 break-words overflow-hidden shadow-sm transition-all duration-200 word-wrap
             ${isOwnMessage 
               ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-br-md' 
               : 'bg-white text-gray-900 border border-gray-200 rounded-bl-md hover:shadow-md'
             }
           `}>
-            <div className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere leading-relaxed">
+            <div className="text-sm whitespace-pre-wrap break-words hyphens-auto leading-relaxed" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
               {message.content}
             </div>
           </div>
@@ -144,21 +144,21 @@ function PendingMessageBubble({ message, onRetry, onRemove }: PendingMessageBubb
   };
   
   return (
-    <div className="flex justify-end mb-3 group">
-      <div className="flex max-w-[75%] min-w-0 flex-row-reverse items-end gap-2">
+    <div className="flex justify-end mb-3 group w-full">
+      <div className="flex max-w-[80%] sm:max-w-[70%] min-w-0 flex-row-reverse items-end gap-2">
         <Avatar className="w-8 h-8 flex-shrink-0 ring-2 ring-white shadow-sm">
           <AvatarFallback className="bg-gradient-to-br from-green-500 to-teal-600 text-white text-sm font-semibold">
             You
           </AvatarFallback>
         </Avatar>
         
-        <div className="flex flex-col">
+        <div className="flex flex-col min-w-0 flex-1">
           <div className={`
             rounded-2xl px-4 py-3 min-w-0 break-words overflow-hidden shadow-sm transition-all duration-200
             ${getStatusColor()} text-white rounded-br-md
             ${message.status === 'failed' ? 'opacity-75' : ''}
           `}>
-            <div className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere leading-relaxed">
+            <div className="text-sm whitespace-pre-wrap break-words hyphens-auto leading-relaxed" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
               {message.content}
             </div>
             
@@ -266,18 +266,18 @@ export function ChatRoom({ roomId, roomName, roomType, onClose }: ChatRoomProps)
   };
   
   return (
-    <Card className="h-full flex flex-col shadow-lg bg-gradient-to-b from-white to-gray-50">
+    <Card className="h-full flex flex-col shadow-lg bg-gradient-to-b from-white to-gray-50 overflow-hidden">
       {/* Header */}
       <CardHeader className="flex-shrink-0 border-b bg-white rounded-t-lg">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-md">
+          <div className="flex items-center space-x-3 min-w-0 flex-1">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-md flex-shrink-0">
               <span className="text-white font-semibold text-sm">
                 {roomName[0]?.toUpperCase()}
               </span>
             </div>
-            <div>
-              <CardTitle className="text-lg font-semibold text-gray-900">{roomName}</CardTitle>
+            <div className="min-w-0 flex-1">
+              <CardTitle className="text-lg font-semibold text-gray-900 truncate">{roomName}</CardTitle>
               <div className="flex items-center gap-2 mt-1">
                 <Badge className={`${getRoomTypeColor(roomType)} text-xs font-medium`}>
                   {roomType}
@@ -288,7 +288,7 @@ export function ChatRoom({ roomId, roomName, roomType, onClose }: ChatRoomProps)
                     connectionAttempts > 0 ? 'bg-yellow-400' : 
                     'bg-gray-400'
                   }`} />
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-500 hidden sm:inline">
                     {isConnected ? 'Connected' : 
                      connectionAttempts > 0 ? `Reconnecting... (${connectionAttempts})` : 
                      lastError ? 'Connection failed' :
@@ -307,18 +307,18 @@ export function ChatRoom({ roomId, roomName, roomType, onClose }: ChatRoomProps)
             </div>
           </div>
           
-          <div className="flex items-center space-x-1">
-            <Button variant="ghost" size="icon" className="hover:bg-gray-100">
+          <div className="flex items-center space-x-1 flex-shrink-0">
+            <Button variant="ghost" size="icon" className="hover:bg-gray-100 hidden sm:flex">
               <Users className="h-4 w-4 text-gray-600" />
             </Button>
-            <Button variant="ghost" size="icon" className="hover:bg-gray-100">
+            <Button variant="ghost" size="icon" className="hover:bg-gray-100 hidden sm:flex">
               <Settings className="h-4 w-4 text-gray-600" />
             </Button>
             <Button variant="ghost" size="icon" className="hover:bg-gray-100">
               <MoreVertical className="h-4 w-4 text-gray-600" />
             </Button>
             {onClose && (
-              <Button variant="ghost" size="sm" onClick={onClose} className="hover:bg-gray-100 ml-2">
+              <Button variant="ghost" size="sm" onClick={onClose} className="hover:bg-gray-100 ml-2 lg:hidden">
                 ×
               </Button>
             )}
@@ -327,8 +327,8 @@ export function ChatRoom({ roomId, roomName, roomType, onClose }: ChatRoomProps)
       </CardHeader>
       
       {/* Messages Area */}
-      <CardContent className="flex-1 flex flex-col p-0 bg-gradient-to-b from-gray-50 to-white">
-        <ScrollArea className="flex-1 p-6">
+      <CardContent className="flex-1 flex flex-col p-0 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
+        <ScrollArea className="flex-1 px-4 py-6">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <div className="flex flex-col items-center gap-3">
@@ -347,7 +347,7 @@ export function ChatRoom({ roomId, roomName, roomType, onClose }: ChatRoomProps)
               </div>
             </div>
           ) : (
-            <div className="space-y-1">
+            <div className="space-y-1 w-full">
               {messages.map((message) => (
                 <MessageBubble
                   key={message.id}
@@ -394,16 +394,16 @@ export function ChatRoom({ roomId, roomName, roomType, onClose }: ChatRoomProps)
         <Separator className="bg-gray-200" />
         
         {/* Message Input */}
-        <div className="p-4 bg-white rounded-b-lg">
-          <div className="flex items-end space-x-3">
-            <div className="flex-1 relative">
+        <div className="p-4 bg-white rounded-b-lg flex-shrink-0">
+          <div className="flex items-end space-x-3 max-w-full">
+            <div className="flex-1 relative min-w-0">
               <Input
                 ref={inputRef}
                 value={newMessage}
                 onChange={handleInputChange}
                 onKeyPress={handleKeyPress}
                 placeholder="Type your message..."
-                className="pr-12 rounded-full border-gray-300 focus:border-blue-500 focus:ring-blue-200"
+                className="pr-12 rounded-full border-gray-300 focus:border-blue-500 focus:ring-blue-200 w-full"
                 disabled={isPending}
               />
               {isPending && (
@@ -416,7 +416,7 @@ export function ChatRoom({ roomId, roomName, roomType, onClose }: ChatRoomProps)
               onClick={handleSendMessage}
               disabled={!newMessage.trim() || isPending}
               size="icon"
-              className="rounded-full bg-blue-500 hover:bg-blue-600 shadow-md transition-all duration-200 hover:shadow-lg"
+              className="rounded-full bg-blue-500 hover:bg-blue-600 shadow-md transition-all duration-200 hover:shadow-lg flex-shrink-0"
             >
               <Send className="h-4 w-4" />
             </Button>

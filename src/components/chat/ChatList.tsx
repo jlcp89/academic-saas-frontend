@@ -101,15 +101,16 @@ export function ChatList({ onSelectRoom, selectedRoomId }: ChatListProps) {
   };
   
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="h-full flex flex-col overflow-hidden">
       <CardHeader className="flex-shrink-0">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">Chat Rooms</CardTitle>
+          <CardTitle className="text-lg truncate">Chat Rooms</CardTitle>
           <Button 
             variant="outline" 
             size="icon"
             onClick={handleCreateRoom}
             disabled={createRoom.isPending}
+            className="flex-shrink-0"
           >
             <Plus className="h-4 w-4" />
           </Button>
@@ -127,9 +128,9 @@ export function ChatList({ onSelectRoom, selectedRoomId }: ChatListProps) {
         </div>
       </CardHeader>
       
-      <CardContent className="flex-1 p-0">
+      <CardContent className="flex-1 p-0 overflow-hidden">
         {/* Debug Button */}
-        <div className="px-4 pb-2">
+        <div className="px-4 pb-2 flex-shrink-0">
           <Button 
             variant="outline" 
             size="sm"
@@ -140,7 +141,7 @@ export function ChatList({ onSelectRoom, selectedRoomId }: ChatListProps) {
           </Button>
         </div>
         
-        <ScrollArea className="h-full">
+        <ScrollArea className="flex-1">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="text-gray-500">Loading rooms...</div>
