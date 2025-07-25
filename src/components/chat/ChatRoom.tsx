@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Send, Users, Settings, MoreVertical, MessageCircle } from 'lucide-react';
+import { Send, Users, Settings, MoreVertical, MessageCircle, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +12,15 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useChatMessages, useSendMessage, useMarkMessagesRead, useTypingIndicator, useWebSocketNotifications } from '@/hooks/useChat';
 import { Clock, AlertCircle, RotateCcw, X } from 'lucide-react';
+import { AddParticipantModal } from './AddParticipantModal';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/auth-context';
+import { User } from '@/types';
+
+// Helper function to get user initials
+const getInitials = (name: string) => {
+  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+};
 
 interface ChatRoomProps {
   roomId: number;
@@ -33,6 +42,7 @@ interface MessageBubbleProps {
   };
   isOwnMessage: boolean;
   currentUserId?: number;
+  currentUser?: User | null;
 }
 
 interface PendingMessageBubbleProps {
@@ -44,87 +54,171 @@ interface PendingMessageBubbleProps {
   };
   onRetry: (tempId: string) => void;
   onRemove: (tempId: string) => void;
+  currentUser?: User | null;
 }
 
-function MessageBubble({ message, isOwnMessage }: MessageBubbleProps) {
+function MessageBubble({ message, isOwnMessage, currentUserId, currentUser }: MessageBubbleProps) {
   const messageTime = format(new Date(message.created_at), 'HH:mm');
+  const [isVisible, setIsVisible] = useState(false);
+  
+  // Animation effect
+  useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), 50);
+    return () => clearTimeout(timer);
+  }, []);
+  
+  // Generate consistent colors for different users
+  const getUserColor = (senderId: number, senderName: string) => {
+    const colors = [
+      'from-purple-500 to-pink-500',
+      'from-blue-500 to-indigo-500', 
+      'from-green-500 to-teal-500',
+      'from-yellow-500 to-orange-500',
+      'from-red-500 to-pink-500',
+      'from-indigo-500 to-purple-500',
+      'from-teal-500 to-cyan-500',
+      'from-orange-500 to-red-500'
+    ];
+    const hash = senderId + senderName.length;
+    return colors[hash % colors.length];
+  };
+  
   
   if (message.is_system_message) {
     return (
-      <div className="flex justify-center my-4">
-        <div className="bg-gray-50 border border-gray-200 rounded-full px-4 py-2 text-xs text-gray-600 font-medium shadow-sm">
-          {message.content}
+      <div className={`flex justify-center my-6 transform transition-all duration-500 ${
+        isVisible ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
+      }`}>
+        <div className="bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-full px-6 py-3 text-sm text-gray-600 font-medium shadow-sm backdrop-blur-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+            {message.content}
+            <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+          </div>
         </div>
       </div>
     );
   }
   
   return (
-    <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-3 group w-full`}>
-      <div className={`flex max-w-[80%] sm:max-w-[70%] min-w-0 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'} items-end gap-2`}>
-        {!isOwnMessage && (
-          <Avatar className="w-8 h-8 flex-shrink-0 ring-2 ring-white shadow-sm">
-            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm font-semibold">
-              {message.sender_name[0]?.toUpperCase()}
+    <div 
+      className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-4 group w-full ${
+        isVisible 
+          ? isOwnMessage 
+            ? 'animate-slide-in-right' 
+            : 'animate-slide-in-left'
+          : 'opacity-0'
+      }`}
+      role="article"
+      aria-label={`Message from ${isOwnMessage ? 'you' : message.sender_name} at ${messageTime}`}
+    >
+      <div className={`flex max-w-[85%] sm:max-w-[75%] min-w-0 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'} items-end gap-3`}>
+        {/* Avatar */}
+        <div className="flex-shrink-0">
+          <Avatar className={`w-10 h-10 ring-2 ${isOwnMessage ? 'ring-blue-200' : 'ring-gray-200'} shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-105`}>
+            <AvatarFallback className={`text-white text-sm font-bold ${
+              isOwnMessage 
+                ? 'bg-gradient-to-br from-blue-500 to-blue-600' 
+                : `bg-gradient-to-br ${getUserColor(message.sender, message.sender_name)}`
+            }`}>
+              {getInitials(isOwnMessage ? (currentUser?.first_name + ' ' + currentUser?.last_name || 'You') : message.sender_name)}
             </AvatarFallback>
           </Avatar>
-        )}
+        </div>
         
         <div className="flex flex-col min-w-0 flex-1">
+          {/* Sender info for other users */}
           {!isOwnMessage && (
-            <div className="text-xs font-medium mb-1 text-gray-600 px-3 break-words">
-              {message.sender_name}
-              <Badge variant="secondary" className="ml-2 text-xs bg-gray-100 text-gray-700 border-0">
+            <div className="flex items-center gap-2 mb-2 px-1">
+              <span className="text-sm font-semibold text-gray-700 truncate">
+                {message.sender_name}
+              </span>
+              <Badge 
+                variant="secondary" 
+                className="text-xs px-2 py-1 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-600 border-0 font-medium"
+              >
                 {message.sender_role}
               </Badge>
             </div>
           )}
           
+          {/* Message bubble */}
           <div className={`
-            rounded-2xl px-4 py-3 min-w-0 break-words overflow-hidden shadow-sm transition-all duration-200 word-wrap
+            message-bubble relative rounded-2xl px-4 py-3 min-w-0 break-words overflow-hidden shadow-lg
             ${isOwnMessage 
-              ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-br-md' 
-              : 'bg-white text-gray-900 border border-gray-200 rounded-bl-md hover:shadow-md'
+              ? 'bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 text-white rounded-br-md ml-4' 
+              : 'bg-white text-gray-800 border border-gray-200 rounded-bl-md mr-4 hover:border-gray-300'
             }
+            before:absolute before:inset-0 before:rounded-2xl before:bg-gradient-to-br before:from-white/10 before:to-transparent before:pointer-events-none
           `}>
-            <div className="text-sm whitespace-pre-wrap break-words hyphens-auto leading-relaxed" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-              {message.content}
+            <div className="relative z-10">
+              <div 
+                className="text-sm whitespace-pre-wrap break-words leading-relaxed"
+                style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
+              >
+                {message.content}
+              </div>
             </div>
+            
+            {/* Subtle shine effect */}
+            <div className={`absolute inset-0 rounded-2xl bg-gradient-to-r ${
+              isOwnMessage 
+                ? 'from-transparent via-white/5 to-transparent' 
+                : 'from-transparent via-gray-100/50 to-transparent'
+            } translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out`}></div>
           </div>
           
-          <div className={`text-xs mt-1 text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity px-3 ${
-            isOwnMessage ? 'text-right' : 'text-left'
+          {/* Timestamp and status */}
+          <div className={`flex items-center gap-2 mt-2 px-1 text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-all duration-200 ${
+            isOwnMessage ? 'justify-end' : 'justify-start'
           }`}>
-            {messageTime}
+            <Clock className="w-3 h-3" />
+            <span>{messageTime}</span>
             {message.is_edited && (
-              <span className="ml-1 italic">(edited)</span>
+              <>
+                <span>•</span>
+                <span className="italic text-gray-400">edited</span>
+              </>
+            )}
+            {isOwnMessage && (
+              <div className="flex items-center gap-1">
+                <div className="w-4 h-4 rounded-full bg-green-100 flex items-center justify-center">
+                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                </div>
+              </div>
             )}
           </div>
         </div>
-        
-        {isOwnMessage && (
-          <Avatar className="w-8 h-8 flex-shrink-0 ring-2 ring-white shadow-sm">
-            <AvatarFallback className="bg-gradient-to-br from-green-500 to-teal-600 text-white text-sm font-semibold">
-              You
-            </AvatarFallback>
-          </Avatar>
-        )}
       </div>
     </div>
   );
 }
 
-function PendingMessageBubble({ message, onRetry, onRemove }: PendingMessageBubbleProps) {
+function PendingMessageBubble({ message, onRetry, onRemove, currentUser }: PendingMessageBubbleProps) {
   const messageTime = format(message.timestamp, 'HH:mm');
+  const [isVisible, setIsVisible] = useState(false);
+  
+  // Animation effect
+  useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), 50);
+    return () => clearTimeout(timer);
+  }, []);
   
   const getStatusIcon = () => {
     switch (message.status) {
       case 'sending':
         return <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />;
       case 'sent':
-        return <div className="text-green-400 text-xs">✓</div>;
+        return (
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-full bg-green-400 flex items-center justify-center">
+              <div className="w-1 h-1 rounded-full bg-white"></div>
+            </div>
+            <span className="text-xs text-green-200">Sent</span>
+          </div>
+        );
       case 'failed':
-        return <AlertCircle className="w-3 h-3 text-red-400" />;
+        return <AlertCircle className="w-3 h-3 text-red-300" />;
       default:
         return null;
     }
@@ -133,57 +227,75 @@ function PendingMessageBubble({ message, onRetry, onRemove }: PendingMessageBubb
   const getStatusColor = () => {
     switch (message.status) {
       case 'sending':
-        return 'bg-gradient-to-r from-blue-400 to-blue-500';
+        return 'bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600';
       case 'sent':
-        return 'bg-gradient-to-r from-green-400 to-green-500';
+        return 'bg-gradient-to-br from-green-400 via-green-500 to-green-600';
       case 'failed':
-        return 'bg-gradient-to-r from-red-400 to-red-500';
+        return 'bg-gradient-to-br from-red-400 via-red-500 to-red-600';
       default:
-        return 'bg-gradient-to-r from-blue-500 to-blue-600';
+        return 'bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700';
     }
   };
   
   return (
-    <div className="flex justify-end mb-3 group w-full">
-      <div className="flex max-w-[80%] sm:max-w-[70%] min-w-0 flex-row-reverse items-end gap-2">
-        <Avatar className="w-8 h-8 flex-shrink-0 ring-2 ring-white shadow-sm">
-          <AvatarFallback className="bg-gradient-to-br from-green-500 to-teal-600 text-white text-sm font-semibold">
-            You
-          </AvatarFallback>
-        </Avatar>
+    <div className={`flex justify-end mb-4 group w-full transform transition-all duration-500 ${
+      isVisible ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
+    }`}>
+      <div className="flex max-w-[85%] sm:max-w-[75%] min-w-0 flex-row-reverse items-end gap-3">
+        <div className="flex-shrink-0">
+          <Avatar className="w-10 h-10 ring-2 ring-blue-200 shadow-lg">
+            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white text-sm font-bold">
+              {getInitials(currentUser?.first_name + ' ' + currentUser?.last_name || 'You')}
+            </AvatarFallback>
+          </Avatar>
+        </div>
         
         <div className="flex flex-col min-w-0 flex-1">
           <div className={`
-            rounded-2xl px-4 py-3 min-w-0 break-words overflow-hidden shadow-sm transition-all duration-200
+            relative rounded-2xl px-4 py-3 min-w-0 break-words overflow-hidden shadow-lg transition-all duration-300 ml-4
             ${getStatusColor()} text-white rounded-br-md
-            ${message.status === 'failed' ? 'opacity-75' : ''}
+            ${message.status === 'failed' ? 'opacity-80 animate-pulse' : ''}
+            before:absolute before:inset-0 before:rounded-2xl before:bg-gradient-to-br before:from-white/10 before:to-transparent before:pointer-events-none
           `}>
-            <div className="text-sm whitespace-pre-wrap break-words hyphens-auto leading-relaxed" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-              {message.content}
+            <div className="relative z-10">
+              <div 
+                className="text-sm whitespace-pre-wrap break-words leading-relaxed"
+                style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
+              >
+                {message.content}
+              </div>
+              
+              <div className="flex items-center justify-end mt-2 gap-2">
+                <Clock className="w-3 h-3 opacity-75" />
+                <span className="text-xs opacity-75">{messageTime}</span>
+                {getStatusIcon()}
+                {message.status === 'failed' && (
+                  <div className="flex gap-1 ml-2">
+                    <button
+                      onClick={() => onRetry(message.tempId)}
+                      className="p-1 rounded hover:bg-white/20 transition-colors"
+                      title="Retry sending message"
+                      aria-label="Retry sending message"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={() => onRemove(message.tempId)}
+                      className="p-1 rounded hover:bg-white/20 transition-colors"
+                      title="Remove failed message"
+                      aria-label="Remove failed message"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
             
-            <div className="flex items-center justify-end mt-1 gap-2">
-              <span className="text-xs opacity-75">{messageTime}</span>
-              {getStatusIcon()}
-              {message.status === 'failed' && (
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => onRetry(message.tempId)}
-                    className="text-xs text-white hover:text-yellow-200 p-1"
-                    title="Retry"
-                  >
-                    <RotateCcw className="w-3 h-3" />
-                  </button>
-                  <button
-                    onClick={() => onRemove(message.tempId)}
-                    className="text-xs text-white hover:text-red-200 p-1"
-                    title="Remove"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              )}
-            </div>
+            {/* Pulse effect for sending */}
+            {message.status === 'sending' && (
+              <div className="absolute inset-0 rounded-2xl bg-white/5 animate-pulse"></div>
+            )}
           </div>
         </div>
       </div>
@@ -193,8 +305,10 @@ function PendingMessageBubble({ message, onRetry, onRemove }: PendingMessageBubb
 
 export function ChatRoom({ roomId, roomName, roomType, onClose }: ChatRoomProps) {
   const [newMessage, setNewMessage] = useState('');
+  const [isAddParticipantModalOpen, setIsAddParticipantModalOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
   
   // Hooks
   const { messages, isLoading } = useChatMessages(roomId);
@@ -203,18 +317,27 @@ export function ChatRoom({ roomId, roomName, roomType, onClose }: ChatRoomProps)
   const { typingUsers, startTyping, stopTyping } = useTypingIndicator(roomId);
   // Note: Temporarily disable WebSocket notifications to prevent multiple connections
   // TODO: Implement unified WebSocket connection
-  const isConnected = false;
-  const lastError = null;
-  const retry = () => {};
-  const connectionAttempts = 0;
   
-  // Dummy current user ID (in real app, get from auth context)
-  const currentUserId = 1; // This should come from useAuth()
+  // Get current user from auth context
+  const { user: currentUser } = useAuth();
+  const currentUserId = currentUser?.id;
   
-  // Auto-scroll to bottom when new messages arrive
+  // Enhanced auto-scroll behavior
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    const scrollToBottom = () => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'end',
+          inline: 'nearest'
+        });
+      }
+    };
+    
+    // Small delay to allow for DOM updates and animations
+    const timer = setTimeout(scrollToBottom, 100);
+    return () => clearTimeout(timer);
+  }, [messages, pendingMessages]);
   
   // TEMPORARILY DISABLED: Mark messages as read when component loads
   // This was causing excessive API calls
@@ -237,7 +360,7 @@ export function ChatRoom({ roomId, roomName, roomType, onClose }: ChatRoomProps)
     }
   };
   
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
@@ -264,50 +387,61 @@ export function ChatRoom({ roomId, roomName, roomType, onClose }: ChatRoomProps)
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  const handleOpenAddParticipant = () => {
+    setIsAddParticipantModalOpen(true);
+  };
+
+  const handleCloseAddParticipant = () => {
+    setIsAddParticipantModalOpen(false);
+  };
+
+  const handleParticipantAdded = (addedUsers: any[]) => {
+    console.log(`Added ${addedUsers.length} users to ${roomName}:`, addedUsers);
+    
+    // Invalidate chat rooms cache so all users (including newly added ones) see updated chat list
+    queryClient.invalidateQueries({ queryKey: ['chat-rooms'] });
+    
+    // Also invalidate messages cache to show any system messages about user additions
+    queryClient.invalidateQueries({ queryKey: ['chat-messages', roomId] });
+  };
   
   return (
-    <Card className="h-full flex flex-col shadow-lg bg-gradient-to-b from-white to-gray-50 overflow-hidden">
-      {/* Header */}
-      <CardHeader className="flex-shrink-0 border-b bg-white rounded-t-lg">
+    <Card className="h-full flex flex-col shadow-2xl bg-gradient-to-b from-white via-gray-50 to-white overflow-hidden border-0 ring-1 ring-gray-200">
+      {/* Enhanced Header */}
+      <CardHeader className="flex-shrink-0 border-b border-gray-200 bg-gradient-to-r from-white to-gray-50 backdrop-blur-sm">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3 min-w-0 flex-1">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-md flex-shrink-0">
-              <span className="text-white font-semibold text-sm">
-                {roomName[0]?.toUpperCase()}
-              </span>
+          <div className="flex items-center space-x-4 min-w-0 flex-1">
+            <div className="relative">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-blue-600 flex items-center justify-center shadow-lg flex-shrink-0 ring-2 ring-white">
+                <span className="text-white font-bold text-lg">
+                  {roomName[0]?.toUpperCase()}
+                </span>
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-green-400 ring-2 ring-white shadow-sm"></div>
             </div>
             <div className="min-w-0 flex-1">
-              <CardTitle className="text-lg font-semibold text-gray-900 truncate">{roomName}</CardTitle>
-              <div className="flex items-center gap-2 mt-1">
-                <Badge className={`${getRoomTypeColor(roomType)} text-xs font-medium`}>
+              <CardTitle className="text-xl font-bold text-gray-900 truncate bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text">
+                {roomName}
+              </CardTitle>
+              <div className="flex items-center gap-3 mt-2">
+                <Badge className={`${getRoomTypeColor(roomType)} text-xs font-semibold px-3 py-1 rounded-full shadow-sm`}>
                   {roomType}
                 </Badge>
-                <div className="flex items-center gap-1">
-                  <div className={`w-2 h-2 rounded-full ${
-                    isConnected ? 'bg-green-400' : 
-                    connectionAttempts > 0 ? 'bg-yellow-400' : 
-                    'bg-gray-400'
-                  }`} />
-                  <span className="text-xs text-gray-500 hidden sm:inline">
-                    {isConnected ? 'Connected' : 
-                     connectionAttempts > 0 ? `Reconnecting... (${connectionAttempts})` : 
-                     lastError ? 'Connection failed' :
-                     'Connecting...'}
-                  </span>
-                  {lastError && (
-                    <button
-                      onClick={retry}
-                      className="text-xs text-blue-500 hover:text-blue-700 ml-1"
-                    >
-                      Retry
-                    </button>
-                  )}
-                </div>
               </div>
             </div>
           </div>
           
           <div className="flex items-center space-x-1 flex-shrink-0">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="hover:bg-gray-100 hidden sm:flex"
+              onClick={handleOpenAddParticipant}
+              title="Add users to chat"
+            >
+              <UserPlus className="h-4 w-4 text-gray-600" />
+            </Button>
             <Button variant="ghost" size="icon" className="hover:bg-gray-100 hidden sm:flex">
               <Users className="h-4 w-4 text-gray-600" />
             </Button>
@@ -327,8 +461,13 @@ export function ChatRoom({ roomId, roomName, roomType, onClose }: ChatRoomProps)
       </CardHeader>
       
       {/* Messages Area */}
-      <CardContent className="flex-1 flex flex-col p-0 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
-        <ScrollArea className="flex-1 px-4 py-6">
+      <CardContent 
+        className="flex-1 flex flex-col p-0 bg-gradient-to-b from-gray-50 to-white overflow-hidden"
+        role="log"
+        aria-label="Chat messages"
+        aria-live="polite"
+      >
+        <ScrollArea className="flex-1 px-6 py-8 chat-scroll">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <div className="flex flex-col items-center gap-3">
@@ -354,6 +493,7 @@ export function ChatRoom({ roomId, roomName, roomType, onClose }: ChatRoomProps)
                   message={message}
                   isOwnMessage={message.sender === currentUserId}
                   currentUserId={currentUserId}
+                  currentUser={currentUser}
                 />
               ))}
               
@@ -364,24 +504,38 @@ export function ChatRoom({ roomId, roomName, roomType, onClose }: ChatRoomProps)
                   message={pendingMessage}
                   onRetry={retryMessage}
                   onRemove={removePendingMessage}
+                  currentUser={currentUser}
                 />
               ))}
               
-              {/* Typing indicator */}
+              {/* Enhanced typing indicator */}
               {typingUsers.length > 0 && (
-                <div className="flex items-center space-x-3 text-sm text-gray-500 mb-4 px-3">
-                  <Avatar className="w-6 h-6">
-                    <AvatarFallback className="bg-gray-200 text-gray-600 text-xs">
-                      ...
+                <div className="flex items-center space-x-3 text-sm text-gray-500 mb-6 px-3 animate-fade-in">
+                  <Avatar className="w-8 h-8 ring-2 ring-gray-100 shadow-sm">
+                    <AvatarFallback className="bg-gradient-to-br from-gray-200 to-gray-300 text-gray-500 text-xs font-medium">
+                      <div className="flex items-center justify-center">
+                        <div className="flex space-x-0.5">
+                          <div className="w-1 h-1 bg-gray-500 rounded-full animate-bounce" />
+                          <div className="w-1 h-1 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                          <div className="w-1 h-1 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                        </div>
+                      </div>
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex items-center space-x-2">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                  <div className="flex flex-col">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex space-x-1">
+                        <div className="w-2.5 h-2.5 bg-blue-400 rounded-full animate-bounce" />
+                        <div className="w-2.5 h-2.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }} />
+                        <div className="w-2.5 h-2.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }} />
+                      </div>
+                      <span className="text-sm font-medium text-gray-600">
+                        {typingUsers.length === 1 
+                          ? `${typingUsers[0]} is typing...`
+                          : `${typingUsers.slice(0, -1).join(', ')} and ${typingUsers[typingUsers.length - 1]} are typing...`
+                        }
+                      </span>
                     </div>
-                    <span className="text-xs font-medium">{typingUsers.join(', ')} typing...</span>
                   </div>
                 </div>
               )}
@@ -393,22 +547,31 @@ export function ChatRoom({ roomId, roomName, roomType, onClose }: ChatRoomProps)
         
         <Separator className="bg-gray-200" />
         
-        {/* Message Input */}
-        <div className="p-4 bg-white rounded-b-lg flex-shrink-0">
-          <div className="flex items-end space-x-3 max-w-full">
+        {/* Enhanced Message Input */}
+        <div className="p-6 bg-gradient-to-r from-white to-gray-50 border-t border-gray-200 flex-shrink-0">
+          <div className="flex items-end space-x-4 max-w-full">
             <div className="flex-1 relative min-w-0">
               <Input
                 ref={inputRef}
                 value={newMessage}
                 onChange={handleInputChange}
-                onKeyPress={handleKeyPress}
+                onKeyDown={handleKeyDown}
                 placeholder="Type your message..."
-                className="pr-12 rounded-full border-gray-300 focus:border-blue-500 focus:ring-blue-200 w-full"
+                className="focus-ring pr-16 py-3 rounded-2xl border-2 border-gray-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 w-full bg-white shadow-sm transition-all duration-200 hover:shadow-md text-gray-800 placeholder-gray-500"
                 disabled={isPending}
+                aria-label="Type your message and press Enter to send"
+                aria-describedby="message-help"
+                role="textbox"
+                aria-multiline="false"
               />
               {isPending && (
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+                <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                  <div className="w-5 h-5 border-2 border-blue-200 border-t-blue-500 rounded-full animate-spin"></div>
+                </div>
+              )}
+              {!isPending && newMessage.trim() && (
+                <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                 </div>
               )}
             </div>
@@ -416,13 +579,33 @@ export function ChatRoom({ roomId, roomName, roomType, onClose }: ChatRoomProps)
               onClick={handleSendMessage}
               disabled={!newMessage.trim() || isPending}
               size="icon"
-              className="rounded-full bg-blue-500 hover:bg-blue-600 shadow-md transition-all duration-200 hover:shadow-lg flex-shrink-0"
+              className={`w-12 h-12 rounded-2xl shadow-lg transition-all duration-300 transform hover:scale-105 flex-shrink-0 ${
+                newMessage.trim() && !isPending
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-blue-200'
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              }`}
+              aria-label="Send message"
             >
-              <Send className="h-4 w-4" />
+              <Send className="h-5 w-5" />
             </Button>
+          </div>
+          {/* Accessibility and user guidance */}
+          <div className="flex justify-end items-center mt-3 text-xs text-gray-500">
+            <span id="message-help" className="text-gray-400">
+              Press Enter to send, Shift + Enter for new line
+            </span>
           </div>
         </div>
       </CardContent>
+
+      {/* Add Participant Modal */}
+      <AddParticipantModal
+        isOpen={isAddParticipantModalOpen}
+        onClose={handleCloseAddParticipant}
+        roomId={roomId}
+        roomName={roomName}
+        onParticipantAdded={handleParticipantAdded}
+      />
     </Card>
   );
 }

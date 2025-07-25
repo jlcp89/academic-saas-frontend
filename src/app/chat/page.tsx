@@ -127,7 +127,7 @@ export default function ChatPage() {
                   <ChatRoom
                     roomId={selectedRoom.id}
                     roomName={selectedRoom.name}
-                    roomType={selectedRoom.type as any}
+                    roomType={selectedRoom.type as 'DIRECT' | 'GROUP' | 'CLASS' | 'ANNOUNCEMENT'}
                     onClose={handleCloseRoom}
                   />
                 ) : (
