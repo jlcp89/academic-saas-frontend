@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { EnhancedSelect } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCreateUser } from '@/lib/api/users';
+import { useSchools } from '@/lib/api/schools';
 import { useAuth } from '@/contexts/auth-context';
 import { UserRole } from '@/types';
 import { Eye, EyeOff, User, Mail, Lock, Shield } from 'lucide-react';
@@ -23,11 +24,26 @@ const createUserFormSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters').max(100, 'Password must be less than 100 characters'),
   confirmPassword: z.string(),
   role: z.nativeEnum(UserRole),
-  schoolId: z.string().min(1, 'School is required'),
+  schoolId: z.string().optional(),
   phone: z.string().optional(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
+}).superRefine((data, ctx) => {
+  // Validate school is required for non-superadmin users
+  if (data.role !== 'SUPERADMIN' && !data.schoolId) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'School is required for non-superadmin users',
+      path: ['schoolId'],
+    });
+  }
+  
+  // Validate passwords match
+  if (data.password !== data.confirmPassword) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Passwords don't match",
+      path: ["confirmPassword"],
+    });
+  }
 });
 
 type CreateUserFormData = z.infer<typeof createUserFormSchema>;
@@ -43,6 +59,10 @@ export function CreateUserForm({ onSuccess, onCancel }: CreateUserFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const createUserMutation = useCreateUser();
+  
+  // Load schools for SUPERADMIN
+  const { data: schoolsData } = useSchools({ is_active: true });
+  const schools = schoolsData?.results || [];
 
   const {
     register,
@@ -54,23 +74,36 @@ export function CreateUserForm({ onSuccess, onCancel }: CreateUserFormProps) {
     resolver: zodResolver(createUserFormSchema),
     defaultValues: {
       role: UserRole.STUDENT,
-      schoolId: currentUser?.school?.toString() || '1', // Default to current user's school or 1
+      schoolId: currentUser?.school?.toString() || '',
       phone: '',
     },
   });
 
   const selectedRole = watch('role');
 
+  // Auto-assign school for ADMIN users
+  useEffect(() => {
+    if (currentUser?.role === UserRole.ADMIN && currentUser?.school) {
+      setValue('schoolId', currentUser.school.toString());
+    }
+  }, [currentUser, setValue]);
+
   const onSubmit = async (data: CreateUserFormData) => {
     try {
       const { confirmPassword, ...formData } = data;
+      
       // Transform form data to match API expectations
       const createData = {
         ...formData,
         confirmPassword, // API expects confirmPassword
         isActive: true, // Default value
         sendWelcomeEmail: true, // Default value
+        // For ADMIN users, ensure school is set to their school
+        schoolId: currentUser?.role === UserRole.ADMIN 
+          ? currentUser.school?.toString() 
+          : formData.schoolId,
       };
+      
       await createUserMutation.mutateAsync(createData);
       onSuccess();
     } catch (error) {
@@ -177,6 +210,34 @@ export function CreateUserForm({ onSuccess, onCancel }: CreateUserFormProps) {
               />
             </div>
 
+            {/* School selection - only show for non-superadmin roles */}
+            {selectedRole !== 'SUPERADMIN' && (
+              <div className="space-y-2">
+                <Label htmlFor="schoolId">School *</Label>
+                {currentUser?.role === UserRole.ADMIN ? (
+                  // For ADMIN users, show current school as read-only
+                  <Input
+                    id="schoolId"
+                    value={currentUser.school_info?.name || 'Current School'}
+                    disabled
+                    className="bg-gray-50"
+                  />
+                ) : (
+                  // For SUPERADMIN users, show school selection
+                  <EnhancedSelect
+                    options={schools.map(school => ({
+                      value: school.id.toString(),
+                      label: school.name
+                    }))}
+                    value={watch('schoolId')}
+                    onValueChange={(value) => setValue('schoolId', value)}
+                    placeholder="Select school"
+                    error={errors.schoolId?.message}
+                  />
+                )}
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="password">Password *</Label>
               <div className="relative">
@@ -228,10 +289,10 @@ export function CreateUserForm({ onSuccess, onCancel }: CreateUserFormProps) {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h4 className="font-medium text-blue-900 mb-2">Role: {selectedRole}</h4>
             <p className="text-sm text-blue-800">
-              {selectedRole === 'SUPERADMIN' && 'Full system access including school management and system configuration.'}
-              {selectedRole === 'ADMIN' && 'School administration access including user management and school settings.'}
-              {selectedRole === 'PROFESSOR' && 'Teaching access including class management, assignments, and grading.'}
-              {selectedRole === 'STUDENT' && 'Student access including course enrollment, assignments, and submissions.'}
+              {selectedRole === 'SUPERADMIN' && 'Full system access including school management and system configuration. No school assignment required.'}
+              {selectedRole === 'ADMIN' && 'School administration access including user management and school settings. Will be assigned to your current school.'}
+              {selectedRole === 'PROFESSOR' && 'Teaching access including class management, assignments, and grading. Requires school assignment.'}
+              {selectedRole === 'STUDENT' && 'Student access including course enrollment, assignments, and submissions. Requires school assignment.'}
             </p>
           </div>
         </CardContent>

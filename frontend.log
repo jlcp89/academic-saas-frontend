@@ -8,194 +8,57 @@
    - Environments: .env.local
 
  ✓ Starting...
- ✓ Compiled middleware in 477ms
+ ✓ Compiled middleware in 500ms
  ✓ Ready in 2.3s
- ○ Compiling /auth/login ...
- ✓ Compiled /auth/login in 18.1s
- GET /auth/login 200 in 19423ms
  ○ Compiling /api/auth/[...nextauth] ...
- ✓ Compiled /api/auth/[...nextauth] in 2.4s
- GET /favicon.ico?favicon.45db1c09.ico 200 in 2040ms
+ ✓ Compiled /api/auth/[...nextauth] in 4.5s
 [next-auth][warn][DEBUG_ENABLED] 
 https://next-auth.js.org/warnings#debug_enabled
- GET /api/auth/signin?callbackUrl=%2F.well-known%2Fappspecific%2Fcom.chrome.devtools.json 302 in 4371ms
- GET /api/auth/session 200 in 2974ms
- GET /api/auth/session 200 in 81ms
- GET /auth/login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2F.well-known%2Fappspecific%2Fcom.chrome.devtools.json 200 in 245ms
- GET /api/auth/providers 200 in 119ms
- GET /api/auth/csrf 200 in 61ms
- POST /api/auth/callback/credentials 200 in 1413ms
- GET /api/auth/session 200 in 122ms
+ GET /api/auth/csrf 200 in 6496ms
+ POST /api/auth/signout 200 in 101ms
+ GET /api/auth/session 200 in 77ms
+ ○ Compiling /auth/login ...
+ ✓ Compiled /auth/login in 5.1s
+ GET /auth/login 200 in 5597ms
+ GET /api/auth/signin?callbackUrl=%2F.well-known%2Fappspecific%2Fcom.chrome.devtools.json 302 in 250ms
+ GET /auth/login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2F.well-known%2Fappspecific%2Fcom.chrome.devtools.json 200 in 402ms
+ GET /api/auth/session 200 in 310ms
+ GET /api/auth/session 200 in 111ms
+ GET /api/auth/providers 200 in 223ms
+ GET /api/auth/csrf 200 in 98ms
+ POST /api/auth/callback/credentials 200 in 4385ms
+ GET /api/auth/session 200 in 184ms
  ○ Compiling /dashboard ...
- ✓ Compiled /dashboard in 6.1s
- GET /dashboard 200 in 6214ms
-Session Debug: {
-  status: 'loading',
-  hasSession: false,
-  hasAccessToken: false,
-  user: undefined
-}
- GET /dashboard 200 in 1017ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 428ms
- GET /api/auth/session 200 in 416ms
- GET /api/auth/session 200 in 194ms
-Session Debug: {
-  status: 'loading',
-  hasSession: false,
-  hasAccessToken: false,
-  user: undefined
-}
- GET /dashboard 200 in 257ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 515ms
- GET /api/auth/session 200 in 335ms
- GET /api/auth/session 200 in 94ms
-Session Debug: {
-  status: 'loading',
-  hasSession: false,
-  hasAccessToken: false,
-  user: undefined
-}
- GET /dashboard 200 in 249ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 596ms
- GET /api/auth/session 200 in 356ms
- GET /api/auth/session 200 in 112ms
- GET /api/auth/session 200 in 354ms
- GET /api/auth/session 200 in 130ms
- GET /api/auth/providers 200 in 145ms
- GET /api/auth/csrf 200 in 198ms
-Authentication error: TypeError: fetch failed
-    at async Object.authorize (src/app/api/auth/[...nextauth]/route.ts:22:27)
-  20 |
-  21 |         try {
-> 22 |           const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.LOGIN}`, {
-     |                           ^
-  23 |             method: 'POST',
-  24 |             headers: {
-  25 |               'Content-Type': 'application/json', {
-  [cause]: [Error [HeadersTimeoutError]: Headers Timeout Error] {
-    code: 'UND_ERR_HEADERS_TIMEOUT'
-  }
-}
- POST /api/auth/callback/credentials 401 in 301661ms
- ⨯ [Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'
-}
- ○ Compiling /_error ...
- ✓ Compiled /_error in 4.1s
- ⨯ [Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.jvnv82nqsre'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.jvnv82nqsre'
-}
-[Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'
-}
- ⨯ [Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.v9jpfjklg3b'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.v9jpfjklg3b'
-}
-[Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.4j2f8tbijq'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.4j2f8tbijq'
-}
- ⨯ [Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'
-}
- ⨯ [Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'
-}
- ⨯ [Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.uaf26bct8a'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.uaf26bct8a'
-}
- ⨯ [Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.2ft2c3djg9q'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.2ft2c3djg9q'
-}
-[Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'
-}
-[Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'
-}
- ⨯ [Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.9mu21wsqu1c'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.9mu21wsqu1c'
-}
- ⨯ [Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.vuyvug56vgb'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.vuyvug56vgb'
-}
-[Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.on2dodc0vpa'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.on2dodc0vpa'
-}
-[Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.a3w6crfal7q'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.a3w6crfal7q'
-}
- ⨯ [Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'
-}
- ⨯ [Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.o358h6yzpvm'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.o358h6yzpvm'
-}
-[Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'
-}
- ⨯ [Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.oc6jxtbj3zk'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.oc6jxtbj3zk'
-}
-[Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.kma33lf4dml'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.kma33lf4dml'
-}
+ GET /api/auth/providers 200 in 521ms
+ GET /api/auth/csrf 200 in 244ms
+ ✓ Compiled /dashboard in 7.8s
+ GET /dashboard 200 in 7983ms
+ POST /api/auth/callback/credentials 200 in 2459ms
+ GET /api/auth/session 200 in 187ms
+ GET /dashboard 200 in 186ms
+ GET /api/auth/csrf 200 in 78ms
+ POST /api/auth/session 200 in 70ms
+ GET /api/auth/session 200 in 96ms
+ ○ Compiling /users ...
+ ✓ Compiled /users in 2.8s
+ GET /users 200 in 3019ms
+ ○ Compiling /chat ...
+ ✓ Compiled /chat in 1589ms
+ GET /chat 200 in 1731ms
+ GET /api/auth/csrf 200 in 236ms
+ POST /api/auth/signout 200 in 94ms
+ GET /api/auth/session 200 in 242ms
+ GET /auth/login 200 in 441ms
+ GET /api/auth/signin?callbackUrl=%2F.well-known%2Fappspecific%2Fcom.chrome.devtools.json 302 in 233ms
+ GET /auth/login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2F.well-known%2Fappspecific%2Fcom.chrome.devtools.json 200 in 532ms
+ GET /api/auth/session 200 in 177ms
+ GET /api/auth/session 200 in 172ms
+ GET /api/auth/providers 200 in 239ms
+ GET /api/auth/csrf 200 in 84ms
+ POST /api/auth/callback/credentials 200 in 1905ms
+ GET /api/auth/session 200 in 235ms
+ GET /dashboard 200 in 137ms
+ GET /api/auth/csrf 200 in 159ms
+ POST /api/auth/session 200 in 88ms
+ GET /api/auth/session 200 in 174ms
+ GET /chat 200 in 131ms

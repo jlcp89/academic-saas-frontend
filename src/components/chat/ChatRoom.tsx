@@ -121,7 +121,13 @@ function MessageBubble({ message, isOwnMessage, currentUserId, currentUser }: Me
                 ? 'bg-gradient-to-br from-blue-500 to-blue-600' 
                 : `bg-gradient-to-br ${getUserColor(message.sender, message.sender_name)}`
             }`}>
-              {getInitials(isOwnMessage ? (currentUser?.first_name + ' ' + currentUser?.last_name || 'You') : message.sender_name)}
+              {getInitials(isOwnMessage ? 
+                (currentUser?.first_name && currentUser?.last_name ? 
+                  `${currentUser.first_name} ${currentUser.last_name}` : 
+                  currentUser?.first_name || currentUser?.username || 'You'
+                ) : 
+                message.sender_name
+              )}
             </AvatarFallback>
           </Avatar>
         </div>
@@ -245,7 +251,11 @@ function PendingMessageBubble({ message, onRetry, onRemove, currentUser }: Pendi
         <div className="flex-shrink-0">
           <Avatar className="w-10 h-10 ring-2 ring-blue-200 shadow-lg">
             <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white text-sm font-bold">
-              {getInitials(currentUser?.first_name + ' ' + currentUser?.last_name || 'You')}
+              {getInitials(
+                currentUser?.first_name && currentUser?.last_name ? 
+                  `${currentUser.first_name} ${currentUser.last_name}` : 
+                  currentUser?.first_name || currentUser?.username || 'You'
+              )}
             </AvatarFallback>
           </Avatar>
         </div>

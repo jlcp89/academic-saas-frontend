@@ -62,13 +62,17 @@ export class UsersApi {
   async createUser(data: CreateUserFormData): Promise<User> {
     // Transform frontend form data to backend API format
     const { firstName, lastName, schoolId, sendWelcomeEmail, ...rest } = data;
-    const apiData = {
+    const apiData: any = {
       ...rest,
       first_name: firstName,
       last_name: lastName,
-      school_id: parseInt(schoolId),
-      send_welcome_email: sendWelcomeEmail,
+      // Removido send_welcome_email ya que no está en el serializer del backend
     };
+    
+    // Only include school if schoolId is provided
+    if (schoolId) {
+      apiData.school = parseInt(schoolId);
+    }
     
     return this.request<User>('/', {
       method: 'POST',

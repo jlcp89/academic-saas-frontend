@@ -97,13 +97,26 @@ export const createUserSchema = userSchema.extend({
   password: commonValidations.password,
   confirmPassword: commonValidations.confirmPassword(),
   sendWelcomeEmail: z.boolean().default(true),
-}).refine(
-  (data) => data.password === data.confirmPassword,
-  {
-    message: "Passwords don't match",
-    path: ["confirmPassword"],
+  schoolId: z.string().optional(),
+}).superRefine((data, ctx) => {
+  // Validate school is required for non-superadmin users
+  if (data.role !== 'SUPERADMIN' && !data.schoolId) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'School is required for non-superadmin users',
+      path: ['schoolId'],
+    });
   }
-);
+  
+  // Validate passwords match
+  if (data.password !== data.confirmPassword) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Passwords don't match",
+      path: ["confirmPassword"],
+    });
+  }
+});
 
 export const updateUserSchema = userSchema.partial().extend({
   id: z.string().min(1, 'User ID is required'),
