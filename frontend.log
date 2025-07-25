@@ -77,3 +77,125 @@ Authentication error: TypeError: fetch failed
   }
 }
  POST /api/auth/callback/credentials 401 in 301661ms
+ ⨯ [Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'
+}
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 4.1s
+ ⨯ [Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.jvnv82nqsre'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.jvnv82nqsre'
+}
+[Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.v9jpfjklg3b'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.v9jpfjklg3b'
+}
+[Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.4j2f8tbijq'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.4j2f8tbijq'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.uaf26bct8a'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.uaf26bct8a'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.2ft2c3djg9q'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.2ft2c3djg9q'
+}
+[Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.9mu21wsqu1c'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.9mu21wsqu1c'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.vuyvug56vgb'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.vuyvug56vgb'
+}
+[Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.on2dodc0vpa'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.on2dodc0vpa'
+}
+[Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.a3w6crfal7q'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.a3w6crfal7q'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.o358h6yzpvm'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.o358h6yzpvm'
+}
+[Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/home/jl/school/repos/academic-saas-frontend/.next/server/app/api/auth/[...nextauth]/[__metadata_id__]/route/app-paths-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.oc6jxtbj3zk'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.oc6jxtbj3zk'
+}
+[Error: ENOENT: no such file or directory, open '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.kma33lf4dml'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/home/jl/school/repos/academic-saas-frontend/.next/static/development/_buildManifest.js.tmp.kma33lf4dml'
+}
